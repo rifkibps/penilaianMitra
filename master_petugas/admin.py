@@ -10,3 +10,5 @@ class PersonAdmin(ImportExportModelAdmin):
 
 admin.site.register(models.AlokasiPetugas)
 admin.site.register(models.RoleMitra)
+admin.site.register(models.AdministrativeModel)
+

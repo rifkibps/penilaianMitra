@@ -13,11 +13,11 @@ from django.core.validators import FileExtensionValidator
 class MasterPetugasForm(forms.ModelForm):
     
     class Meta:
-
         model = models.MasterPetugas
         fields = [
             'kode_petugas',
-            'nama_petugas', 
+            'nama_petugas',
+            'jk',
             'nik',
             'npwp',
             'tgl_lahir',
@@ -32,7 +32,8 @@ class MasterPetugasForm(forms.ModelForm):
 
         labels = {
             'kode_petugas': 'Kode Petugas',
-            'nama_petugas': 'Nama Petugas', 
+            'nama_petugas': 'Nama Petugas',
+            'jk': 'Jenis Kelamin',
             'nik': 'NIK',
             'npwp': 'NPWP',
             'tgl_lahir': 'Tanggal Lahir',
@@ -54,6 +55,9 @@ class MasterPetugasForm(forms.ModelForm):
         widgets = {
             'kode_petugas': forms.TextInput(
                 attrs = attrs_input | {'autofocus': 'autofocus'}
+            ),
+            'jk': forms.Select(
+                attrs = attrs_input | {'class' : 'form-select'}
             ),
             'nama_petugas': forms.TextInput(
                 attrs = attrs_input | {'autofocus': 'autofocus'}
@@ -167,7 +171,7 @@ class MasterPetugasFormUpload(forms.Form):
 
         data = self.cleaned_data.get('import_file').read()
 
-        df = pd.read_excel(data, skiprows=1, usecols='A:M', dtype='str')
+        df = pd.read_excel(data, skiprows=1, usecols='A:N', dtype='str')
 
         df.dropna(axis=0, how='all', inplace=True)
 
@@ -196,6 +200,12 @@ class MasterPetugasFormUpload(forms.Form):
             if row not in choices_status.values():
                 base_errors.append(f'<b>Status Mitra</b> hanya dapat diisi {", ".join(choices_status.values())}. Harap periksa baris <b>{idx+1}</b>')
         df['Status Mitra'] = df['Status Mitra'].replace(list(choices_status.values()), list(choices_status.keys()))
+
+        choices_jk = dict(models.MasterPetugas._meta.get_field('jk').choices)
+        for idx, row in df['Jenis Kelamin'].items():
+            if row not in choices_jk.values():
+                base_errors.append(f'<b>Jenis Kelamin</b> hanya dapat diisi {", ".join(choices_jk.values())}. Harap periksa baris <b>{idx+1}</b>')
+        df['Jenis Kelamin'] = df['Jenis Kelamin'].replace(list(choices_jk.values()), list(choices_jk.keys()))
 
         choices_pendidikan = dict(models.MasterPetugas._meta.get_field('pendidikan').choices)
         for idx, row in df['Pendidikan Terakhir'].items():
@@ -276,8 +286,7 @@ class MasterPetugasFormUpload(forms.Form):
 
         for column in df.columns:
 
-
-            if column in ['pendidikan', 'agama', 'status', models.MasterPetugas._meta.pk.name]:
+            if column in ['jk', 'pendidikan', 'agama', 'status', models.MasterPetugas._meta.pk.name]:
                 continue
             
             obj_field = models.MasterPetugas._meta.get_field(column)
@@ -294,7 +303,6 @@ class MasterPetugasFormUpload(forms.Form):
                 msg += '</ul>'
                 base_errors.append(msg)
        
-    
         if len(base_errors) > 0:
             self._errors['import_file'] = self.error_class(base_errors)
             return self._errors['import_file'] 

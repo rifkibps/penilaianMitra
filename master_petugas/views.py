@@ -24,7 +24,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment
 from openpyxl.styles import Font, PatternFill
 from . import utils
-
+from pprint import pprint
 
 from statistics import mean
 from operator import itemgetter
@@ -45,7 +45,7 @@ class MasterPetugasJsonResponseClassView(LoginRequiredMixin, View):
 		
     def _datatables(self, request):
         datatables = request.POST
-        
+
         # Get Draw
         draw = int(datatables.get('draw'))
         start = int(datatables.get('start'))
@@ -186,9 +186,9 @@ class MasterPetugasDeleteView(LoginRequiredMixin, View):
                 data_petugas = models.MasterPetugas.objects.filter(pk = id)
                 if data_petugas.exists():
 
-                    check_nilai_mitra = MasterNilaiPetugas.objects.filter(petugas__petugas = id)
-                    if check_nilai_mitra.exists():
-                        return JsonResponse({'status' : 'failed', 'message': 'Data alokasi petugas telah digunakan pada master data penilaian'}, status=200)
+                    # check_nilai_mitra = MasterNilaiPetugas.objects.filter(petugas__petugas = id)
+                    # if check_nilai_mitra.exists():
+                    #     return JsonResponse({'status' : 'failed', 'message': 'Data alokasi petugas telah digunakan pada master data penilaian'}, status=200)
 
                     data_petugas.delete()
                     return JsonResponse({'status' : 'success', 'message': 'Data berhasil dihapus'}, status=200)
@@ -267,7 +267,7 @@ class MasterPetugasTemplateClassView(LoginRequiredMixin, View):
         header = ['No'] + header
 
         head_row = 2
-        header_cols = np.array(ws[f'A{head_row}':f'M{head_row}'])
+        header_cols = np.array(ws[f'A{head_row}':f'N{head_row}'])
 
         # Set value and style for header
         for v,c in zip(header, header_cols.T.flatten()):
@@ -293,23 +293,23 @@ class MasterPetugasTemplateClassView(LoginRequiredMixin, View):
         ws.row_dimensions[1].height = 25
         ws.row_dimensions[2].height = 22.50
 
-
-        utils.generate_meta_templates(ws, 'P', 3, 'Data Pendidikan', list(models.MasterPetugas._meta.get_field('pendidikan').choices), 'G', 3, def_rows=def_rows)
-        utils.generate_meta_templates(ws, 'R', 3, 'Agama', list(models.MasterPetugas._meta.get_field('agama').choices), 'I',3,  def_rows=def_rows)
-        utils.generate_meta_templates(ws, 'T', 3, 'Status Mitra', list(models.MasterPetugas._meta.get_field('status').choices), 'M', 3,  def_rows=def_rows)
+        utils.generate_meta_templates(ws, 'P', 3, 'Data Pendidikan', list(models.MasterPetugas._meta.get_field('jk').choices), 'D', 3, def_rows=def_rows)
+        utils.generate_meta_templates(ws, 'Q', 3, 'Data Pendidikan', list(models.MasterPetugas._meta.get_field('pendidikan').choices), 'H', 3, def_rows=def_rows)
+        utils.generate_meta_templates(ws, 'R', 3, 'Agama', list(models.MasterPetugas._meta.get_field('agama').choices), 'J',3,  def_rows=def_rows)
+        utils.generate_meta_templates(ws, 'S', 3, 'Status Mitra', list(models.MasterPetugas._meta.get_field('status').choices), 'N', 3,  def_rows=def_rows)
 
         ws.merge_cells('A1:M1')
         ws['A1'] = 'Template Upload Data Mitra'
         ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
         ws['A1'].font = Font(name='Cambria',bold=True, size=14)
 
-        ws.merge_cells('P2:T2')
+        ws.merge_cells('P2:S2')
         ws['P2'] = 'Metadata Mitra'
         ws['P2'].alignment = Alignment(horizontal='center', vertical='center')
         ws['P2'].font = Font(name='Cambria',bold=True, size=12)
 
-        for col in ['P', 'Q', 'R', 'S', 'T']:
-            ws.column_dimensions[col].hidden= True
+        # for col in ['P', 'Q', 'R', 'S', 'T']:
+        #     ws.column_dimensions[col].hidden= False
 
         for row in range(def_rows):
             ws[f'A{row+3}'] = row+1
@@ -337,11 +337,11 @@ class MasterPetugasUploadClassView(LoginRequiredMixin, View):
                 df = form.cleaned_data
                 objs = []
                 for idx in range(len(df['id'])):
-
                     objs.append(
                         model(
                             kode_petugas = df['kode_petugas'][idx],
                             nama_petugas= df['nama_petugas'][idx],
+                            jk= df['jk'][idx],
                             nik= df['nik'][idx],
                             npwp= df['npwp'][idx],
                             tgl_lahir= df['tgl_lahir'][idx],
@@ -583,7 +583,7 @@ class AlokasiPetugasDeleteView(LoginRequiredMixin, View):
                         data_petugas.delete()
                         return JsonResponse({'status' : 'success', 'message': 'Data berhasil dihapus'}, status=200)
                     
-                    return JsonResponse({'status' : 'failed', 'message': 'Data alokasi petugas telah digunakan pada master data penilaian.'}, status=200)
+                    # return JsonResponse({'status' : 'failed', 'message': 'Data alokasi petugas telah digunakan pada master data penilaian.'}, status=200)
                 else:
                     return JsonResponse({'status': 'failed', 'message': 'Data tidak tersedia'}, status=200)
                 
@@ -601,10 +601,10 @@ class MasterAlokasiDetailView(LoginRequiredMixin, View):
                 id = request.POST.get('id')
                 data_petugas = models.AlokasiPetugas.objects.filter(pk=id)
 
-                check_nilai_mitra = MasterNilaiPetugas.objects.filter(petugas = id)
 
-                if check_nilai_mitra.exists():
-                    return JsonResponse({'status' : 'failed', 'message': 'Data alokasi petugas telah digunakan pada master data penilaian'}, status=200)
+                # check_nilai_mitra = MasterNilaiPetugas.objects.filter(petugas = id)
+                # if check_nilai_mitra.exists():
+                #     return JsonResponse({'status' : 'failed', 'message': 'Data alokasi petugas telah digunakan pada master data penilaian'}, status=200)
                 
                 if data_petugas.exists():
                     return JsonResponse({'status' : 'success', 'instance': list(data_petugas.values())[0]}, status=200)
@@ -625,9 +625,9 @@ class MasterAlokasiUpdateView(LoginRequiredMixin, View):
             if data.petugas.status == '1' or data.petugas.status == '3':
                 return JsonResponse({"status":"failed", 'message': f'Mitra dengan status {data.petugas.get_status_display()} tidak dapat dialokasikan.'}, status=200)
         
-            check_nilai_mitra = MasterNilaiPetugas.objects.filter(petugas = request.POST.get('id'))
-            if check_nilai_mitra.exists():
-                return JsonResponse({'status' : 'failed', 'message': 'Data alokasi petugas telah digunakan pada master data penilaian'}, status=200)
+            # check_nilai_mitra = MasterNilaiPetugas.objects.filter(petugas = request.POST.get('id'))
+            # if check_nilai_mitra.exists():
+            #     return JsonResponse({'status' : 'failed', 'message': 'Data alokasi petugas telah digunakan pada master data penilaian'}, status=200)
 
             form = forms.AlokasiForm(request.POST, instance=data)
 

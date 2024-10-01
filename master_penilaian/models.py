@@ -30,7 +30,6 @@ class KegiatanPenilaianModel(models.Model):
     def __str__(self):
         return f"{self.nama_kegiatan} [{self.survey.nama}]"
    
-
 class IndikatorKegiatanPenilaian(models.Model):
    kegiatan_penilaian = models.ForeignKey(KegiatanPenilaianModel, on_delete=models.RESTRICT, related_name='kegiatan_penilaian_petugas')
    indikator_penilaian = models.ForeignKey(IndikatorPenilaian, on_delete=models.RESTRICT, related_name='indikator_penilaian_petugas')
@@ -41,7 +40,7 @@ class IndikatorKegiatanPenilaian(models.Model):
 
 class MasterNilaiPetugas(models.Model):
 
-   petugas = models.ForeignKey(AlokasiPetugas, on_delete=models.RESTRICT,  related_name='nilai_petugas')
+   petugas = models.ForeignKey(AlokasiPetugas, on_delete=models.CASCADE,  related_name='nilai_petugas')
    penilaian = models.ForeignKey(IndikatorKegiatanPenilaian, on_delete=models.RESTRICT, related_name='indikator_kegiatan_penilaian')
    nilai = models.SmallIntegerField(null=True, blank=True, verbose_name='Nilai Kegiatan Petugas')
    catatan = models.TextField(null=True, blank=True, verbose_name='Catatan Personal')
