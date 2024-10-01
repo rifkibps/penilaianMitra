@@ -1,0 +1,206 @@
+{% extends 'base/detached-layout/datables.html' %}
+
+{% load static %}
+
+{% block nav_content %}
+<!-- start page title -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box">
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="javascript: void(0);">Manajemen Survei</a></li>
+                    <li class="breadcrumb-item active">Manajemen Survei</li>
+                </ol>
+            </div>
+            <h4 class="page-title">{{title}}</h4>
+        </div>
+    </div>  
+</div>     
+
+{% endblock nav_content %}
+
+{% block table-content %}
+
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-danger d-none" id="msgs-upload" role="alert">   
+           
+            <div id="messages-content">
+             
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+  <div class="col-12">
+      <div class="card">
+          <div class="card-body">
+              <h4 class="header-title">Master Survei</h4>
+              <p class="text-muted font-14">
+                  Master survei berisi informasi kegiatan survei yang sedang atau telah dilaksanakan di BPS Kabupaten Muna
+              </p>
+
+              <ul class="nav nav-tabs nav-bordered mb-3">
+                    <li class="nav-item">
+                        <a href="#survey-preview" data-bs-toggle="tab" aria-expanded="false" class="nav-link active">
+                            Matriks Honor Mitra
+                        </a>
+                    </li>
+                    <li class="nav-item d-none">
+                        <a href="#input-tab" data-bs-toggle="tab" aria-expanded="true" class="nav-link">
+                            Detail Honor Mitra
+                        </a>
+                    </li>
+
+              </ul> <!-- end nav-->
+              <div class="tab-content">
+                    <div class="tab-pane show active" id="survey-preview">
+                        <div class="row mb-2">
+                            <div class="col-sm-6">
+                                <a href="#offcanvasFilter"  data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasFilter" class="btn btn-danger mb-2"><i class="mdi mdi-filter-menu me-2"></i> Filter Data</a>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="text-sm-end">
+                                    <button type="button" class="btn btn-success mb-2 me-1" id="redraw-table"><i class="mdi mdi-refresh"></i></button>
+                                     <a href="{% url 'master_survei:export-survey' %}" class="btn btn-light mb-2">Export</a>
+                                </div>
+                            </div><!-- end col-->
+                        </div>
+                        <div class="table-responsive">
+                            <table id="basic-datatable1" class="table table-centered table-striped w-100 dt-responsive nowrap">
+                                <thead>
+                                    <tr>
+                                        <th>Kode Petugas</th>
+                                        <th>Nama Petugas</th>
+                                        <th>Bulan</th>
+                                        <th>Jumlah Honor Diterima/Bulan</th>
+                                        <th>Deviasi Honor Maksimal</th>
+                                        <th>Status</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            
+                                <tbody>
+    
+                                </tbody>
+                            </table>                                            
+                        </div>
+                    </div> <!-- end preview-->
+              </div> <!-- end tab-content-->
+
+          </div> <!-- end card body-->
+      </div> <!-- end card -->
+  </div><!-- end col-->
+</div>
+<!-- end row-->
+
+<div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasFilter" aria-labelledby="offcanvasFilterLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasFilterLabel">Filter Survey</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+
+        <h5>Filter by Status</h5>
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="d-flex align-items-center">
+                     <select class="form-select" id="status-select-filter">
+                        <option value="">----</option>
+                       {% for value, text in form.status.field.choices %}
+                            <option value="{{ value }}">{{ text }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn btn-danger mt-3" id="reset-filter">Clear Filter</button>
+    </div>
+</div>
+
+
+{% endblock table-content %}
+
+{% block tables-script-extend %}
+
+<script>
+    'use strict'
+
+    var swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+          confirmButton: 'btn btn-primary'},
+        buttonsStyling: true
+    })
+
+    var table = $("#basic-datatable").DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            "url": "{% url 'master_survei:datatable-json' %}",
+            "headers": {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": '{{csrf_token}}',
+            },
+            "type": "POST",
+            "data": function (d){
+                return $.extend({}, d, {
+                    "status_filter": $('#status-select-filter').val(),
+                })
+            },
+        },
+        columns :[
+            {"data": 'nama'},
+            {"data" : 'tgl_mulai'},
+            {"data" : 'tgl_selesai'},
+            {"data" : 'salary'},
+            {"data": 'deskripsi'},
+            {"data" : 'status'},
+            {"data" : 'aksi'},
+        ],
+        lengthMenu: [5, 25, 50, 100,'All'],
+        columnDefs: [ {
+            'targets': [5], /* column index */
+            'orderable': false, /* true or false */
+        }],
+        keys: !0,
+        language: {
+            paginate: {
+            previous: "<i class='mdi mdi-chevron-left'>",
+            next: "<i class='mdi mdi-chevron-right'>",
+            },
+        },
+        drawCallback: function () {
+            $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
+        },
+    });
+
+    openTabInput()
+
+    $('#status-select-filter').bind("keyup change", function (){
+        table.draw()
+    })
+
+    $('#ResetFormSurvei').on('click', function(e){
+        resetForm()
+    })
+
+    $('#redraw-table').on('click', function (){
+        table.draw();
+    })
+
+    $('#get-templates-upload').on('click', function(){
+        var numrows = $('#number_rows').val()
+        return window.location.replace("http://127.0.0.1:8000/master-survei/template/" + numrows);
+    })
+
+    $('#reset-filter').on('click', function (){
+        $('#status-select-filter').prop('selectedIndex',0);
+        table.draw();
+    })
+
+</script>
+
+{% endblock tables-script-extend %}
