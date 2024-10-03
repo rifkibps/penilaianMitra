@@ -30,7 +30,8 @@ from statistics import mean
 from operator import itemgetter
 from django.shortcuts import redirect
 
-from munapps.helpers import currency_formatting as cf\
+from munapps.helpers import currency_formatting as cf
+from django.db.models.functions import Length
 
 from master_honor.models import HonorModel
 # Packages for upload master petugas
@@ -64,6 +65,19 @@ class MasterPetugasJsonResponseClassView(LoginRequiredMixin, View):
 
 
         data = models.MasterPetugas.objects
+
+        if datatables.get('adm_filter'):
+            data = data.filter(Q(adm_id__code__icontains=datatables.get('adm_filter')))
+
+        if datatables.get('jk_filter'):
+            data = data.filter(Q(jk=datatables.get('jk_filter')))
+
+        if datatables.get('agama_filter'):
+            data = data.filter(Q(agama=datatables.get('agama_filter')))
+
+        if datatables.get('bank_filter'):
+            data = data.filter(Q(bank=datatables.get('bank_filter')))
+
         if datatables.get('pendidikan_filter'):
             data = data.filter(pendidikan = datatables.get('pendidikan_filter'))
 
@@ -128,7 +142,7 @@ class MasterPetugasJsonResponseClassView(LoginRequiredMixin, View):
                         'email': obj.email,
                         'no_telp': obj.no_telp,
                         'status': f'<span class="badge {class_badge}"> {obj.get_status_display()} </span>',
-                        'aksi': f'<a href="javascript:void(0);" onclick="editPetugas({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a> <a href="javascript:void(0);" onclick="hapusPetugas({obj.id});" class="action-icon"> <i class="mdi mdi-delete"></i></a>'
+                        'aksi': f'<a href="javascript:void(0);" onclick="editPetugas({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline font-15"></i></a> <a href="javascript:void(0);" onclick="hapusPetugas({obj.id});" class="action-icon"> <i class="mdi mdi-delete font-15"></i></a>'
                 })
             
         return {
@@ -163,9 +177,18 @@ class MasterPetugasClassView(LoginRequiredMixin, View):
     def get(self, request):
 
         form = forms.MasterPetugasForm()
+        adm = models.AdministrativeModel.objects.annotate(text_len=Length('code'))
+        adm = {
+                'prov' : adm.filter(text_len=2).order_by('region'),
+                'kabkot' : adm.filter(text_len=4).order_by('region'),
+                'kec' : adm.filter(text_len=7).order_by('region'),
+                'desa' : adm.filter(text_len=10).order_by('region'),
+            }
+
         context = {
             'title' : 'Master Mitra',
             'data_petugas' : self.data_petugas.all(),
+            'adm' :adm ,
             'form': form,
             'form_upload': forms.MasterPetugasFormUpload()
             }
@@ -224,7 +247,7 @@ class MasterPetugasUpdateView(LoginRequiredMixin, View):
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         if is_ajax:
-
+            
             data = get_object_or_404(models.MasterPetugas, pk=request.POST.get('id'))
 
             form = forms.MasterPetugasForm(request.POST, instance=data)
@@ -261,13 +284,13 @@ class MasterPetugasTemplateClassView(LoginRequiredMixin, View):
         ws = wb.active
 
         # Ini untuk header columns
-        ws.title = 'Upload Data Petugas'
+        ws.title = 'Form Upload Data Petugas'
 
         header = utils.get_verbose_fields(models.MasterPetugas, exclude_pk=True)
         header = ['No'] + header
 
         head_row = 2
-        header_cols = np.array(ws[f'A{head_row}':f'N{head_row}'])
+        header_cols = np.array(ws[f'A{head_row}':f'R{head_row}'])
 
         # Set value and style for header
         for v,c in zip(header, header_cols.T.flatten()):
@@ -293,27 +316,44 @@ class MasterPetugasTemplateClassView(LoginRequiredMixin, View):
         ws.row_dimensions[1].height = 25
         ws.row_dimensions[2].height = 22.50
 
-        utils.generate_meta_templates(ws, 'P', 3, 'Data Pendidikan', list(models.MasterPetugas._meta.get_field('jk').choices), 'D', 3, def_rows=def_rows)
-        utils.generate_meta_templates(ws, 'Q', 3, 'Data Pendidikan', list(models.MasterPetugas._meta.get_field('pendidikan').choices), 'H', 3, def_rows=def_rows)
-        utils.generate_meta_templates(ws, 'R', 3, 'Agama', list(models.MasterPetugas._meta.get_field('agama').choices), 'J',3,  def_rows=def_rows)
-        utils.generate_meta_templates(ws, 'S', 3, 'Status Mitra', list(models.MasterPetugas._meta.get_field('status').choices), 'N', 3,  def_rows=def_rows)
+        for i in range(3, 500):
+            for dt in ['B', 'C', 'F', 'G', 'M', 'Q'] :
+                ws[f'{dt}{i}'].number_format = '@'
 
-        ws.merge_cells('A1:M1')
+        ws.merge_cells('A1:R1')
         ws['A1'] = 'Template Upload Data Mitra'
         ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
         ws['A1'].font = Font(name='Cambria',bold=True, size=14)
 
-        ws.merge_cells('P2:S2')
-        ws['P2'] = 'Metadata Mitra'
-        ws['P2'].alignment = Alignment(horizontal='center', vertical='center')
-        ws['P2'].font = Font(name='Cambria',bold=True, size=12)
-
-        # for col in ['P', 'Q', 'R', 'S', 'T']:
-        #     ws.column_dimensions[col].hidden= False
-
         for row in range(def_rows):
             ws[f'A{row+3}'] = row+1
             ws[f'A{row+3}'].alignment = Alignment(horizontal='center', vertical='center')
+        
+        # Sheet 2 for Metadata
+        ws1 = wb.create_sheet('Metadata Formulir Pengisian')
+        ws1.merge_cells('A1:E1')
+
+        ws1['A1'] = 'Metadata'
+        ws1['A1'].alignment = Alignment(horizontal='center', vertical='center')
+        ws1['A1'].font = Font(name='Cambria',bold=True, size=12)
+
+        jk = list(models.MasterPetugas._meta.get_field('jk').choices)
+        pendidikan = list(models.MasterPetugas._meta.get_field('pendidikan').choices)
+        agama = list(models.MasterPetugas._meta.get_field('agama').choices)
+        status = list(models.MasterPetugas._meta.get_field('status').choices)
+        bank = list(models.MasterPetugas._meta.get_field('bank').choices)
+        
+        utils.generate_meta_templates(ws1, 'A', 2, 'Jenis Kelamin', jk)
+        utils.generate_meta_templates(ws1, 'B', 2, 'Data Pendidikan', pendidikan)
+        utils.generate_meta_templates(ws1, 'C', 2, 'Agama', agama)
+        utils.generate_meta_templates(ws1, 'D', 2, 'Status Mitra', status)
+        utils.generate_meta_templates(ws1, 'E', 2, 'Jenis Bank', bank)
+
+        utils.generate_field_Validation(ws, ws1, 'T', 3, len(jk), 'E', 3, def_rows=def_rows)
+        utils.generate_field_Validation(ws, ws1, 'U', 3, len(pendidikan), 'I', 3, def_rows=def_rows)
+        utils.generate_field_Validation(ws, ws1, 'V', 3, len(agama), 'K',3,  def_rows=def_rows)
+        utils.generate_field_Validation(ws, ws1, 'W', 3, len(status), 'O', 3,  def_rows=def_rows)
+        utils.generate_field_Validation(ws, ws1, 'X', 3, len(bank), 'P', 3,  def_rows=def_rows)
 
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = 'attachment; filename=Template Upload Data Mitra.xlsx'
@@ -493,8 +533,6 @@ class MasterPetugasSearchClassView(LoginRequiredMixin, View):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
         if is_ajax:
-
-            print('MASUK')
 
             if request.method == 'POST':
                 

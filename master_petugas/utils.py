@@ -63,27 +63,46 @@ def tablib_to_dict(dataset):
     return data
 
 
+# def generate_field_Validation(sheet, head_cell, start_rows, choices, target_cell, target_idx, def_rows = 10):
 
-def generate_meta_templates (sheet, head_cell, start_rows, head_text, choices, target_cell, target_idx, def_rows = 10):
-    sheet[f'{head_cell}{start_rows}'] = head_text
-    sheet[f'{head_cell}{start_rows}'].font = Font(name='Cambria',bold=True, size=11)
-    sheet.column_dimensions[head_cell].width = 22
+#     val_data = DataValidation(type="list",formula1=f'=${head_cell}${start_rows+1}:${head_cell}${start_rows+len(choices)}', allow_blank=False)
+#     val_data.error ='Your entry is not in the list'
+#     val_data.errorTitle = 'Invalid Entry'
+#     val_data.prompt = 'Please select from the list'
+#     val_data.promptTitle = 'List Selection'
+#     val_data.showInputMessage = True
+#     val_data.showErrorMessage = True
+#     sheet.add_data_validation(val_data)
 
+#     for row in range(target_idx,target_idx+def_rows):
+#         val_data.add(sheet[f"{target_cell}{row}"])
+    
+#     return sheet
 
-    for idx, dt_status in enumerate(choices): #Generates 99 "ip" address in the Column A;
-        sheet[f'{head_cell}{idx+start_rows+1}'].value = dt_status[1]
-        sheet[f'{head_cell}{idx+start_rows+1}'].font = Font(name='Cambria', size=11)
+def generate_field_Validation(sheet, sheet1, head_cell, start_rows, len_choices, target_cell, target_idx, def_rows = 10):
 
-    val_data = DataValidation(type="list",formula1=f'=${head_cell}{start_rows+1}:${head_cell}{start_rows+len(choices)}') #You can change =$A:$A with a smaller range like =A1:A9
+    val_data = DataValidation(type="list",formula1=f'={sheet1}!${head_cell}${start_rows+1}:${head_cell}${start_rows+len_choices}', allow_blank=False)
     val_data.error ='Your entry is not in the list'
     val_data.errorTitle = 'Invalid Entry'
     val_data.prompt = 'Please select from the list'
     val_data.promptTitle = 'List Selection'
+    val_data.showInputMessage = True
+    val_data.showErrorMessage = True
     sheet.add_data_validation(val_data)
 
     for row in range(target_idx,target_idx+def_rows):
-        val_data.add(sheet[f"{target_cell}{row}"]) #If you go to the cell B1 you will find a drop down list with all the values from the column A
+        val_data.add(sheet[f"{target_cell}{row}"])
+    
     return sheet
+
+def generate_meta_templates(sheet, head_cell, start_rows, head_text, choices):
+    sheet[f'{head_cell}{start_rows}'] = head_text
+    sheet[f'{head_cell}{start_rows}'].font = Font(name='Cambria',bold=True, size=11)
+    sheet.column_dimensions[head_cell].width = 22
+
+    for idx, dt_status in enumerate(choices): #Generates 99 "ip" address in the Column A;
+        sheet[f'{head_cell}{idx+start_rows+1}'].value = dt_status[1]
+        sheet[f'{head_cell}{idx+start_rows+1}'].font = Font(name='Cambria', size=11)
 
 
 def generate_meta_templates_multiple_cols (sheet, head_cell, start_rows, head_text, choices, target_cell, target_idx, def_rows = 10):

@@ -9,50 +9,22 @@ from master_survey.models import SurveyModel
 
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
-
+from pprint import pprint
 class MasterPetugasForm(forms.ModelForm):
     
     class Meta:
         model = models.MasterPetugas
-        fields = [
-            'kode_petugas',
-            'nama_petugas',
-            'jk',
-            'nik',
-            'npwp',
-            'tgl_lahir',
-            'pendidikan',
-            'pekerjaan',
-            'agama',
-            'email',
-            'no_telp',
-            'alamat',
-            'status'
-        ]
-
-        labels = {
-            'kode_petugas': 'Kode Petugas',
-            'nama_petugas': 'Nama Petugas',
-            'jk': 'Jenis Kelamin',
-            'nik': 'NIK',
-            'npwp': 'NPWP',
-            'tgl_lahir': 'Tanggal Lahir',
-            'pendidikan': 'Pendidikan',
-            'pekerjaan': 'Pekerjaan',
-            'agama': 'Agama',
-            'email': 'Email',
-            'no_telp': 'No Telp',
-            'alamat': 'Alamat',
-            'status': 'Status Petugas'
-        }
+        fields = "__all__"
 
         attrs_input = {
             'class' : 'form-control',
-            'required': 'required',
             'placeholder': '...'
         }
 
         widgets = {
+            'adm_id': forms.Select(
+                attrs = attrs_input | {'class' : 'form-select ', 'id' : 'id_adm_id_id'}
+            ),
             'kode_petugas': forms.TextInput(
                 attrs = attrs_input | {'autofocus': 'autofocus'}
             ),
@@ -87,14 +59,100 @@ class MasterPetugasForm(forms.ModelForm):
                 attrs = attrs_input
             ),
             'alamat': forms.Textarea(
-                attrs = attrs_input
+                attrs = attrs_input | {'rows' : 50}
             ),
             'status': forms.Select(
                 attrs = attrs_input | {'class' : 'form-select'}
             ),
+            'bank': forms.Select(
+                attrs = attrs_input | {'class' : 'form-select'}
+            ),
+            'rekening': forms.TextInput(
+                attrs = attrs_input
+            ),
+            'pemilik_rek': forms.TextInput(
+                attrs = attrs_input
+            ),
         }
 
+    def clean(self):
+        form_data = self.cleaned_data
+        data_not_cleaned = self.data
 
+        if form_data.get('kode_petugas') is not None:
+            # Validasi Kode Petugas
+            if form_data['kode_petugas'].isnumeric() == False or len(form_data['kode_petugas']) != 12:
+                self._errors['kode_petugas'] = self.error_class(['Format Kode Petugas/Sobat ID harus berupa angka 12 digit.'])
+            else:
+                check_code = models.MasterPetugas.objects.filter(kode_petugas=form_data['kode_petugas'])
+                if check_code.exists():
+                    if data_not_cleaned.get('id') is not None:
+                        if check_code.first().id != int(data_not_cleaned.get('id')):
+                            self._errors['kode_petugas'] = self.error_class(['Kode Petugas telah terdaftar pada database'])
+                    else:
+                            self._errors['kode_petugas'] = self.error_class(['Kode Petugas telah terdaftar pada database'])
+        
+        if form_data.get('nik') is not None:
+            # Validasi NIK
+            if form_data['nik'].isnumeric() == False or len(form_data['nik']) != 16:
+                self._errors['nik'] = self.error_class(['Format NIK harus berupa angka 16 digit.'])
+            else:
+                check_kk = models.MasterPetugas.objects.filter(nik=form_data['nik'])
+                if check_kk.exists():
+                    if data_not_cleaned.get('id') is not None:
+                        if check_kk.first().id != int(data_not_cleaned.get('id')):
+                            self._errors['nik'] = self.error_class(['No KK telah terdaftar pada database'])
+                    else:
+                        self._errors['nik'] = self.error_class(['No KK telah terdaftar pada database'])
+        
+        if form_data.get('npwp') is not None:
+            if form_data['npwp'].isnumeric() == False or len(form_data['npwp']) != 15:
+                self._errors['npwp'] = self.error_class(['Format NPWP harus berupa angka 15 digit.'])
+            else:
+                check_npwp = models.MasterPetugas.objects.filter(npwp=form_data['npwp'])
+                if check_npwp.exists():
+                    if data_not_cleaned.get('id') is not None:
+                        if check_npwp.first().id != int(data_not_cleaned.get('id')):
+                            self._errors['npwp'] = self.error_class(['No NPWP telah terdaftar pada database'])
+                    else:
+                        self._errors['npwp'] = self.error_class(['No NPWP telah terdaftar pada database'])
+        
+        if form_data.get('no_telp') is not None:
+            if form_data['no_telp'].isnumeric() == False or len(form_data['no_telp']) != 13:
+                self._errors['no_telp'] = self.error_class(['Format No Hp harus berupa angka 13 digit. Contoh:6285712345678'])
+        
+        if form_data.get('email') is not None:
+            check_email = models.MasterPetugas.objects.filter(email=form_data['email'].strip())
+            if check_email.exists():
+                if data_not_cleaned.get('id') is not None:
+                    if check_email.first().id != int(data_not_cleaned.get('id')):
+                        self._errors['email'] = self.error_class(['Email telah terdaftar pada database'])
+                else:
+                    self._errors['email'] = self.error_class(['Email telah terdaftar pada database'])
+
+        if form_data.get('bank') is not None or form_data.get('rekening') is not None or form_data.get('pemilik_rek') is not None:
+            if (form_data.get('bank') is not None and form_data.get('rekening') is not None and form_data.get('pemilik_rek') is not None) is False:
+                if form_data.get('rekening') is None:
+                    self._errors['rekening'] = self.error_class(['Nomor rekening tidak terisi lengkap'])
+                elif form_data.get('pemilik_rek') is None:
+                    self._errors['pemilik_rek'] = self.error_class(['Nama pemilik rekening tidak terisi lengkap'])
+                else:
+                    self._errors['bank'] = self.error_class(['Rincian Bank tidak terisi lengkap'])
+            else:
+                if form_data['rekening'].isnumeric() == False or (len(form_data['rekening']) > 16 or len(form_data['rekening']) < 10):
+                    self._errors['rekening'] = self.error_class(['Nomor rekening harus berupa angka dengan maksimal 10 - 16 digit.'])
+                else:
+                    check_rekening = models.MasterPetugas.objects.filter(rekening=form_data['rekening'])
+                    if check_rekening.exists():
+                        if data_not_cleaned.get('id') is not None:
+                            if check_rekening.first().id != int(data_not_cleaned.get('id')):
+                                self._errors['rekening'] = self.error_class(['Rekening telah terdaftar pada database'])
+                        else:
+                            self._errors['rekening'] = self.error_class(['Rekening telah terdaftar pada database'])
+
+
+        return self.cleaned_data
+    
 class AlokasiForm(forms.ModelForm):
     
     class Meta:
@@ -191,7 +249,6 @@ class MasterPetugasFormUpload(forms.Form):
         for idx, i in df_null.iterrows():
             null_cols = ', '.join(str(e).capitalize() for e in i[i.isna()].index)
             base_errors.append(f'Nilai kosong pada <b>Baris {idx+1}</b> ditemukan. Periksa kolom <b>({null_cols})</b>')
-        
         
         # Validasi untuk non numerik value
         # Get option choices

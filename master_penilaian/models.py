@@ -37,7 +37,6 @@ class IndikatorKegiatanPenilaian(models.Model):
    def __str__(self):
       return f"{self.kegiatan_penilaian.nama_kegiatan} [{self.indikator_penilaian}]"
 
-
 class MasterNilaiPetugas(models.Model):
 
    petugas = models.ForeignKey(AlokasiPetugas, on_delete=models.CASCADE,  related_name='nilai_petugas')

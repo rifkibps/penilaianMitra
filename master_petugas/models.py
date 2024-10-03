@@ -40,8 +40,17 @@ class MasterPetugas(models.Model):
        ('1', 'Perempuan')
    )
 
-   adm_id = models.ForeignKey(AdministrativeModel, on_delete=models.RESTRICT, null=False, blank=False, related_name='region_code', verbose_name='Asal Wilayah')
-   kode_petugas = models.CharField(max_length=12, null=False, blank=False, unique=True, verbose_name='Kode Petugas/ID Sobat')
+   bank = (
+      ('1', 'BRI'),
+      ('2', 'BNI'),
+      ('3', 'BSI'),
+      ('4', 'BCA'),
+      ('5', 'Mandiri'),
+      ('6', 'Bank Sultra'),
+   )
+
+   adm_id = models.ForeignKey(AdministrativeModel, on_delete=models.RESTRICT, null=False, blank=False, related_name='region_code', verbose_name='Kode Desa')
+   kode_petugas = models.CharField(max_length=12, null=False, blank=False, unique=True, verbose_name='Kode Petugas')
    nama_petugas = models.CharField(max_length=64, null=False, blank=False,  verbose_name='Nama Petugas')
    jk = models.CharField(max_length=1, null=False, blank=False, choices=jk,  verbose_name='Jenis Kelamin')
    nik = models.CharField(max_length=16, null=False, blank=False, validators=[int_validators], unique=True, verbose_name='NIK')
@@ -51,11 +60,14 @@ class MasterPetugas(models.Model):
    pekerjaan = models.CharField(max_length=128, null=False, blank=False, verbose_name='Pekerjaan')
    agama = models.CharField(max_length=1, choices=agama, null=False, blank=False, verbose_name='Agama')
    email = models.EmailField(max_length=128, null=False, blank=False,unique=True, verbose_name='Email')
-   no_telp = models.CharField(max_length=13, null=True, blank=True, validators=[int_validators], verbose_name='No. Telp')
+   no_telp = models.CharField(max_length=13, null=True, blank=True, validators=[int_validators], verbose_name='No. Telp (Ex: 6285712345678)')
    alamat = models.CharField(max_length=256, null=False, blank=False, verbose_name='Alamat Domisili')
-   
    status = models.CharField(max_length=1, choices=status_choices, blank=False, verbose_name='Status Mitra')
    
+   bank = models.CharField(max_length=1, choices=bank, null=True, blank=True, verbose_name='Jenis Bank')
+   rekening = models.CharField(max_length=16, null=True, blank=True, verbose_name='Nomor Rekening')
+   pemilik_rek = models.CharField(max_length=64, null=True, blank=True, verbose_name='Pemilik Rekening')
+
    def __str__(self):
       return f"{self.nama_petugas} [{self.kode_petugas}]"
 
