@@ -10,6 +10,8 @@ from master_survey.models import SurveyModel
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from pprint import pprint
+pd.set_option('future.no_silent_downcasting', True)
+
 class MasterPetugasForm(forms.ModelForm):
     
     class Meta:
@@ -223,13 +225,14 @@ class RoleForm(forms.ModelForm):
 
 class MasterPetugasFormUpload(forms.Form):
     import_file = forms.FileField(allow_empty_file=False,validators=[FileExtensionValidator(allowed_extensions=['xlsx'])], label="Import File Mitra", widget=forms.FileInput(
-                              attrs={'class': "form-control"}))
+                    attrs={'class': "form-control"}))
     
     def clean(self):
 
         data = self.cleaned_data.get('import_file').read()
 
-        df = pd.read_excel(data, skiprows=1, usecols='A:N', dtype='str')
+        df = pd.read_excel(data, skiprows=1, usecols='A:R', dtype='str')
+        df.head()
 
         df.dropna(axis=0, how='all', inplace=True)
 
@@ -245,13 +248,22 @@ class MasterPetugasFormUpload(forms.Form):
         df.columns = headers
         df.drop(columns=df.columns[0], axis=1, inplace=True)
 
-        df_null = df[df.isna().any(axis=1)]
+        df_required = df.drop(['Jenis Bank', 'Nomor Rekening', 'Pemilik Rekening'], axis=1)
+        df_null = df_required[df_required.isna().any(axis=1)]
         for idx, i in df_null.iterrows():
             null_cols = ', '.join(str(e).capitalize() for e in i[i.isna()].index)
             base_errors.append(f'Nilai kosong pada <b>Baris {idx+1}</b> ditemukan. Periksa kolom <b>({null_cols})</b>')
         
-        # Validasi untuk non numerik value
+        # Validasi untuk  Categoric value
         # Get option choices
+        adm = models.AdministrativeModel.objects.values_list('code', flat=True)
+        for idx, row in df['Kode Desa'].items():
+            if len(row.split(']')) == 2:
+                code = row.split(']')[0].replace('[', '')
+                if code in adm: 
+                    continue
+            base_errors.append(f'<b>Kode Desa</b> Kode Desa tidak ditemukan pada database. Harap periksa baris <b>{idx+1}</b>')
+
         choices_status = dict(models.MasterPetugas._meta.get_field('status').choices)
         for idx, row in df['Status Mitra'].items():
             if row not in choices_status.values():
@@ -276,6 +288,12 @@ class MasterPetugasFormUpload(forms.Form):
                 base_errors.append(f'<b>Agama</b> hanya dapat diisi {", ".join(choices_agama.values())}. Harap periksa baris <b>{idx+1}</b>')
         df['Agama'] = df['Agama'].replace(list(choices_agama.values()), list(choices_agama.keys()))
         
+        choices_bank = dict(models.MasterPetugas._meta.get_field('bank').choices)
+        for idx, row in df['Jenis Bank'].items():
+            if pd.isna(row) is False:
+                if row not in choices_bank.values():
+                    base_errors.append(f'<b>Agama</b> hanya dapat diisi {", ".join(choices_bank.values())}. Harap periksa baris <b>{idx+1}</b>')
+        df['Jenis Bank'] = df['Jenis Bank'].replace(list(choices_bank.values()), list(choices_bank.keys()))
         df['Tanggal Lahir'] = pd.to_datetime(df['Tanggal Lahir'], format='%d/%m/%Y')
 
         # Insert coloumn id to dataframe

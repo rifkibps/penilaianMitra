@@ -1,5 +1,6 @@
 from openpyxl.styles import Font
 from openpyxl.worksheet.datavalidation import DataValidation
+from openpyxl.utils import quote_sheetname
 import string
 
 
@@ -80,8 +81,7 @@ def tablib_to_dict(dataset):
 #     return sheet
 
 def generate_field_Validation(sheet, sheet1, head_cell, start_rows, len_choices, target_cell, target_idx, def_rows = 10):
-
-    val_data = DataValidation(type="list",formula1=f'={sheet1}!${head_cell}${start_rows+1}:${head_cell}${start_rows+len_choices}', allow_blank=False)
+    val_data = DataValidation(type="list", formula1=f'={quote_sheetname(sheet1.title)}!${head_cell}${start_rows}:${head_cell}${start_rows+len_choices-1}', allowBlank=False)
     val_data.error ='Your entry is not in the list'
     val_data.errorTitle = 'Invalid Entry'
     val_data.prompt = 'Please select from the list'
@@ -117,7 +117,7 @@ def generate_meta_templates_multiple_cols (sheet, head_cell, start_rows, head_te
 
     sheet.merge_cells(f'{head_cell}{start_rows}:{next_cols}{start_rows}')
 
-    for idx, dt_status in enumerate(choices): #Generates 99 "ip" address in the Column A;
+    for idx, dt_status in enumerate(choices):
         sheet[f'{head_cell}{idx+start_rows+1}'].value = dt_status[0]
         sheet[f'{head_cell}{idx+start_rows+1}'].font = Font(name='Cambria', size=11)
 

@@ -317,7 +317,7 @@ class MasterPetugasTemplateClassView(LoginRequiredMixin, View):
         ws.row_dimensions[2].height = 22.50
 
         for i in range(3, 500):
-            for dt in ['B', 'C', 'F', 'G', 'M', 'Q'] :
+            for dt in ['B', 'C', 'F', 'G', 'H', 'M', 'Q'] :
                 ws[f'{dt}{i}'].number_format = '@'
 
         ws.merge_cells('A1:R1')
@@ -342,25 +342,31 @@ class MasterPetugasTemplateClassView(LoginRequiredMixin, View):
         agama = list(models.MasterPetugas._meta.get_field('agama').choices)
         status = list(models.MasterPetugas._meta.get_field('status').choices)
         bank = list(models.MasterPetugas._meta.get_field('bank').choices)
-        
+        adm = models.AdministrativeModel.objects.annotate(text_len=Length('code')).filter(text_len=10).order_by('region')
+
+        adm_lists = []
+        for idx, dt in enumerate(adm):
+            adm_lists.append((idx, f'[{dt.code}] {dt.region}'))
+
         utils.generate_meta_templates(ws1, 'A', 2, 'Jenis Kelamin', jk)
         utils.generate_meta_templates(ws1, 'B', 2, 'Data Pendidikan', pendidikan)
         utils.generate_meta_templates(ws1, 'C', 2, 'Agama', agama)
         utils.generate_meta_templates(ws1, 'D', 2, 'Status Mitra', status)
         utils.generate_meta_templates(ws1, 'E', 2, 'Jenis Bank', bank)
+        utils.generate_meta_templates(ws1, 'F', 2, 'Daftar Desa', adm_lists)
 
-        utils.generate_field_Validation(ws, ws1, 'T', 3, len(jk), 'E', 3, def_rows=def_rows)
-        utils.generate_field_Validation(ws, ws1, 'U', 3, len(pendidikan), 'I', 3, def_rows=def_rows)
-        utils.generate_field_Validation(ws, ws1, 'V', 3, len(agama), 'K',3,  def_rows=def_rows)
-        utils.generate_field_Validation(ws, ws1, 'W', 3, len(status), 'O', 3,  def_rows=def_rows)
-        utils.generate_field_Validation(ws, ws1, 'X', 3, len(bank), 'P', 3,  def_rows=def_rows)
+        utils.generate_field_Validation(ws, ws1, 'A', 3, len(jk), 'E', 3, def_rows=def_rows)
+        utils.generate_field_Validation(ws, ws1, 'B', 3, len(pendidikan), 'I', 3, def_rows=def_rows)
+        utils.generate_field_Validation(ws, ws1, 'C', 3, len(agama), 'K',3,  def_rows=def_rows)
+        utils.generate_field_Validation(ws, ws1, 'D', 3, len(status), 'O', 3,  def_rows=def_rows)
+        utils.generate_field_Validation(ws, ws1, 'E', 3, len(bank), 'P', 3,  def_rows=def_rows)
+        utils.generate_field_Validation(ws, ws1, 'F', 3, len(adm_lists), 'B', 3,  def_rows=def_rows)
 
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = 'attachment; filename=Template Upload Data Mitra.xlsx'
 
         wb.save(response)
         return response
-
 
 class MasterPetugasUploadClassView(LoginRequiredMixin, View):
     
