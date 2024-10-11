@@ -358,7 +358,6 @@ class MasterPetugasFormUpload(forms.Form):
             self._errors['import_file'] = self.error_class(base_errors)
             return self._errors['import_file'] 
 
-
         for column in df.columns:
 
             if column in ['jk', 'pendidikan', 'agama', 'status', models.MasterPetugas._meta.pk.name]:
