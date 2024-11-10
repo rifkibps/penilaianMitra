@@ -3,6 +3,7 @@ from django import forms
 from . import models
 from . import utils
 import pandas as pd
+from io import BytesIO
 from django.db.models import Q
 
 from master_survey.models import SurveyModel
@@ -230,9 +231,7 @@ class MasterPetugasFormUpload(forms.Form):
     def clean(self):
 
         data = self.cleaned_data.get('import_file').read()
-
-        df = pd.read_excel(data, skiprows=1, usecols='A:R', dtype='str')
-        df.head()
+        df = pd.read_excel(BytesIO(data), skiprows=1, usecols='A:R', dtype='str')
 
         df.dropna(axis=0, how='all', inplace=True)
 
@@ -260,7 +259,8 @@ class MasterPetugasFormUpload(forms.Form):
         for idx, row in df['Kode Desa'].items():
             if len(row.split(']')) == 2:
                 code = row.split(']')[0].replace('[', '')
-                if code in adm: 
+                if code in adm:
+                    df.loc[idx, 'Kode Desa'] = code
                     continue
             base_errors.append(f'<b>Kode Desa</b> Kode Desa tidak ditemukan pada database. Harap periksa baris <b>{idx+1}</b>')
 
@@ -320,7 +320,6 @@ class MasterPetugasFormUpload(forms.Form):
         for idx, row in duplicated_email.items():
             base_errors.append(f'Duplikasi Email: <b>{row}</b> ditemukan. Harap periksa baris <b>{idx+1}</b>')
         
-
         # Cek duplikasi Data pada Database
         db_petugas = models.MasterPetugas.objects.values_list('kode_petugas', 'nik', 'npwp', 'email')
 
@@ -336,7 +335,6 @@ class MasterPetugasFormUpload(forms.Form):
             dt_petugas_sort['nik'].append(dt[1])
             dt_petugas_sort['npwp'].append(dt[2])
             dt_petugas_sort['email'].append(dt[3])
-
 
         for idx, row in df['kode_petugas'].items():
             if row in dt_petugas_sort['kode_petugas']:
@@ -382,6 +380,7 @@ class MasterPetugasFormUpload(forms.Form):
             return self._errors['import_file'] 
         
         self.cleaned_data = df.to_dict()
+
         return self.cleaned_data
 
 

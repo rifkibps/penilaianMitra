@@ -107,7 +107,6 @@ class MasterPetugasJsonResponseClassView(LoginRequiredMixin, View):
                 Q(status__icontains=search)
             ).exclude(Q(nama_petugas=None)|Q(nik=None)|Q(email=None)|Q(no_telp=None)|Q(status=None))
 
-          
             records_total = data.count()
             records_filtered = records_total
         
@@ -377,14 +376,15 @@ class MasterPetugasUploadClassView(LoginRequiredMixin, View):
            
             form = forms.MasterPetugasFormUpload(request.POST, request.FILES)
             model = models.MasterPetugas
+            admInstance = models.AdministrativeModel.objects
 
             if form.is_valid():
-                
                 df = form.cleaned_data
                 objs = []
                 for idx in range(len(df['id'])):
                     objs.append(
                         model(
+                            adm_id = admInstance.filter(code = df['adm_id'][idx]).first(),
                             kode_petugas = df['kode_petugas'][idx],
                             nama_petugas= df['nama_petugas'][idx],
                             jk= df['jk'][idx],

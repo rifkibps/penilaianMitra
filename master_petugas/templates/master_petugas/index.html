@@ -499,8 +499,7 @@
     </div>
 </div>
 
-
-<div id="import-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="compose-header-modalLabel" aria-hidden="true">
+<div id="import-modal" class="modal fade" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header modal-colored-header bg-primary">
@@ -512,9 +511,7 @@
                     <h5>Upload Berkas Mitra</h5>
                     <div class="mb-3">
                         <ol>
-
                             <li>Unduh template petugas: <br>
-                                
                                 <div class="mt-1">
                                     <input type="number" class="form-control  form-control-sm d-inline" style="width:150px;" placeholder="Jumlah baris data" alt="Masukan jumlah data" id="number_rows">   
                                     <button class="btn btn-primary btn-sm d-inline" id="get-templates-upload">Unduh</button>
@@ -755,13 +752,12 @@
         clearFormValidation('#formMasterPetugas')
     }
     
-    $('.region-adm').bind("keyup change", function (){
-        console.log(region_code)
+    $('.region-adm').bind("keyup change", () => {
         region_code = $(this).val()
         table.draw()
     })
 
-    $('#jk-select-filter, #agama-select-filter, #pendidikan-select-filter, #bank-select-filter, #status-select-filter').bind("keyup change", function (){
+    $('#jk-select-filter, #agama-select-filter, #pendidikan-select-filter, #bank-select-filter, #status-select-filter').bind("keyup change", () => {
         table.draw()
     })
     
@@ -775,9 +771,7 @@
 
     $("#form-upload-petugas").on("submit", function (e){
         e.preventDefault()
-
         var formData = new FormData(this);
-
         $.ajax({
             type: 'POST',
             url: $(this).attr('action'),
@@ -789,9 +783,7 @@
                 "X-CSRFToken": '{{csrf_token}}',
             },
             success: function (response) {
-              
                 if (response.status == 'error') {
-                    
                     var error_list = '<ol>'
                     for (let i = 0; i < response.message.length; i++) {
                         error_list += '<li class="p-1">'+ response.message[i].error +'</li>'
@@ -802,6 +794,7 @@
                     $("#error-upload-files").removeClass('d-none')
                 } else{
                     $("#ConfirmUploadExcelPetugas").removeClass('d-none')
+                    return alert('Success')
                 }
             },
             error: function (response) {
@@ -810,32 +803,33 @@
         })
     })
 
-    $('#reset-filter').on('click', function (){
+    $('#reset-filter').on('click', () => {
         region_code = ''
         $('.region-adm, #jk-select-filter, #agama-select-filter, #pendidikan-select-filter, #bank-select-filter, #status-select-filter').prop('selectedIndex',0);
         table.draw();
     })
 
-    $('#redraw-table').on('click', function (){
+    $('#redraw-table').on('click', () => {
         table.draw();
     })
     
-    $('#get-templates-upload').on('click', function(){
+    $('#get-templates-upload').on('click', () =>{
         var numrows = $('#number_rows').val()
         return window.location.replace("http://127.0.0.1:8000/master-petugas/template/" + numrows);
     })
 
-    $('#{{form_upload.import_file.id_for_label}}').on('change', function(){
+    $('#{{form_upload.import_file.id_for_label}}').on('change', () =>{
         preview_excel('preview-data-upload', '{{form_upload.import_file.id_for_label}}')
     })
 
-    $('#btn-submit-file').on('click', function(){
+    $('#btn-submit-file').on('click', function(e){
         $('#nav-item-import').removeClass('d-none')
-        $('#import-modal').modal('toggle')
         $('.nav-tabs a[href="#import-tab"]').tab('show');
+        $(this).blur()
+        $('#import-modal').modal('toggle')
     })
    
-    $('#confirm-submit-file').on('click', function(){
+    $('#confirm-submit-file').on('click', () =>{
           swalWithBootstrapButtons.fire({
             title: 'Are you sure?',
             text: "Apakah anda yakin ingin mengupload data mitra?",
@@ -879,6 +873,9 @@
                             $('#msgs-upload').removeClass('alert-danger')
                             $('#msgs-upload').addClass('alert-success')
                             $('#msgs-upload').removeClass('d-none')
+
+                            $('#nav-item-import').addClass('d-none')
+                            $('.nav-tabs a[href="#petugas-preview"]').tab('show');
                             table.ajax.reload();
     
                         }
@@ -897,7 +894,7 @@
         }) 
     })
 
-    $(document).on('change', '.form-control, .form-select', function() {
+    $(document).on('change', '.form-control, .form-select', () => {
         if ($(this).hasClass('is-invalid')){
             $(this).removeClass('is-invalid')
         }
@@ -906,7 +903,6 @@
     function checkSubmit(){
         var serializedData = $('#formMasterPetugas').serialize();
         clearFormValidation('#formMasterPetugas')
-        console.log(serializedData)
         
         $.ajax({
             type: 'POST',
@@ -923,7 +919,6 @@
             },
             error: function (response) {
                 var errors = response["responseJSON"]["error"]
-                console.log(errors)
                 for (const [key, value] of Object.entries(errors)) {
                     var msgs = '<ul>'
                     value.forEach(function (item, index) {
