@@ -57,7 +57,7 @@ class SurveyJsonResponseClassView(LoginRequiredMixin, View):
         if datatables.get('status_filter'):
             data_survey = data_survey.filter(status = datatables.get('status_filter'))
         
-        data_survey = data_survey.exclude(Q(nama=None)|Q(deskripsi=None)|Q(tgl_mulai=None)|Q(tgl_selesai=None)|Q(salary=None)|Q(status=None))
+        data_survey = data_survey.exclude(Q(nama=None)|Q(deskripsi=None)|Q(tgl_mulai=None)|Q(tgl_selesai=None)|Q(status=None))
 
         records_total = data_survey.count()
         records_filtered = records_total
@@ -69,7 +69,7 @@ class SurveyJsonResponseClassView(LoginRequiredMixin, View):
 
             data_survey = data_survey.filter(
                 Q(nama__icontains=search)|Q(deskripsi__icontains=search)|Q(tgl_mulai__icontains=search)|Q(tgl_selesai__icontains=search)|Q(salary=search)
-            ).exclude(Q(nama=None)|Q(deskripsi=None)|Q(tgl_mulai=None)|Q(tgl_selesai=None)|Q(salary=None)|Q(status=None))
+            ).exclude(Q(nama=None)|Q(deskripsi=None)|Q(tgl_mulai=None)|Q(tgl_selesai=None)|Q(status=None))
 
             records_total = data_survey.count()
             records_filtered = records_total
@@ -102,7 +102,6 @@ class SurveyJsonResponseClassView(LoginRequiredMixin, View):
                 'nama': obj.nama,
                 'tgl_mulai': obj.tgl_mulai.strftime('%d-%m-%Y'),
                 'tgl_selesai': obj.tgl_selesai.strftime('%d-%m-%Y'),
-                'salary': cf(obj.salary, True),
                 'deskripsi': obj.deskripsi[:32] + '...',
                 'status' : f'<span class="badge {class_status}"> {obj.get_status_display()} </span>',
                 'aksi': f'<a href="javascript:void(0);" onclick="editSurvei({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a> <a href="javascript:void(0);" onclick="deleteSurvei({obj.id});" class="action-icon"> <i class="mdi mdi-delete"></i></a>'

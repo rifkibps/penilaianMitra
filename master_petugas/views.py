@@ -330,7 +330,7 @@ class MasterPetugasTemplateClassView(LoginRequiredMixin, View):
         
         # Sheet 2 for Metadata
         ws1 = wb.create_sheet('Metadata Formulir Pengisian')
-        ws1.merge_cells('A1:E1')
+        ws1.merge_cells('A1:F1')
 
         ws1['A1'] = 'Metadata'
         ws1['A1'].alignment = Alignment(horizontal='center', vertical='center')
@@ -593,7 +593,7 @@ class AlokasiPetugasClassView(LoginRequiredMixin, View):
                 if data.status == '1' or data.status == '3':
                     return JsonResponse({"status":"failed", 'message': f'Mitra dengan status {data.get_status_display()} tidak dapat dialokasikan.'}, status=200)
 
-                check_exist_data = models.AlokasiPetugas.objects.filter(petugas = form.data['petugas'], survey = form.data['survey'], role = form.data['role'])
+                check_exist_data = models.AlokasiPetugas.objects.filter(petugas = form.data['petugas'], survey = form.data['survey'])
                 
                 if check_exist_data.exists():
                     return JsonResponse({"status":"failed", 'message': 'Data alokasi telah tersedia pada database'}, status=200)
@@ -677,7 +677,7 @@ class MasterAlokasiUpdateView(LoginRequiredMixin, View):
 
             if form.is_valid():
             
-                check_exist_data = models.AlokasiPetugas.objects.filter(~Q(pk=form.data['id']) & Q(petugas = form.data['petugas']) & Q(survey = form.data['survey']) & Q(role = form.data['role']))
+                check_exist_data = models.AlokasiPetugas.objects.filter(~Q(pk=form.data['id']) & Q(petugas = form.data['petugas']) & Q(survey = form.data['survey']))
               
                 if check_exist_data.exists():
                     return JsonResponse({"status":"failed", 'message': 'Data alokasi telah tersedia pada database'}, status=200)
@@ -725,10 +725,8 @@ class MasterAlokasiJsonResponseClassView(LoginRequiredMixin, View):
         if datatables.get('jabatan_filter'):
             data = data.filter(role = datatables.get('jabatan_filter'))
 
-        if datatables.get('batasan_honor_filter'):
-            data = data.filter(const_salary = datatables.get('batasan_honor_filter'))
 
-        data = data.all().exclude(Q(petugas=None)|Q(role=None)|Q(survey=None)|Q(const_salary=None))
+        data = data.all().exclude(Q(petugas=None)|Q(role=None)|Q(survey=None))
         records_total = data.count()
         records_filtered = records_total
         
@@ -737,10 +735,8 @@ class MasterAlokasiJsonResponseClassView(LoginRequiredMixin, View):
                 Q(petugas__kode_petugas__icontains=search)|
                 Q(petugas__nama_petugas__icontains=search)|
                 Q(survey__nama__icontains=search)|
-                Q(role__jabatan__icontains=search)|
-                Q(survey__salary__icontains=search)|
-                Q(const_salary__nama__icontains=search)
-            ).exclude(Q(petugas=None)|Q(role=None)|Q(survey=None)|Q(const_salary=None))
+                Q(role__jabatan__icontains=search)
+            ).exclude(Q(petugas=None)|Q(role=None)|Q(survey=None))
 
             records_total = data.count()
             records_filtered = records_total
@@ -762,10 +758,7 @@ class MasterAlokasiJsonResponseClassView(LoginRequiredMixin, View):
                 'petugas__nama_petugas': f'<a href="{reverse_lazy("master_petugas:mitra-view-detail", kwargs={"mitra_id": obj.id})}" class="text-body" target="_blank">{obj.petugas.nama_petugas}</a>',
                 'survey__nama': obj.survey.nama,
                 'role__jabatan': obj.role.jabatan,
-                'survey_salary__honor_maks': cf(obj.survey.salary, True),
-                'const_salary__nama': f"{obj.const_salary.nama} | {cf(obj.const_salary.honor_maks, True)}/bulan",
                 'aksi': f'<a href="javascript:void(0);" onclick="editAlokPetugas({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a> <a href="javascript:void(0);" onclick="deleteAlokasi({obj.id});" class="action-icon"> <i class="mdi mdi-delete"></i></a>'
-                
             } for obj in object_list
         ]
         
@@ -807,7 +800,6 @@ class MasterAlokasiTemplateClassView(LoginRequiredMixin, View):
 
         # Set value and style for header
         for v,c in zip(header, header_cols.T.flatten()):
-            # Set style
             c.font = Font(name='Cambria', size=12)
             c.alignment = Alignment(horizontal='center', vertical='center')
             c.fill = PatternFill(start_color="95B3D7", end_color="95B3D7", fill_type = "solid")
@@ -829,23 +821,45 @@ class MasterAlokasiTemplateClassView(LoginRequiredMixin, View):
         ws.row_dimensions[1].height = 25
         ws.row_dimensions[2].height = 22.50
 
-        utils.generate_meta_templates_multiple_cols(ws, 'G', 3, 'Data Mitra', list(models.MasterPetugas.objects.filter(~Q(status=1), ~Q(status=3)). values_list('kode_petugas', 'nama_petugas')), 'B', 3, def_rows = def_rows)
-        utils.generate_meta_templates(ws, 'J', 3, 'Data Survei/Sensus', list(SurveyModel.objects.values_list('id','nama')), 'C',3, def_rows=def_rows)
-        utils.generate_meta_templates(ws, 'L', 3, 'Jabatan Mitra', list(models.RoleMitra.objects.values_list('id','jabatan')), 'D', 3, def_rows=def_rows)
-
         ws.merge_cells('A1:D1')
         ws['A1'] = 'Template Upload Alokasi Mitra'
         ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
         ws['A1'].font = Font(name='Cambria',bold=True, size=14)
 
-        ws.merge_cells('G2:L2')
-        ws['G2'] = 'Metadata Alokasi Mitra'
-        ws['G2'].alignment = Alignment(horizontal='center', vertical='center')
-        ws['G2'].font = Font(name='Cambria',bold=True, size=12)
-
         for row in range(def_rows):
             ws[f'A{row+3}'] = row+1
             ws[f'A{row+3}'].alignment = Alignment(horizontal='center', vertical='center')
+
+        # Sheet 2 for Metadata
+        ws1 = wb.create_sheet('Metadata Formulir Pengisian')
+        ws1.merge_cells('A1:C1')
+        ws1['A1'] = 'Metadata'
+        ws1['A1'].alignment = Alignment(horizontal='center', vertical='center')
+        ws1['A1'].font = Font(name='Cambria',bold=True, size=12)
+
+        mitra_lists = list(models.MasterPetugas.objects.filter(~Q(status=1), ~Q(status=3)).values_list('kode_petugas', 'nama_petugas'))
+        mitra_choices = []
+        for dt in mitra_lists:
+            mitra_choices.append((dt[0], f'[{dt[0]}] {dt[1]}'))
+
+        survey_lists = list(SurveyModel.objects.values_list('id','nama'))
+        survey_choices = []
+        for dt in survey_lists:
+            survey_choices.append((dt[0], f'[{dt[0]}] {dt[1]}'))
+        
+        role_lists = list(models.RoleMitra.objects.values_list('id','jabatan'))
+        role_choices = []
+        for dt in role_lists:
+            role_choices.append((dt[0], f'[{dt[0]}] {dt[1]}'))
+
+        utils.generate_meta_templates(ws1, 'A', 2, 'Data Mitra', mitra_choices)
+        utils.generate_meta_templates(ws1, 'B', 2, 'Data Survei/Sensus', survey_choices)
+        utils.generate_meta_templates(ws1, 'E', 2, 'Jabatan Mitra', role_choices)
+
+        utils.generate_field_Validation(ws, ws1, 'A', 3, len(mitra_choices), 'B', 3, def_rows=def_rows)
+        utils.generate_field_Validation(ws, ws1, 'B', 3, len(survey_choices), 'C', 3, def_rows=def_rows)
+        utils.generate_field_Validation(ws, ws1, 'C', 3, len(role_choices), 'E', 3, def_rows=def_rows)
+
 
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = 'attachment; filename=Template Upload Alokasi Mitra.xlsx'

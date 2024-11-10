@@ -71,14 +71,6 @@
                                 <div class="col-sm-6">
                                     <div class="text-sm-end">
                                         <button type="button" class="btn btn-success mb-2 me-1" id="redraw-table"><i class="mdi mdi-refresh"></i></button>
-                                        <div class="btn-group">
-                                            <button type="button" class="btn btn-light dropdown-toggle mb-2 me-1" data-bs-toggle="dropdown" aria-expanded="false"> Tambah <span class="caret"></span> </button>
-                                            <div class="dropdown-menu">
-                                                <a class="dropdown-item" href="{% url 'master_petugas:index' %}#input-tab">Mitra Baru</a>
-                                                <a class="dropdown-item" href="{% url 'master_survei:index' %}#input-tab">Survei Baru</a>
-                                                <a class="dropdown-item" href="{% url 'master_petugas:role' %}">Role / Jabatan</a>
-                                            </div>
-                                        </div>
                                         <button type="button" class="btn btn-light mb-2 me-1" data-bs-toggle="modal" data-bs-target="#import-modal">Import</button>
                                         <a href="{% url 'master_petugas:export-alokasi' %}" class="btn btn-light mb-2">Export</a>
                                     </div>
@@ -92,8 +84,6 @@
                                             <th>Nama Mitra</th>
                                             <th>Kegiatan Survei</th>
                                             <th>Jabatan</th>
-                                            <th>Honor Kegiatan</th>
-                                            <th>Dasar Batasan Honor</th>
                                             <th></th>
                                         </tr>
                                     </thead>
@@ -279,21 +269,7 @@
                 </div>
             </div>
         </div>
-
-        <h5>Filter by Batasan Honor</h5>
-        <div class="row">
-            <div class="col-11">
-                <div class="d-flex align-items-center">
-                     <select class="form-select" id="honor-select-filter">
-                        <option value="">Pilih Batasan Honor</option>
-                        {% for dt in data_batasan_honor  %}
-                            <option value="{{ dt.id }}">{{ dt.nama }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-        </div>
-
+        
         <button class="btn btn-danger mt-3" id="reset-filter">Clear Filter</button>
     </div>
 </div>
@@ -320,7 +296,6 @@
                 return $.extend({}, d, {
                     "survei_filter": $('#survei-select-filter').val(),
                     "jabatan_filter": $('#jabatan-select-filter').val(),
-                    "batasan_honor_filter": $('#honor-select-filter').val(),
                 })
             },
         },
@@ -330,8 +305,6 @@
             {"data": 'petugas__nama_petugas'},
             {"data": 'survey__nama'},
             {"data" : 'role__jabatan'},
-            {"data" : 'survey_salary__honor_maks'},
-            {"data" : 'const_salary__nama'},
             {"data" : 'aksi'},
         ],
         columnDefs: [ {
@@ -500,9 +473,6 @@
         table.draw()
     })
 
-    $('#honor-select-filter').bind("keyup change", function (){
-        table.draw()
-    })
 
     $('#ResetformAlokPetugas').on('click', function(e){
         resetForm()
@@ -561,7 +531,6 @@
     $('#reset-filter').on('click', function (){
         $('#survei-select-filter').prop('selectedIndex',0);
         $('#jabatan-select-filter').prop('selectedIndex',0);
-        $('#honor-select-filter').prop('selectedIndex',0);
         table.draw();
     })
 

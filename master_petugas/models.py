@@ -81,8 +81,8 @@ class AlokasiPetugas(models.Model):
 
    petugas = models.ForeignKey(MasterPetugas, on_delete=models.CASCADE, related_name='master_alokasi_petugas', verbose_name='Kode Petugas')
    survey = models.ForeignKey(SurveyModel, on_delete=models.RESTRICT, related_name='master_alokasi_survey', verbose_name='Survei/Sensus')
+   honorPerolehan = models.DecimalField(decimal_places=2, default=0, max_digits=13, verbose_name="Jumlah Honor Perolehan")
    role = models.ForeignKey(RoleMitra, on_delete=models.RESTRICT, related_name='master_alokasi_role', verbose_name='Jabatan Petugas')
-   const_salary = models.ForeignKey(HonorModel, on_delete=models.RESTRICT, related_name='master_honor', verbose_name='Batasan Honor Mitra')
 
    def __str__(self):
       return f"{self.petugas.nama_petugas} [{self.petugas.kode_petugas} - {self.survey.nama}_{self.role.jabatan}]"

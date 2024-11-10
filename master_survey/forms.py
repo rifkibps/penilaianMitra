@@ -17,7 +17,6 @@ class SurveiForm(forms.ModelForm):
             'deskripsi',
             'tgl_mulai',
             'tgl_selesai',
-            'salary',
             'status'
         ]
 
@@ -47,9 +46,6 @@ class SurveiForm(forms.ModelForm):
             ),
             'tgl_selesai': forms.DateInput(
                 attrs = attrs_input | {'type': 'date'}
-            ),
-            'salary': forms.TextInput(
-                attrs = attrs_input
             ),
             'status': forms.Select(
                 attrs = attrs_input |  {'class' : 'form-select'}

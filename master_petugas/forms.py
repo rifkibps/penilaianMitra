@@ -11,7 +11,6 @@ from master_survey.models import SurveyModel
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from pprint import pprint
-pd.set_option('future.no_silent_downcasting', True)
 
 class MasterPetugasForm(forms.ModelForm):
     
@@ -165,14 +164,12 @@ class AlokasiForm(forms.ModelForm):
             'petugas', 
             'survey',
             'role',
-            'const_salary'
         ]
 
         labels = {
             'petugas': 'Nama Petugas', 
             'survey': 'Nama Survei',
             'role': 'Jabatan',
-            'const_salary' : 'Batasan Honor'
         }
 
         attrs_input = {
@@ -191,9 +188,6 @@ class AlokasiForm(forms.ModelForm):
             'role': forms.Select(
                 attrs = attrs_input | {'class' : 'form-select',  'id' : 'id_role_id'}
             ),
-            'const_salary': forms.Select(
-                attrs = attrs_input | {'class' : 'form-select',  'id' : 'id_const_salary_id'}
-            )
         }
 
 

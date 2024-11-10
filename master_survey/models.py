@@ -14,7 +14,6 @@ class SurveyModel(models.Model):
    deskripsi = models.TextField(null=False, blank=False, verbose_name='Deskripsi Survei')
    tgl_mulai = models.DateField( null=False, blank=False, verbose_name='Tanggal Mulai')
    tgl_selesai = models.DateField( null=False, blank=False, verbose_name='Tanggal Berakhir')
-   salary = models.FloatField(null=False, blank=False, verbose_name='Nominal Honor')
    status = models.CharField(max_length=1, choices=status, default=0, null=False, blank=False, verbose_name='Status Survei')
 
    def __str__(self):

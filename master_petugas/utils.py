@@ -100,7 +100,7 @@ def generate_meta_templates(sheet, head_cell, start_rows, head_text, choices):
     sheet[f'{head_cell}{start_rows}'].font = Font(name='Cambria',bold=True, size=11)
     sheet.column_dimensions[head_cell].width = 22
 
-    for idx, dt_status in enumerate(choices): #Generates 99 "ip" address in the Column A;
+    for idx, dt_status in enumerate(choices): 
         sheet[f'{head_cell}{idx+start_rows+1}'].value = dt_status[1]
         sheet[f'{head_cell}{idx+start_rows+1}'].font = Font(name='Cambria', size=11)
 
