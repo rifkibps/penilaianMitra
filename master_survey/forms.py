@@ -2,11 +2,11 @@ from django import forms
 from . import models
 from master_petugas import utils
 import pandas as pd
+from io import BytesIO
 
 from django.core.exceptions import ValidationError
-
 from django.core.validators import FileExtensionValidator
-
+from pprint import pprint
 class SurveiForm(forms.ModelForm):
 
     class Meta:
@@ -60,17 +60,15 @@ class SurveiFormUpload(forms.Form):
 
         data = self.cleaned_data.get('import_file').read()
 
-        df = pd.read_excel(data, skiprows=1, usecols='A:F', dtype='str')
+        df = pd.read_excel(BytesIO(data), skiprows=1, usecols='A:F', dtype='str')
 
         df.dropna(axis=0, how='all', inplace=True)
-
 
         headers = utils.get_verbose_fields(models.SurveyModel, exclude_pk=True)
         headers = ['No'] + headers
         if [str(x).lower() for x in df.columns] != [str(x).lower() for x in headers]:
             self._errors['import_file'] = self.error_class(['Format template tidak sesuai. Silahkan gunakan template yang telah disediakan.'])
             return self._errors['import_file']
-            
 
         # Validate Non Values
         base_errors = []
@@ -81,7 +79,6 @@ class SurveiFormUpload(forms.Form):
         for idx, i in df_null.iterrows():
             null_cols = ', '.join(str(e).capitalize() for e in i[i.isna()].index)
             base_errors.append(f'Nilai kosong pada <b>Baris {idx+1}</b> ditemukan. Periksa kolom <b>({null_cols})</b>')
-    
 
         choices_status = dict(models.SurveyModel._meta.get_field('status').choices)
         for idx, row in df['Status Survei'].items():

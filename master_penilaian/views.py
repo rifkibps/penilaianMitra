@@ -54,7 +54,6 @@ class PenilaianPetugasClassView(LoginRequiredMixin, View):
             if form.is_valid():
                 instance = form.save()
                 user_instance = serializers.serialize('json', [ instance, ])
-                
                 # send to client side.
                 return JsonResponse({"instance": user_instance, 'message': 'Data berhasil ditambahkan'}, status=200)
             else:
@@ -109,6 +108,9 @@ class MasterPenilaianDetailView(LoginRequiredMixin, View):
                 context_data['tgl_penilaian']   = kegiatan_penilaian.tgl_penilaian
                 context_data['status']          = kegiatan_penilaian.status
                 context_data['role_permitted']  = list(kegiatan_penilaian.role_permitted.values_list('id', flat=True))
+                context_data['scale']          = kegiatan_penilaian.scale
+                context_data['n_min']          = kegiatan_penilaian.n_min
+                context_data['n_max']          = kegiatan_penilaian.n_max
 
                 return JsonResponse({'status' : 'success', 'instance': context_data}, status=200)
                 

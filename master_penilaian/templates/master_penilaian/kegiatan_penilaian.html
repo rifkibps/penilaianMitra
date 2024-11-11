@@ -145,6 +145,34 @@
                                         <div class="invalid-feedback" id="msg-{{form.status.id_for_label}}">
                                         </div>
                                     </div>
+
+                                    <h5 class="mb-3 mt-4">{{ form.scale.label }}</h5>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-floating errors" id="form_{{form.scale.id_for_label}}">
+                                                {{form.scale}}
+                                                <label for="{{form.scale.id_for_label}}">{{ form.scale.label }}</label>
+                                                <div class="invalid-feedback" id="msg-{{form.scale.id_for_label}}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-floating errors" id="form_{{form.n_min.id_for_label}}">
+                                                {{form.n_min}}
+                                                <label for="{{form.n_min.id_for_label}}">{{ form.n_min.label }}</label>
+                                                <div class="invalid-feedback" id="msg-{{form.n_min.id_for_label}}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-floating errors" id="form_{{form.n_max.id_for_label}}">
+                                                {{form.n_max}}
+                                                <label for="{{form.n_max.id_for_label}}">{{ form.n_max.label }}</label>
+                                                <div class="invalid-feedback" id="msg-{{form.n_max.id_for_label}}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <br>

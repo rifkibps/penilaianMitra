@@ -253,7 +253,6 @@ class MasterSurveyTemplateClassView(LoginRequiredMixin, View):
             # Set style
             c.font = Font(name='Cambria', size=12)
             c.alignment = Alignment(horizontal='center', vertical='center')
-            c.fill = PatternFill(start_color="95B3D7", end_color="95B3D7", fill_type = "solid")
             c.value = v
 
         # Adjustment cols
@@ -272,24 +271,28 @@ class MasterSurveyTemplateClassView(LoginRequiredMixin, View):
         ws.row_dimensions[1].height = 25
         ws.row_dimensions[2].height = 22.50
 
-        utils.generate_meta_templates(ws, 'I', 3, 'Status Kegiatan', list(models.SurveyModel._meta.get_field('status').choices), 'F', 3, def_rows=def_rows)
-      
-
-        ws.merge_cells('A1:G1')
+        ws.merge_cells('A1:F1')
         ws['A1'] = 'Template Upload Kegiatan Pendataan'
         ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
         ws['A1'].font = Font(name='Cambria',bold=True, size=14)
-
-
-        ws['I2'] = 'Metadata Kegiatan Pendataan'
-        ws['I2'].alignment = Alignment(horizontal='center', vertical='center')
-        ws['I2'].font = Font(name='Cambria',bold=True, size=12)
-
-        ws.column_dimensions['I'].hidden= True
         
         for row in range(def_rows):
             ws[f'A{row+3}'] = row+1
             ws[f'A{row+3}'].alignment = Alignment(horizontal='center', vertical='center')
+
+        # Sheet 2 for Metadata
+        ws1 = wb.create_sheet('Metadata Formulir Pengisian')
+
+        ws1['A1'] = 'Metadata'
+        ws1['A1'].alignment = Alignment(horizontal='center', vertical='center')
+        ws1['A1'].font = Font(name='Cambria',bold=True, size=12)
+
+        state_choices = list(models.SurveyModel._meta.get_field('status').choices)
+
+        utils.generate_meta_templates(ws1, 'A', 2, 'Status Survei', state_choices)
+        utils.generate_field_Validation(ws, ws1, 'A', 3, len(state_choices), 'F', 3, def_rows=def_rows)
+        ws1.protection.password = "Bqlbz110"
+        ws1.protection.sheet = True
 
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = 'attachment; filename=Template Upload Kegiatan Pendataan.xlsx'
@@ -312,7 +315,6 @@ class MasterSurveyUploadClassView(LoginRequiredMixin, View):
             if form.is_valid():
                 
                 df = form.cleaned_data
-    
                 objs = []
                 for idx in range(len(df['id'])):
 

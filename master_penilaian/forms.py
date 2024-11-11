@@ -7,7 +7,6 @@ import pandas as pd
 
 from django.db.models import Q
 
-
 class IndikatorPenilaianForm(forms.ModelForm):
     
     class Meta:
@@ -38,7 +37,6 @@ class IndikatorPenilaianForm(forms.ModelForm):
             )            
         }
 
-
 class KegiatanPenilaianForm(forms.ModelForm):
     
     class Meta:
@@ -49,7 +47,10 @@ class KegiatanPenilaianForm(forms.ModelForm):
             'survey',
             'tgl_penilaian',
             'status',
-            'role_permitted'
+            'role_permitted',
+            'scale',
+            'n_min',
+            'n_max',
         ]
 
         labels = {
@@ -80,7 +81,16 @@ class KegiatanPenilaianForm(forms.ModelForm):
             ),
             'role_permitted': forms.SelectMultiple(
                  attrs = attrs_input | {'size' : '10', 'style' : "height: 100%;"}
-            )
+            ),
+            'scale': forms.Select(
+                attrs = attrs_input | {'class' : 'form-select'}
+            ),
+            'n_min': forms.NumberInput(
+                attrs = attrs_input
+            ),
+            'n_max': forms.NumberInput(
+                attrs = attrs_input
+            ),
         }
 
 

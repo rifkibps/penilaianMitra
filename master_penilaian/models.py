@@ -2,10 +2,6 @@ from django.db import models
 from master_survey.models import SurveyModel
 from master_petugas.models import AlokasiPetugas, RoleMitra
 
-
-# Create your models here.
-
-
 class IndikatorPenilaian(models.Model):
    nama_indikator = models.CharField(max_length=128, null=False, blank=False, verbose_name='Indikator Penilaian' )
    deskripsi_penilaian = models.TextField(null=True, blank=True, verbose_name='Deskripsi Penilaian')
@@ -13,19 +9,26 @@ class IndikatorPenilaian(models.Model):
    def __str__(self):
       return f"{self.nama_indikator}"
 
-
 class KegiatanPenilaianModel(models.Model):
    
     status = (
        ('0', 'Aktif'),
-       ('1', 'Tidak Aktif')
+       ('1', 'Selesai'),
+       ('2', 'Tidak Aktif'),
+    )
+    scale = (
+       ('0', 'Ordinal'),
+       ('1', 'Numerik'),
     )
 
     nama_kegiatan = models.CharField(max_length=256, null=False, blank=False, verbose_name='Nama Kegiatan Penilaian' )
     survey = models.ForeignKey(SurveyModel, on_delete=models.RESTRICT, blank=False, null=False, related_name='penilaian_survei')
     tgl_penilaian = models.DateField( null=False, blank=False,  verbose_name='Tanggal Penilaian')
-    status = models.CharField(max_length=1, choices=status, default=0, null=False, blank=False, verbose_name='Status Penilaian')
     role_permitted = models.ManyToManyField(RoleMitra)
+    status = models.CharField(max_length=1, choices=status, default=0, null=False, blank=False, verbose_name='Status Penilaian')
+    scale = models.CharField(max_length=1, choices=scale, default=0, null=False, blank=False, verbose_name='Skala Penilaian')
+    n_min = models.IntegerField(null=False, blank=False, verbose_name='Batas Minimum')
+    n_max = models.IntegerField(null=False, blank=False, verbose_name='Batas Maksimal')
     
     def __str__(self):
         return f"{self.nama_kegiatan} [{self.survey.nama}]"
