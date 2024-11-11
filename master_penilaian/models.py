@@ -16,19 +16,13 @@ class KegiatanPenilaianModel(models.Model):
        ('1', 'Selesai'),
        ('2', 'Tidak Aktif'),
     )
-    scale = (
-       ('0', 'Ordinal'),
-       ('1', 'Numerik'),
-    )
+
 
     nama_kegiatan = models.CharField(max_length=256, null=False, blank=False, verbose_name='Nama Kegiatan Penilaian' )
     survey = models.ForeignKey(SurveyModel, on_delete=models.RESTRICT, blank=False, null=False, related_name='penilaian_survei')
     tgl_penilaian = models.DateField( null=False, blank=False,  verbose_name='Tanggal Penilaian')
     role_permitted = models.ManyToManyField(RoleMitra)
     status = models.CharField(max_length=1, choices=status, default=0, null=False, blank=False, verbose_name='Status Penilaian')
-    scale = models.CharField(max_length=1, choices=scale, default=0, null=False, blank=False, verbose_name='Skala Penilaian')
-    n_min = models.IntegerField(null=False, blank=False, verbose_name='Batas Minimum')
-    n_max = models.IntegerField(null=False, blank=False, verbose_name='Batas Maksimal')
     
     def __str__(self):
         return f"{self.nama_kegiatan} [{self.survey.nama}]"
@@ -36,6 +30,15 @@ class KegiatanPenilaianModel(models.Model):
 class IndikatorKegiatanPenilaian(models.Model):
    kegiatan_penilaian = models.ForeignKey(KegiatanPenilaianModel, on_delete=models.RESTRICT, related_name='kegiatan_penilaian_petugas')
    indikator_penilaian = models.ForeignKey(IndikatorPenilaian, on_delete=models.RESTRICT, related_name='indikator_penilaian_petugas')
+
+   scale = (
+       ('0', 'Ordinal'),
+       ('1', 'Numerik'),
+   )
+   
+   scale = models.CharField(max_length=1, choices=scale, default=0, null=False, blank=False, verbose_name='Skala Penilaian')
+   n_min = models.IntegerField(null=False, blank=False, default=1, verbose_name='Batas Minimum')
+   n_max = models.IntegerField(null=False, blank=False, default=5, verbose_name='Batas Maksimal')
    
    def __str__(self):
       return f"{self.kegiatan_penilaian.nama_kegiatan} [{self.indikator_penilaian}]"

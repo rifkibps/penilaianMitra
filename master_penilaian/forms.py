@@ -48,9 +48,6 @@ class KegiatanPenilaianForm(forms.ModelForm):
             'tgl_penilaian',
             'status',
             'role_permitted',
-            'scale',
-            'n_min',
-            'n_max',
         ]
 
         labels = {
@@ -82,15 +79,7 @@ class KegiatanPenilaianForm(forms.ModelForm):
             'role_permitted': forms.SelectMultiple(
                  attrs = attrs_input | {'size' : '10', 'style' : "height: 100%;"}
             ),
-            'scale': forms.Select(
-                attrs = attrs_input | {'class' : 'form-select'}
-            ),
-            'n_min': forms.NumberInput(
-                attrs = attrs_input
-            ),
-            'n_max': forms.NumberInput(
-                attrs = attrs_input
-            ),
+            
         }
 
 
@@ -101,7 +90,10 @@ class IndikatorKegiatanPenilaianForm(forms.ModelForm):
         model = models.IndikatorKegiatanPenilaian
         fields = [
             'kegiatan_penilaian', 
-            'indikator_penilaian'
+            'indikator_penilaian',
+            'scale',
+            'n_min',
+            'n_max'
         ]
 
         labels = {
@@ -120,6 +112,15 @@ class IndikatorKegiatanPenilaianForm(forms.ModelForm):
             ),
             'indikator_penilaian': forms.Select(
                 attrs = attrs_input | {'class' : 'form-select', 'id' : 'id_indikator_penilaian_id'}
+            ),
+            'scale': forms.Select(
+                attrs = attrs_input | {'class' : 'form-select'}
+            ),
+            'n_min': forms.NumberInput(
+                attrs = attrs_input
+            ),
+            'n_max': forms.NumberInput(
+                attrs = attrs_input
             ),
           
         }

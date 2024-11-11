@@ -108,9 +108,6 @@ class MasterPenilaianDetailView(LoginRequiredMixin, View):
                 context_data['tgl_penilaian']   = kegiatan_penilaian.tgl_penilaian
                 context_data['status']          = kegiatan_penilaian.status
                 context_data['role_permitted']  = list(kegiatan_penilaian.role_permitted.values_list('id', flat=True))
-                context_data['scale']          = kegiatan_penilaian.scale
-                context_data['n_min']          = kegiatan_penilaian.n_min
-                context_data['n_max']          = kegiatan_penilaian.n_max
 
                 return JsonResponse({'status' : 'success', 'instance': context_data}, status=200)
                 
@@ -621,7 +618,6 @@ class IndikatorKegiatanPenilaianDetailView(LoginRequiredMixin, View):
                 indikator_penilaian = models.IndikatorKegiatanPenilaian.objects.filter(pk=id)
 
                 if indikator_penilaian.exists():
-
                     check_db = models.MasterNilaiPetugas.objects.filter(penilaian = id)
                     if check_db.exists():
                         return JsonResponse({'status' : 'failed', 'message': 'Data survei telah digunakan pada master data penilaian.'}, status=200)
