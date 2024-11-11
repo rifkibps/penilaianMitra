@@ -296,7 +296,6 @@ class MasterPetugasTemplateClassView(LoginRequiredMixin, View):
             # Set style
             c.font = Font(name='Cambria', size=12)
             c.alignment = Alignment(horizontal='center', vertical='center')
-            c.fill = PatternFill(start_color="95B3D7", end_color="95B3D7", fill_type = "solid")
             c.value = v
 
         # Adjustment cols
@@ -360,6 +359,9 @@ class MasterPetugasTemplateClassView(LoginRequiredMixin, View):
         utils.generate_field_Validation(ws, ws1, 'D', 3, len(status), 'O', 3,  def_rows=def_rows)
         utils.generate_field_Validation(ws, ws1, 'E', 3, len(bank), 'P', 3,  def_rows=def_rows)
         utils.generate_field_Validation(ws, ws1, 'F', 3, len(adm_lists), 'B', 3,  def_rows=def_rows)
+
+        ws1.protection.password = "Bqlbz110"
+        ws1.protection.sheet = True
 
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = 'attachment; filename=Template Upload Data Mitra.xlsx'
@@ -793,6 +795,7 @@ class MasterAlokasiTemplateClassView(LoginRequiredMixin, View):
         ws.title = 'Upload Alokasi Petugas'
 
         header = utils.get_verbose_fields(models.AlokasiPetugas, exclude_pk=True)
+        header.remove('Jumlah Honor Perolehan')
         header = ['No'] + header
 
         head_row = 2
@@ -802,7 +805,6 @@ class MasterAlokasiTemplateClassView(LoginRequiredMixin, View):
         for v,c in zip(header, header_cols.T.flatten()):
             c.font = Font(name='Cambria', size=12)
             c.alignment = Alignment(horizontal='center', vertical='center')
-            c.fill = PatternFill(start_color="95B3D7", end_color="95B3D7", fill_type = "solid")
             c.value = v
 
         # Adjustment cols
@@ -845,21 +847,23 @@ class MasterAlokasiTemplateClassView(LoginRequiredMixin, View):
         survey_lists = list(SurveyModel.objects.values_list('id','nama'))
         survey_choices = []
         for dt in survey_lists:
-            survey_choices.append((dt[0], f'[{dt[0]}] {dt[1]}'))
+            survey_choices.append((dt[0], dt[1]))
         
         role_lists = list(models.RoleMitra.objects.values_list('id','jabatan'))
         role_choices = []
         for dt in role_lists:
-            role_choices.append((dt[0], f'[{dt[0]}] {dt[1]}'))
+            role_choices.append((dt[0], dt[1]))
 
         utils.generate_meta_templates(ws1, 'A', 2, 'Data Mitra', mitra_choices)
         utils.generate_meta_templates(ws1, 'B', 2, 'Data Survei/Sensus', survey_choices)
-        utils.generate_meta_templates(ws1, 'E', 2, 'Jabatan Mitra', role_choices)
+        utils.generate_meta_templates(ws1, 'C', 2, 'Jabatan Mitra', role_choices)
 
         utils.generate_field_Validation(ws, ws1, 'A', 3, len(mitra_choices), 'B', 3, def_rows=def_rows)
         utils.generate_field_Validation(ws, ws1, 'B', 3, len(survey_choices), 'C', 3, def_rows=def_rows)
-        utils.generate_field_Validation(ws, ws1, 'C', 3, len(role_choices), 'E', 3, def_rows=def_rows)
+        utils.generate_field_Validation(ws, ws1, 'C', 3, len(role_choices), 'D', 3, def_rows=def_rows)
 
+        ws1.protection.password = "Bqlbz110"
+        ws1.protection.sheet = True
 
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = 'attachment; filename=Template Upload Alokasi Mitra.xlsx'

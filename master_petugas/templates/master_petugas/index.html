@@ -822,14 +822,14 @@
         preview_excel('preview-data-upload', '{{form_upload.import_file.id_for_label}}')
     })
 
-    $('#btn-submit-file').on('click', function(e){
+    $('#btn-submit-file').on('click', (e) => {
         $('#nav-item-import').removeClass('d-none')
         $('.nav-tabs a[href="#import-tab"]').tab('show');
         $(this).blur()
         $('#import-modal').modal('toggle')
     })
    
-    $('#confirm-submit-file').on('click', () =>{
+    $('#confirm-submit-file').on('click', () => {
           swalWithBootstrapButtons.fire({
             title: 'Are you sure?',
             text: "Apakah anda yakin ingin mengupload data mitra?",

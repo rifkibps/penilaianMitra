@@ -193,7 +193,7 @@
   <!-- end row-->
   
   
-<div id="import-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="compose-header-modalLabel" aria-hidden="true">
+<div id="import-modal" class="modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header modal-colored-header bg-primary">
@@ -206,7 +206,6 @@
                     <div class="mb-3">
                         <ol>
                             <li>Unduh template petugas: <br>
-                                
                                 <div class="mt-1">
                                     <input type="number" class="form-control  form-control-sm d-inline" style="width:150px;" placeholder="Jumlah baris data" alt="Masukan jumlah data" id="number_rows">   
                                     <button class="btn btn-primary btn-sm d-inline" id="get-templates-upload">Unduh</button>
@@ -235,13 +234,12 @@
 </div><!-- /.modal -->
     
 
-<div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasFilter" aria-labelledby="offcanvasFilterLabel">
+<div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasFilter">
     <div class="offcanvas-header">
         <h5 class="offcanvas-title" id="offcanvasFilterLabel">Filter Alokasi Petugas</h5>
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-
         <h5>Filter by Survei</h5>
         <div class="row mb-3">
             <div class="col-12">
@@ -465,20 +463,19 @@
         $('#formAlokPetugas').attr('action', "{% url 'master_petugas:alokasi' %}")
     }
 
-    $('#survei-select-filter').bind("keyup change", function (){
+    $('#survei-select-filter').bind("keyup change", () => {
         table.draw()
     })
 
-    $('#jabatan-select-filter').bind("keyup change", function (){
+    $('#jabatan-select-filter').bind("keyup change", () => {
         table.draw()
     })
 
-
-    $('#ResetformAlokPetugas').on('click', function(e){
+    $('#ResetformAlokPetugas').on('click', (e) => {
         resetForm()
     })
 
-    $('#formAlokPetugas').on('submit', function(e){
+    $('#formAlokPetugas').on('submit', (e) => {
 
         e.preventDefault()
         
@@ -490,8 +487,7 @@
             type: 'POST',
             url: $(this).attr('action'),
             data: serializedData,
-            success: function (response) {
-                
+            success: (response) =>  {
                 if (response.status == 'success'){
                     $('#messages-content').html(response["message"])
                     $('#msgs-upload').removeClass('alert-danger')
@@ -507,15 +503,12 @@
                         'info'
                     )
                 }
-
-
-
             },
-            error: function (response) {
+            error: (response) => {
                 var errors = response["responseJSON"]["error"]
                 for (const [key, value] of Object.entries(errors)) {
                     var msgs = '<ul>'
-                    value.forEach(function (item, index) {
+                    value.forEach((item, index) => {
                     
                         msgs += '<li>'+item+'</li>'
                         });
@@ -528,34 +521,34 @@
         })
     })
 
-    $('#reset-filter').on('click', function (){
+    $('#reset-filter').on('click', () => {
         $('#survei-select-filter').prop('selectedIndex',0);
         $('#jabatan-select-filter').prop('selectedIndex',0);
         table.draw();
     })
 
-    $('#redraw-table').on('click', function (){
+    $('#redraw-table').on('click', () => {
         table.draw();
     })
 
-    $('#get-templates-upload').on('click', function(){
+    $('#get-templates-upload').on('click', () => {
 
         var numrows = $('#number_rows').val()
         return window.location.replace("http://127.0.0.1:8000/alokasi-petugas/template/" + numrows);
     })
 
-    $('#{{form_upload.import_file.id_for_label}}').on('change', function(){
+    $('#{{form_upload.import_file.id_for_label}}').on('change', () => {
         preview_excel('preview-data-upload', '{{form_upload.import_file.id_for_label}}')
     })
 
-    $('#btn-submit-file').on('click', function(){
+    $('#btn-submit-file').on('click', (e) => {
         $('#nav-item-import').removeClass('d-none')
-        $('#import-modal').modal('toggle')
         $('.nav-tabs a[href="#import-tab"]').tab('show');
-
+        $(this).blur()
+        $('#import-modal').modal('toggle')
     })
-   
-    $('#confirm-submit-file').on('click', function(){
+    
+    $('#confirm-submit-file').on('click', () => {
 
         const swalWithBootstrapButtons = Swal.mixin({
             customClass: {
@@ -608,8 +601,11 @@
                             $('#msgs-upload').removeClass('alert-danger')
                             $('#msgs-upload').addClass('alert-success')
                             $('#msgs-upload').removeClass('d-none')
+
+                            $('#nav-item-import').addClass('d-none')
+                            $('.nav-tabs a[href="#alokasi-preview"]').tab('show');
+
                             table.ajax.reload();
-    
                         }
                     },
                     error: function (xhr, status, error) {
