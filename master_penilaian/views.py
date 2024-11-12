@@ -13,7 +13,6 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin
 from . import models
 from . import forms
-import string
 import statistics
 
 from django.urls import reverse_lazy
@@ -161,8 +160,6 @@ class AlokasiGetBySurveiClassView(LoginRequiredMixin, View):
                 kegiatan_penilaian = get_object_or_404(models.KegiatanPenilaianModel, pk=penilaian_id)
                 role_permitted = kegiatan_penilaian.role_permitted.values_list('id', flat=True)
 
-                
-
                 data_2 = models.IndikatorKegiatanPenilaian.objects.filter(kegiatan_penilaian = penilaian_id).values('id', 'indikator_penilaian__nama_indikator' )
 
                 final_data = []
@@ -181,8 +178,8 @@ class AlokasiGetBySurveiClassView(LoginRequiredMixin, View):
 class MasterPenilaianJsonResponseClassView(LoginRequiredMixin, View):
 
     def post(self, request):    
-        data_wilayah = self._datatables(request)
-        return HttpResponse(json.dumps(data_wilayah, cls=DjangoJSONEncoder), content_type='application/json')
+        data = self._datatables(request)
+        return HttpResponse(json.dumps(data, cls=DjangoJSONEncoder), content_type='application/json')
 		
     def _datatables(self, request):
         datatables = request.POST

@@ -27,7 +27,8 @@ urlpatterns = [
     path('', include('dashboard.urls')),
     path('', include('master_penilaian.urls')),
     path('', include('master_petugas.urls')),
-     path('', include('master_honor.urls')),
+    path('', include('master_pegawai.urls')),
+    path('', include('master_honor.urls')),
     path('', include('master_survey.urls')),
     
     path('admin/', admin.site.urls),

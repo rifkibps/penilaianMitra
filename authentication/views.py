@@ -26,7 +26,6 @@ class LogoutView(LogoutView):
         'page_header' : 'Halaman Login'
     }
 
-
 class UserThemeSetClassView(LoginRequiredMixin, View):
 
     def post(self, request):

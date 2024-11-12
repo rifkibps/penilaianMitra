@@ -105,12 +105,10 @@
                                 </a>
                             {% endif %}
 
-                            <!-- item-->
-                            <a href="{% url 'auth:logout' %}" class="dropdown-item notify-item">
-                                <i class="mdi mdi-logout me-1"></i>
-                                <span>Logout</span>
-                            </a>
-    
+                            <form action="{% url 'auth:logout' %}" method="post" class="dropdown-item notify-item px-1 py-0">
+                                {% csrf_token %}
+                                <button type="submit" class="btn"><i class="mdi mdi-logout me-1"></i><span>Logout</span></button>
+                            </form>
                         </div>
                     </li>
 
@@ -198,6 +196,29 @@
                             </a>
                         </li>
    
+                        <li class="side-nav-title side-nav-item mt-2">Manajemen Organik</li>
+
+                        <li class="side-nav-item">
+                            <a href="{% url 'master_pegawai:jabatan' %}" class="side-nav-link">
+                                <i class="mdi mdi-sitemap"></i>
+                                <span> Jabatan </span>
+                            </a>
+                        </li>
+
+                        <li class="side-nav-item">
+                            <a href="{% url 'master_pegawai:pangkat' %}" class="side-nav-link">
+                                <i class="mdi mdi-human-capacity-increase"></i>
+                                <span> Pangkat/Gol. </span>
+                            </a>
+                        </li>
+                       
+                        <li class="side-nav-item">
+                            <a href="{% url 'master_pegawai:index' %}" class="side-nav-link">
+                                <i class="mdi mdi-human-edit"></i>
+                                <span> Master Organik </span>
+                            </a>
+                        </li>
+
                         <li class="side-nav-title side-nav-item  mt-2">Manajemen Survei</li>
                         <li class="side-nav-item">
                             <a href="{% url 'master_survei:index' %}" aria-expanded="false"  class="side-nav-link">
@@ -205,7 +226,6 @@
                                 <span> Master Survey </span>
                             </a>
                         </li>
-
                            
                         <li class="side-nav-title side-nav-item  mt-2">Manajemen Penilaian</li>
                         <li class="side-nav-item">
@@ -228,7 +248,8 @@
                                 <span> Indikator Kegiatan </span>
                             </a>
                         </li>
-                                                
+                        
+                        <li class="side-nav-title side-nav-item  mt-2">Input Penilaian</li>
                         <li class="side-nav-item">
                             <a href="{% url 'master_penilaian:nilai-mitra' %}" aria-expanded="false"  class="side-nav-link">
                                 <i class="mdi mdi-pencil-box-multiple"></i>
