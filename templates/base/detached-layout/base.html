@@ -1,6 +1,5 @@
 {% load static %}
 
-
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -173,7 +172,6 @@
                                 <span> Dashboards </span>
                             </a>
                         </li>
-
                         
                         <li class="side-nav-title side-nav-item mt-2">Manajemen Mitra</li>
                         
@@ -187,12 +185,6 @@
                             <a href="{% url 'master_petugas:role' %}" aria-expanded="false"  class="side-nav-link">
                                 <i class="mdi mdi-sitemap"></i>
                                 <span> Role Mitra </span>
-                            </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a href="{% url 'master_petugas:alokasi' %}" aria-expanded="false"  class="side-nav-link">
-                                <i class="mdi mdi-human-capacity-increase"></i>
-                                <span> Alokasi Mitra </span>
                             </a>
                         </li>
    
@@ -221,37 +213,49 @@
 
                         <li class="side-nav-title side-nav-item  mt-2">Manajemen Survei</li>
                         <li class="side-nav-item">
-                            <a href="{% url 'master_survei:index' %}" aria-expanded="false"  class="side-nav-link">
+                            <a href="{% url 'master_survei:index' %}" class="side-nav-link">
                                 <i class="mdi mdi-clipboard-account"></i>
                                 <span> Master Survey </span>
                             </a>
                         </li>
-                           
+                        <li class="side-nav-item">
+                            <a href="{% url 'master_petugas:alokasi' %}" class="side-nav-link">
+                                <i class="mdi mdi-human-capacity-increase"></i>
+                                <span> Alokasi Peran </span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="{% url 'master_petugas:penugasan' %}"  class="side-nav-link">
+                                <i class="mdi mdi-human-capacity-increase"></i>
+                                <span> Alokasi Penugasan </span>
+                            </a>
+                        </li>
+
                         <li class="side-nav-title side-nav-item  mt-2">Manajemen Penilaian</li>
                         <li class="side-nav-item">
-                            <a href="{% url 'master_penilaian:indikator-penilaian' %}" aria-expanded="false"  class="side-nav-link">
+                            <a href="{% url 'master_penilaian:indikator-penilaian' %}"  class="side-nav-link">
                                 <i class="mdi mdi-clipboard-edit"></i>
                                 <span> Aspek Penilaian </span>
                             </a>
                         </li>
 
                         <li class="side-nav-item">
-                            <a href="{% url 'master_penilaian:index' %}" aria-expanded="false"  class="side-nav-link">
-                                <i class="mdi mdi-clipboard-list"></i>
-                                <span> Kegiatan Penilaian </span>
-                            </a>
-                        </li>
-                        
-                        <li class="side-nav-item">
-                            <a href="{% url 'master_penilaian:indikator-kegiatan' %}" aria-expanded="false"  class="side-nav-link">
+                            <a href="{% url 'master_penilaian:indikator-kegiatan' %}"  class="side-nav-link">
                                 <i class="mdi mdi-clipboard-text-multiple"></i>
                                 <span> Indikator Kegiatan </span>
                             </a>
                         </li>
                         
+                        <li class="side-nav-item">
+                            <a href="{% url 'master_penilaian:index' %}"  class="side-nav-link">
+                                <i class="mdi mdi-clipboard-list"></i>
+                                <span> Kegiatan Penilaian </span>
+                            </a>
+                        </li>
+
                         <li class="side-nav-title side-nav-item  mt-2">Input Penilaian</li>
                         <li class="side-nav-item">
-                            <a href="{% url 'master_penilaian:nilai-mitra' %}" aria-expanded="false"  class="side-nav-link">
+                            <a href="{% url 'master_penilaian:nilai-mitra' %}"  class="side-nav-link">
                                 <i class="mdi mdi-pencil-box-multiple"></i>
                                 <span> Nilai Petugas </span>
                             </a>
@@ -259,13 +263,13 @@
 
                         <li class="side-nav-title side-nav-item  mt-2">Manajemen Honor</li>
                         <li class="side-nav-item">
-                            <a href="{% url 'master_honor:honor-settings' %}" aria-expanded="false"  class="side-nav-link">
+                            <a href="{% url 'master_honor:honor-settings' %}"  class="side-nav-link">
                                 <i class="mdi mdi-google-spreadsheet"></i>
                                 <span> Pengaturan Honor Mitra </span>
                             </a>
                         </li>
                         <li class="side-nav-item">
-                            <a href="{% url 'master_honor:index' %}" aria-expanded="false"  class="side-nav-link">
+                            <a href="{% url 'master_honor:index' %}"  class="side-nav-link">
                                 <i class="mdi mdi-currency-usd-circle-outline"></i>
                                 <span> Honor Mitra </span>
                             </a>
@@ -320,16 +324,8 @@
 
         <!-- bundle -->
 
-
-
         <script src="{% static 'app-design/assets/js/vendor.min.js' %}"></script>
         <script src="{% static 'app-design/assets/js/app.min.js' %}"></script>
-
-        <!-- third party js -->
-        {% comment %} <script src="{% static 'app-design/assets/js/vendor/apexcharts.min.js' %}"></script> {% endcomment %}
-        {% comment %} <script src="{% static 'app-design/assets/js/vendor/jquery-jvectormap-1.2.2.min.js' %}"></script>
-        <script src="{% static 'app-design/assets/js/vendor/jquery-jvectormap-world-mill-en.js' %}"></script> {% endcomment %}
-        <!-- third party js ends -->
 
         <!-- demo app -->
         <script src="{% static 'app-design/assets/js/pages/demo.dashboard.js' %}"></script>

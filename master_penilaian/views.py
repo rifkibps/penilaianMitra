@@ -1225,3 +1225,13 @@ class GetNilaiMitraClassView(LoginRequiredMixin, View):
                     return JsonResponse({'status': 'failed', 'message': 'Data tidak tersedia'}, status=200)
                 
         return JsonResponse({'status': 'Invalid request'}, status=400) 
+
+class EntryPenilaianClassView(LoginRequiredMixin, View):
+    
+    def get(self, request):
+        context = {
+            'title' : 'Penilaian Mitra',
+        }
+
+        return render(request, 'master_penilaian/entry_nilai.html', context)
+    

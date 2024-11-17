@@ -1,0 +1,474 @@
+{% extends 'base/horizontal/base.html' %}
+
+{% load static %}
+
+{% block css-extender %}
+<style>
+    #ranking-global thead th {
+        background: white!important;
+        position: sticky;
+        top: 0;
+      }
+</style>        
+{% endblock css-extender %}
+
+
+{% block content %}
+<!-- Start Content-->
+<div class="container-fluid">
+
+    <!-- start page title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <div class="page-title-right">
+                    <form class="d-flex">
+                        <div class="input-group">
+                            <input type="text" class="form-control form-control-light" placeholder="Cari Mitra">
+                            <span class="input-group-text bg-primary border-primary text-white">
+                                <i class="mdi mdi-calendar-range font-13"></i>
+                            </span>
+                        </div>
+                        <a href="javascript: void(0);" class="btn btn-primary ms-2">
+                            <i class="mdi mdi-autorenew"></i>
+                        </a>
+                        <a href="javascript: void(0);" class="btn btn-primary ms-1">
+                            <i class="mdi mdi-filter-variant"></i>
+                        </a>
+                    </form>
+                </div>
+                <h4 class="page-title">Dashboard</h4>
+            </div>
+        </div>
+    </div>
+    <!-- end page title -->
+
+    <div class="row">
+        <div class="col-xl-5 col-lg-6">
+
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card widget-flat">
+                        <div class="card-body">
+                            <div class="float-end">
+                                <i class="mdi mdi-account-multiple widget-icon"></i>
+                            </div>
+                            <h5 class="text-muted fw-normal mt-0" title="Jumlah Kegiatan">Jumlah Kegiatan Diikuti</h5>
+                            <h3 class="mt-3 mb-3">5</h3>
+                        </div> <!-- end card-body-->
+                    </div> <!-- end card-->
+                </div> <!-- end col-->
+
+                <div class="col-lg-6">
+                    <div class="card widget-flat">
+                        <div class="card-body">
+                            <div class="float-end">
+                                <i class="mdi mdi-cart-plus widget-icon"></i>
+                            </div>
+                            <h5 class="text-muted fw-normal mt-0" title="Number of Orders">Jumlah Kegiatan Penilaian</h5>
+                            <h3 class="mt-3 mb-3">10</h3>
+                        </div> <!-- end card-body-->
+                    </div> <!-- end card-->
+                </div> <!-- end col-->
+            </div> <!-- end row -->
+
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card widget-flat">
+                        <div class="card-body">
+                            <div class="float-end">
+                                <i class="mdi mdi-currency-usd widget-icon"></i>
+                            </div>
+                            <h5 class="text-muted fw-normal mt-0" title="Average Revenue">Jumlah Mitra</h5>
+                            <h3 class="mt-3 mb-3">20</h3>
+                        </div> <!-- end card-body-->
+                    </div> <!-- end card-->
+                </div> <!-- end col-->
+
+                <div class="col-lg-6">
+                    <div class="card widget-flat">
+                        <div class="card-body">
+                            <div class="float-end">
+                                <i class="mdi mdi-pulse widget-icon"></i>
+                            </div>
+                            <h5 class="text-muted fw-normal mt-0" title="Growth">Jumlah Mitra Dinilai</h5>
+                            <h3 class="mt-3 mb-3">24</h3>
+                        </div> <!-- end card-body-->
+                    </div> <!-- end card-->
+                </div> <!-- end col-->
+            </div> <!-- end row -->
+
+        </div> <!-- end col -->
+
+        <div class="col-xl-7 col-lg-6">
+            <div class="card card-h-100">
+                <div class="card-body">
+                    <div class="dropdown float-end">
+                        <a href="#" class="dropdown-toggle arrow-none card-drop" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="mdi mdi-dots-vertical"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end">
+                            <!-- item-->
+                            <a href="javascript:void(0);" class="dropdown-item">Sales Report</a>
+                            <!-- item-->
+                            <a href="javascript:void(0);" class="dropdown-item">Export Report</a>
+                            <!-- item-->
+                            <a href="javascript:void(0);" class="dropdown-item">Profit</a>
+                            <!-- item-->
+                            <a href="javascript:void(0);" class="dropdown-item">Action</a>
+                        </div>
+                    </div>
+                    <h4 class="header-title mb-3">Penilaian Mitra Global</h4>
+
+                    <div class="table-responsive" style="max-height: 200px; overflow-y: schroll;display:block">
+                        <table class="table table-centered table-hover mb-0" id="ranking-global">
+                            <thead>
+                                <tr>
+                                    <th>Wilayah</th>
+                                    <th>Nama Mitra</th>
+                                    <th class="text-center">Rerata Nilai</th>
+                                    <th>Ranking</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in '1234567891'  %}
+                                    <tr>
+                                        <td>Katobu</td>
+                                        <td>Rifki Gustiawan</td>
+                                        <td class="text-center">4.9</td>
+                                        <td>5 / 259</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div> <!-- end table-responsive-->
+                        
+                </div> <!-- end card-body-->
+            </div> <!-- end card-->
+
+        </div> <!-- end col -->
+    </div>
+    <!-- end row -->
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card">
+                <div class="card-body">
+                    <a href="" class="btn btn-sm btn-link float-end">Export
+                        <i class="mdi mdi-download ms-1"></i>
+                    </a>
+                    <h4 class="header-title mt-2 mb-3">Kegiatan Penilaian Mitra</h4>
+
+                    <div class="table-responsive">
+                        <table class="table table-centered table-nowrap table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Nama Survei/Sensus</th>
+                                    <th>Kegiatan Penilaian</th>
+                                    <th>Tanggal Penilaian</th>
+                                    <th>Status Kegiatan</th>
+                                    <th>Status Penilaian Anda</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in '14'  %}
+                                    <tr>
+                                        <td>PLUMKM</td>
+                                        <td>Penilaian Lapangan Petugas PLKUMKM</td>
+                                        <td>19/12/2024</td>
+                                        <td><span class="badge bg-primary p-1"> Berlangsung </span></td>
+                                        <td><span class="badge bg-success p-1"> Anda Menilai 7 / 15 Mitra </span></td>
+                                        <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
+                                    </tr>
+                                    <tr>
+                                        <td>PLUMKM</td>
+                                        <td>Penilaian Lapangan Petugas PLKUMKM</td>
+                                        <td>19/12/2024</td>
+                                        <td><span class="badge bg-success p-1"> Selesai </span></td>
+                                        <td><span class="badge bg-warning p-1"> Belum Menilai </span></td>
+                                        <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div> <!-- end table-responsive-->
+                </div> <!-- end card-body-->
+            </div> <!-- end card-->
+        </div>
+    </div>
+    <!-- end row -->
+
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card">
+                <div class="card-body">
+                    <a href="" class="btn btn-sm btn-link float-end">Export
+                        <i class="mdi mdi-download ms-1"></i>
+                    </a>
+                    <h4 class="header-title mt-2 mb-3">Penilaian Mitra</h4>
+
+                    <div class="table-responsive">
+                        <table class="table table-centered table-nowrap table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Kegiatan Penilaian</th>
+                                    <th>Wilayah</th>
+                                    <th>Nama Mitra</th>
+                                    <th>Role</th>
+                                    <th>Rerata Nilai</th>
+                                    <th>Jumlah Penilai</th>
+                                    <th>Status Penilaian Anda</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Penilaian Lapangan Petugas PLKUMKM</td>
+                                    <td>Kec. Katobu</td>
+                                    <td>Sitti Riskinong</td>
+                                    <td>PCL</td>
+                                    <td class="text-center">4.5</td>
+                                    <td>5 Orang</td>
+                                    <td class="text-center"><span class="badge bg-success p-1"> Sudah Menilai </span></td>
+                                    <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
+                                </tr>
+                                <tr>
+                                    <td>Penilaian Lapangan Petugas PLKUMKM</td>
+                                    <td>Kec. Sawerigadi</td>
+                                    <td>Armin Ruswanto</td>
+                                    <td>PCL</td>
+                                    <td class="text-center">4.5</td>
+                                    <td>5 Orang</td>
+                                    <td class="text-center"><span class="badge bg-success p-1"> Sudah Menilai </span></td>
+                                    <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
+                                </tr>
+                                <tr>
+                                    <td>Penilaian Lapangan Petugas PLKUMKM</td>
+                                    <td>Kec. Batalaiworu</td>
+                                    <td>Sitti Dahlia</td>
+                                    <td>PCL</td>
+                                    <td class="text-center">5</td>
+                                    <td>5 Orang</td>
+                                    <td class="text-center"><span class="badge bg-success p-1"> Sudah Menilai </span></td>
+                                    <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
+                                </tr>
+                                <tr>
+                                    <td>Penilaian Lapangan Petugas PLKUMKM</td>
+                                    <td>Kec. Lasalepa</td>
+                                    <td>Isnan Iskandar</td>
+                                    <td>PCL</td>
+                                    <td class="text-center">5</td>
+                                    <td>5 Orang</td>
+                                    <td class="text-center"><span class="badge bg-success p-1"> Sudah Menilai </span></td>
+                                    <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
+                                </tr>
+                                <tr>
+                                    <td>Penilaian Lapangan Petugas PLKUMKM</td>
+                                    <td>Kec. Parigi</td>
+                                    <td>La Ode Fajaruddin</td>
+                                    <td>PCL</td>
+                                    <td class="text-center">-</td>
+                                    <td>0</td>
+                                    <td class="text-center"><span class="badge bg-warning p-1"> Belum Menilai </span></td>
+                                    <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div> <!-- end table-responsive-->
+                </div> <!-- end card-body-->
+            </div> <!-- end card-->
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card">
+                <div class="card-body">
+                    <a href="" class="btn btn-sm btn-link float-end">Tutup
+                        <i class="mdi mdi-download ms-1"></i>
+                    </a>
+                    <h4 class="header-title mt-2 mb-3">Input Penilaian Mitra</h4>
+
+                    <div class="row">
+                        <p>Silahkan isikan data Penilaian Peserta.</p>
+                        <input type="hidden" name="id" id="id_id">
+
+                        <div class="row mt-3">
+                            <div class="col-6">
+                                <div class="row">
+                                    <div class="col-sm-5">
+                                        <h5 class="mb-3">Penilai</h5>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <select class="form-select mb-2" id="field_survey" name="field_survey">
+                                            <option value="">Pilih Survei</option>
+                                            {% for dt in data_survei %}
+                                                    <option value="{{ dt.id }}">{{ dt.nama }}</option>
+                                                {% endfor %}
+                                            </select>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm-5">
+                                        <h5 class="mb-3">Jabatan Penilai</h5>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <select class="form-select mb-2" id="field_survey" name="field_survey">
+                                            <option value="">Pilih Survei</option>
+                                            {% for dt in data_survei %}
+                                                    <option value="{{ dt.id }}">{{ dt.nama }}</option>
+                                                {% endfor %}
+                                            </select>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm-5">
+                                        <h5 class="mb-3">Survei</h5>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <select class="form-select mb-2" id="field_survey" name="field_survey">
+                                            <option value="">Pilih Survei</option>
+                                            {% for dt in data_survei %}
+                                                    <option value="{{ dt.id }}">{{ dt.nama }}</option>
+                                                {% endfor %}
+                                            </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="row">
+                                    <div class="col-sm-5">
+                                        <h5 class="mb-3">Kegiatan Penilaian</h5>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <select class="form-select mb-2 d-inline" id="field_kegiatan" name="field_kegiatan">
+                                            <option value="">Pilih Kegiatan</option>
+                                            </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-sm-5">
+                                        <h5 class="mb-3">Mitra</h5>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <select class="form-select mb-2 d-inline" id="field_mitra" name="field_mitra">
+                                            <option value="">Pilih Mitra</option>
+                                            </select>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-2">
+                                    <div class="col-sm-5">
+                                        <h5 class="mb-3">Jabatan Mitra</h5>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <select class="form-select mb-2 d-inline" id="field_mitra" name="field_mitra">
+                                            <option value="">PPL</option>
+                                            </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                    </div>
+                    <div class="table-responsive mt-2 mb-3">
+                        <table class="table table-sm table-centered table-nowrap table-hover mb-0">
+                            <thead>
+                                <tr class="bg-info text-white">
+                                    <th>No</th>
+                                    <th>Indikator Penilaian</th>
+                                    <th>Penilaian</th>
+                                    <th>Catatan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>Aspek Pemahaman</td>
+                                    <td>
+                                        <input type="number" class="form-control d-inline" name="nilai_indikator_42" placeholder="Isikan nilai" alt="Isikan nilai" min="0" max="100" onkeyup="if(this.value > 100 || this.value < 0) this.value = null;">   
+                                    </td>
+                                    <td>
+                                        <textarea class="form-control" name="catatan_indikator_42" cols="30" rows="5"></textarea>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>Aspek Teknik Wawancara</td>
+                                    <td>
+                                        <input type="number" class="form-control d-inline" name="nilai_indikator_43" placeholder="Isikan nilai" alt="Isikan nilai" min="0" max="100" onkeyup="if(this.value > 100 || this.value < 0) this.value = null;">   
+                                    </td>
+                                    <td>
+                                        <textarea class="form-control" name="catatan_indikator_43" cols="30" rows="5"></textarea>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>Aspek Ketepatan Waktu</td>
+                                    <td>
+                                        <input type="number" class="form-control d-inline" name="nilai_indikator_44" placeholder="Isikan nilai" alt="Isikan nilai" min="0" max="100" onkeyup="if(this.value > 100 || this.value < 0) this.value = null;">   
+                                    </td>
+                                    <td>
+                                        <textarea class="form-control" name="catatan_indikator_44" cols="30" rows="5"></textarea>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>Aspek Kerjasama</td>
+                                    <td>
+                                        <input type="number" class="form-control d-inline" name="nilai_indikator_45" placeholder="Isikan nilai" alt="Isikan nilai" min="0" max="100" onkeyup="if(this.value > 100 || this.value < 0) this.value = null;">   
+                                    </td>
+                                    <td>
+                                        <textarea class="form-control" name="catatan_indikator_45" cols="30" rows="5"></textarea>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>5</td>
+                                    <td>Aspek Kejujuran</td>
+                                    <td>
+                                        <input type="number" class="form-control d-inline" name="nilai_indikator_46" placeholder="Isikan nilai" alt="Isikan nilai" min="0" max="100" onkeyup="if(this.value > 100 || this.value < 0) this.value = null;">   
+                                    </td>
+                                    <td>
+                                        <textarea class="form-control" name="catatan_indikator_46" cols="30" rows="5"></textarea>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>6</td>
+                                    <td>Aspek Kualitas Isian</td>
+                                    <td>
+                                        <input type="number" class="form-control d-inline" name="nilai_indikator_47" placeholder="Isikan nilai" alt="Isikan nilai" min="0" max="100" onkeyup="if(this.value > 100 || this.value < 0) this.value = null;">   
+                                    </td>
+                                    <td>
+                                        <textarea class="form-control" name="catatan_indikator_47" cols="30" rows="5"></textarea>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>7</td>
+                                    <td>Aspek Pertanggungjawaban</td>
+                                    <td>
+                                        <input type="number" class="form-control d-inline" name="nilai_indikator_48" placeholder="Isikan nilai" alt="Isikan nilai" min="0" max="100" onkeyup="if(this.value > 100 || this.value < 0) this.value = null;">   
+                                    </td>
+                                    <td>
+                                        <textarea class="form-control" name="catatan_indikator_48" cols="30" rows="5"></textarea>
+                                    </td>
+                                </tr>
+                        </tbody>
+                        </table>
+                    </div> <!-- end table-responsive-->
+                    
+                    <div class="row mt-3">
+                        <div class="col-lg">        
+                            <button type="submit" class="btn btn-primary" id="submitformPenilaianPetugas">Simpan Penilaian</button>
+                            <button type="button" class="btn btn-danger" id="ResetformPenilaianPetugas">Reset Form</button>
+                        </div>
+                    </div>
+                </div> <!-- end card-body-->
+            </div> <!-- end card-->
+        </div>
+    </div>
+</div>
+<!-- container -->
+{% endblock content %}

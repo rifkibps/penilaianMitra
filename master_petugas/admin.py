@@ -8,6 +8,7 @@ from . import models
 class PersonAdmin(ImportExportModelAdmin):
     pass
 
+admin.site.register(models.AlokasiPenugasan)
 admin.site.register(models.AlokasiPetugas)
 admin.site.register(models.RoleMitra)
 admin.site.register(models.AdministrativeModel)

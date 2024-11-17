@@ -87,3 +87,12 @@ class AlokasiPetugas(models.Model):
    def __str__(self):
       return f"{self.petugas.nama_petugas} [{self.petugas.kode_petugas} - {self.survey.nama}_{self.role.jabatan}]"
    
+
+class AlokasiPenugasan(models.Model):
+
+   pengawas = models.ForeignKey(AlokasiPetugas, on_delete=models.CASCADE, related_name='alokasi_penugasan', verbose_name='Pengawas')
+   pendata = models.ManyToManyField(AlokasiPetugas)
+
+   def __str__(self):
+      return f"{self.pengawas}"
+   

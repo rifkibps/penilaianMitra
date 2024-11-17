@@ -190,7 +190,6 @@ class AlokasiForm(forms.ModelForm):
             ),
         }
 
-
 class RoleForm(forms.ModelForm):
     
     class Meta:
@@ -215,8 +214,6 @@ class RoleForm(forms.ModelForm):
                 attrs = attrs_input
             ),
         }
-
-
 
 class MasterPetugasFormUpload(forms.Form):
     import_file = forms.FileField(allow_empty_file=False,validators=[FileExtensionValidator(allowed_extensions=['xlsx'])], label="Import File Mitra", widget=forms.FileInput(
@@ -376,7 +373,6 @@ class MasterPetugasFormUpload(forms.Form):
         self.cleaned_data = df.to_dict()
 
         return self.cleaned_data
-
 
 class AlokasiPetugasFormUpload(forms.Form):
     import_file = forms.FileField(allow_empty_file=False,validators=[FileExtensionValidator(allowed_extensions=['xlsx'])], label="Import Alokasi Petugas", widget=forms.FileInput(

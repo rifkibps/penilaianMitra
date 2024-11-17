@@ -96,7 +96,7 @@
                     </div> <!-- end preview-->
               
                     <div class="tab-pane" id="input-tab">
-                        <p>Silahkan isikan data Peserta.</p>
+                        <p>Silahkan isikan data survei.</p>
                         
                         <form action="{% url 'master_survei:index' %}" method="POST" id="formMasterSurvei" class="needs-validation" novalidate>
                             {% csrf_token %}
@@ -111,20 +111,9 @@
                                         </div>
                                     </div>
                                     
-
                                     <div class="row">
-                                        <div class="col-md-6">
-                                            <h5 class="mb-3 mt-4">{{ form.salary.label }}</h5>
-                                            <div class="form-floating errors" id="form_{{form.salary.id_for_label}}">
-                                                {{form.salary}}
-                                                <label for="{{form.salary.id_for_label}}">{{ form.salary.label }}</label>
-                                                <div class="invalid-feedback" id="msg-{{form.salary.id_for_label}}">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
+                                        <div class="col-md-12">
                                             <h5 class="mb-3 mt-4">{{ form.status.label }}</h5>
-                                    
                                             <div class="form-floating errors" id="form_{{form.status.id_for_label}}">
                                                 {{form.status}}
                                                 <label for="{{form.status.id_for_label}}">{{ form.status.label }}</label>

@@ -563,10 +563,18 @@ class MasterPetugasSearchClassView(LoginRequiredMixin, View):
         return JsonResponse({'status': 'Invalid request'}, status=400) 
 
 
-
-
 ### Alokasi Petugas
 
+class AlokasiPenugasanClassView(LoginRequiredMixin, View):
+    
+    def get(self, request):
+        context = {
+            'title' : 'Alokasi Penugasan',
+            'form' : forms.AlokasiForm()
+            }
+
+        return render(request, 'master_petugas/alokasi_penugasan.html', context)
+    
 class AlokasiPetugasClassView(LoginRequiredMixin, View):
     
     def get(self, request):
@@ -580,17 +588,15 @@ class AlokasiPetugasClassView(LoginRequiredMixin, View):
             'form' : forms.AlokasiForm()
             }
 
-        return render(request, 'master_petugas/alokasi.html', context)
+        return render(request, 'master_petugas/alokasi_peran.html', context)
 
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
-        if is_ajax:
+        if is_ajax and request.method == 'POST':
             form = forms.AlokasiForm(request.POST)
-
             if form.is_valid():
-
                 data = get_object_or_404(models.MasterPetugas, pk=form.data['petugas'])
                 if data.status == '1' or data.status == '3':
                     return JsonResponse({"status":"failed", 'message': f'Mitra dengan status {data.get_status_display()} tidak dapat dialokasikan.'}, status=200)
@@ -665,7 +671,7 @@ class MasterAlokasiUpdateView(LoginRequiredMixin, View):
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         if is_ajax:
-
+            print('masuk')
             data = get_object_or_404(models.AlokasiPetugas, pk=request.POST.get('id'))
 
             if data.petugas.status == '1' or data.petugas.status == '3':
@@ -1091,4 +1097,15 @@ class MasterRoleExportClassView(LoginRequiredMixin, View):
 
         response = HttpResponse(dataset.xls, content_type='application/vnd.ms-excel')
         response['Content-Disposition'] = 'attachment; filename="Jabatan Petugas.xls"'
-        return response 
+        return response
+
+
+class PetugasClassView(LoginRequiredMixin, View):
+    
+    def get(self, request):
+        context = {
+            'title' : 'Data Mitra',
+            }
+
+        return render(request, 'master_petugas/petugas.html', context)
+

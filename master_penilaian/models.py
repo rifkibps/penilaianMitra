@@ -1,6 +1,7 @@
 from django.db import models
 from master_survey.models import SurveyModel
 from master_petugas.models import AlokasiPetugas, RoleMitra
+from master_pegawai.models import MasterPegawaiModel
 
 class IndikatorPenilaian(models.Model):
    nama_indikator = models.CharField(max_length=128, null=False, blank=False, verbose_name='Indikator Penilaian' )
@@ -12,12 +13,10 @@ class IndikatorPenilaian(models.Model):
 class KegiatanPenilaianModel(models.Model):
    
     status = (
-       ('0', 'Aktif'),
+       ('0', 'Berlangsung'),
        ('1', 'Selesai'),
        ('2', 'Tidak Aktif'),
     )
-
-
     nama_kegiatan = models.CharField(max_length=256, null=False, blank=False, verbose_name='Nama Kegiatan Penilaian' )
     survey = models.ForeignKey(SurveyModel, on_delete=models.RESTRICT, blank=False, null=False, related_name='penilaian_survei')
     tgl_penilaian = models.DateField( null=False, blank=False,  verbose_name='Tanggal Penilaian')
@@ -45,6 +44,7 @@ class IndikatorKegiatanPenilaian(models.Model):
 
 class MasterNilaiPetugas(models.Model):
 
+   penilai = models.ForeignKey(MasterPegawaiModel, on_delete=models.CASCADE,  related_name='penilai')
    petugas = models.ForeignKey(AlokasiPetugas, on_delete=models.CASCADE,  related_name='nilai_petugas')
    penilaian = models.ForeignKey(IndikatorKegiatanPenilaian, on_delete=models.RESTRICT, related_name='indikator_kegiatan_penilaian')
    nilai = models.SmallIntegerField(null=True, blank=True, verbose_name='Nilai Kegiatan Petugas')

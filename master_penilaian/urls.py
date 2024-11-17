@@ -37,4 +37,6 @@ urlpatterns = [
     path('indikator-kegiatan/detail', views.IndikatorKegiatanPenilaianDetailView.as_view(), name='detail-indikator-kegiatan'),
     path('indikator-kegiatan/update', views.IndikatorKegiatanPenilaianUpdateView.as_view(), name='update-indikator-kegiatan'),
     path('indikator-kegiatan/export', views.IndikatorKegiatanPenilaianExportView.as_view(), name='export-indikator-kegiatan'),
+
+    path('penilaian', views.EntryPenilaianClassView.as_view(), name='penilaian'),
 ]

@@ -24,6 +24,7 @@ urlpatterns = [
     path('alokasi-petugas/upload', views.MasterAlokasiUploadClassView.as_view(), name="upload-alokasi"),
     path('alokasi-petugas/template/<int:rows>', views.MasterAlokasiTemplateClassView.as_view(), name="template-alokasi"),
     
+    path('alokasi-penugasan', views.AlokasiPenugasanClassView.as_view(), name='penugasan'),
     
     path('role-petugas', views.RolePetugasClassView.as_view(), name='role'),
     path('role-petugas/json-response', views.MasterRoleJsonResponseClassView.as_view(), name='datatable-json-role'),
@@ -31,5 +32,7 @@ urlpatterns = [
     path('role-petugas/detail', views.MasterRoleDetailView.as_view(), name='detail-role'),
     path('role-petugas/update', views.MasterRoleUpdateView.as_view(), name='update-role'),
     path('role-petugas/export', views.MasterRoleExportClassView.as_view(), name='export-role'),
+
+    path('petugas', views.PetugasClassView.as_view(), name='petugas'),
 
 ]
