@@ -53,7 +53,7 @@
                             <div class="float-end">
                                 <i class="mdi mdi-account-multiple widget-icon"></i>
                             </div>
-                            <h5 class="text-muted fw-normal mt-0" title="Jumlah Kegiatan">Jumlah Kegiatan Diikuti</h5>
+                            <h5 class="text-muted fw-normal mt-0" title="Jumlah Kegiatan">Jumlah Mitra</h5>
                             <h3 class="mt-3 mb-3">5</h3>
                         </div> <!-- end card-body-->
                     </div> <!-- end card-->
@@ -65,7 +65,7 @@
                             <div class="float-end">
                                 <i class="mdi mdi-cart-plus widget-icon"></i>
                             </div>
-                            <h5 class="text-muted fw-normal mt-0" title="Number of Orders">Jumlah Kegiatan Penilaian</h5>
+                            <h5 class="text-muted fw-normal mt-0" title="Number of Orders">Jumlah Mitra Diblacklist</h5>
                             <h3 class="mt-3 mb-3">10</h3>
                         </div> <!-- end card-body-->
                     </div> <!-- end card-->
@@ -79,7 +79,7 @@
                             <div class="float-end">
                                 <i class="mdi mdi-currency-usd widget-icon"></i>
                             </div>
-                            <h5 class="text-muted fw-normal mt-0" title="Average Revenue">Jumlah Mitra</h5>
+                            <h5 class="text-muted fw-normal mt-0" title="Average Revenue">Rerata Nilai Mitra</h5>
                             <h3 class="mt-3 mb-3">20</h3>
                         </div> <!-- end card-body-->
                     </div> <!-- end card-->
@@ -156,73 +156,48 @@
                     <a href="" class="btn btn-sm btn-link float-end">Export
                         <i class="mdi mdi-download ms-1"></i>
                     </a>
-                    <h4 class="header-title mt-2 mb-3">Penilaian Mitra</h4>
+                    <h4 class="header-title mt-2 mb-3">Daftar Mitra BPS Kabupaten Muna</h4>
 
                     <div class="table-responsive">
                         <table class="table table-centered table-nowrap table-hover mb-0">
                             <thead>
                                 <tr>
-                                    <th>Kegiatan Penilaian</th>
-                                    <th>Wilayah</th>
+                                    <th>ID Sobat</th>
                                     <th>Nama Mitra</th>
-                                    <th>Role</th>
-                                    <th>Rerata Nilai</th>
-                                    <th>Jumlah Penilai</th>
-                                    <th>Status Penilaian Anda</th>
+                                    <th>Wilayah</th>
+                                    <th>No Telp.</th>
+                                    <th>Email</th>
+                                    <th>Jumlah Kegiatan Diikuti</th>
+                                    <th>Dinilai oleh</th>
+                                    <th>Status</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>Penilaian Lapangan Petugas PLKUMKM</td>
-                                    <td>Kec. Katobu</td>
-                                    <td>Sitti Riskinong</td>
-                                    <td>PCL</td>
-                                    <td class="text-center">4.5</td>
-                                    <td>5 Orang</td>
-                                    <td class="text-center"><span class="badge bg-success p-1"> Sudah Menilai </span></td>
-                                    <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
-                                </tr>
-                                <tr>
-                                    <td>Penilaian Lapangan Petugas PLKUMKM</td>
-                                    <td>Kec. Sawerigadi</td>
-                                    <td>Armin Ruswanto</td>
-                                    <td>PCL</td>
-                                    <td class="text-center">4.5</td>
-                                    <td>5 Orang</td>
-                                    <td class="text-center"><span class="badge bg-success p-1"> Sudah Menilai </span></td>
-                                    <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
-                                </tr>
-                                <tr>
-                                    <td>Penilaian Lapangan Petugas PLKUMKM</td>
-                                    <td>Kec. Batalaiworu</td>
-                                    <td>Sitti Dahlia</td>
-                                    <td>PCL</td>
-                                    <td class="text-center">5</td>
-                                    <td>5 Orang</td>
-                                    <td class="text-center"><span class="badge bg-success p-1"> Sudah Menilai </span></td>
-                                    <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
-                                </tr>
-                                <tr>
-                                    <td>Penilaian Lapangan Petugas PLKUMKM</td>
-                                    <td>Kec. Lasalepa</td>
-                                    <td>Isnan Iskandar</td>
-                                    <td>PCL</td>
-                                    <td class="text-center">5</td>
-                                    <td>5 Orang</td>
-                                    <td class="text-center"><span class="badge bg-success p-1"> Sudah Menilai </span></td>
-                                    <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
-                                </tr>
-                                <tr>
-                                    <td>Penilaian Lapangan Petugas PLKUMKM</td>
-                                    <td>Kec. Parigi</td>
-                                    <td>La Ode Fajaruddin</td>
-                                    <td>PCL</td>
-                                    <td class="text-center">-</td>
-                                    <td>0</td>
-                                    <td class="text-center"><span class="badge bg-warning p-1"> Belum Menilai </span></td>
-                                    <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
-                                </tr>
+                                {% for i in '123' %}
+                                    <tr>
+                                        <td>24211823</td>
+                                        <td>La Ode Fajaruddin</td>
+                                        <td>Kec. Katobu</td>
+                                        <td>085320813630</td>
+                                        <td>rifki.gusti@bps.go.id</td>
+                                        <td>5 Survei</td>
+                                        <td>5 Orang</td>
+                                        <td><span class="badge bg-success p-1"> Mitra Rekomendasi </span></td>
+                                        <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
+                                    </tr>
+                                    <tr>
+                                        <td>12312341</td>
+                                        <td>Moh. Isnan Iskandar</td>
+                                        <td>Kec. Katobu</td>
+                                        <td>085320813630</td>
+                                        <td>rifki.gusti@bps.go.id</td>
+                                        <td>5 Survei</td>
+                                        <td>5 Orang</td>
+                                        <td><span class="badge bg-danger p-1"> Blacklist </span></td>
+                                        <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
+                                    </tr>
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div> <!-- end table-responsive-->

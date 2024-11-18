@@ -34,5 +34,6 @@ urlpatterns = [
     path('role-petugas/export', views.MasterRoleExportClassView.as_view(), name='export-role'),
 
     path('petugas', views.PetugasClassView.as_view(), name='petugas'),
+    path('petugas/preview/<int:mitra_id>', views.DetailPetugasPreviewClassView.as_view(), name='detail-petugas'),
 
 ]
