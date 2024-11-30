@@ -13,7 +13,7 @@ from . import forms
 # username: rifki.gusti
 # password: hbz934115
 
-class aLoginView(LoginView):
+class LoginView(LoginView):
     template_name = 'authentication/login.html'
     redirect_authenticated_user = True
     extra_context = {

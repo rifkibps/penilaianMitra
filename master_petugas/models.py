@@ -2,6 +2,7 @@ from django.db import models
 from master_survey.models import SurveyModel
 from .validators import int_validators
 from master_honor.models import HonorModel
+from master_pegawai.models import MasterPegawaiModel
 # Create your models here.
 
 class AdministrativeModel(models.Model):
@@ -79,13 +80,14 @@ class RoleMitra(models.Model):
 
 class AlokasiPetugas(models.Model):
 
-   petugas = models.ForeignKey(MasterPetugas, on_delete=models.CASCADE, related_name='master_alokasi_petugas', verbose_name='Kode Petugas')
+   petugas = models.ForeignKey(MasterPetugas, null=True, blank=True, on_delete=models.CASCADE, related_name='master_alokasi_petugas', verbose_name='Kode Petugas')
+   pegawai = models.ForeignKey(MasterPegawaiModel, null=True, blank=True, on_delete=models.CASCADE, related_name='master_alokasi_pegawai', verbose_name='Pegawai')
    survey = models.ForeignKey(SurveyModel, on_delete=models.RESTRICT, related_name='master_alokasi_survey', verbose_name='Survei/Sensus')
    honorPerolehan = models.DecimalField(decimal_places=2, default=0, max_digits=13, verbose_name="Jumlah Honor Perolehan")
    role = models.ForeignKey(RoleMitra, on_delete=models.RESTRICT, related_name='master_alokasi_role', verbose_name='Jabatan Petugas')
 
    def __str__(self):
-      return f"{self.petugas.nama_petugas} [{self.petugas.kode_petugas} - {self.survey.nama}_{self.role.jabatan}]"
+      return (f"[{self.pegawai.nip}] {self.pegawai.name}" if self.pegawai else f"[{self.petugas.kode_petugas}] {self.petugas.nama_petugas}") + ' | ' +  f'{self.survey.nama}_{self.role.jabatan}'
    
 
 class AlokasiPenugasan(models.Model):

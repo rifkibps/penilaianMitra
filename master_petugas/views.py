@@ -34,6 +34,7 @@ from munapps.helpers import currency_formatting as cf
 from django.db.models.functions import Length
 
 from master_honor.models import HonorModel
+from master_pegawai.models import MasterPegawaiModel
 # Packages for upload master petugas
 
 # Create your views here.
@@ -581,6 +582,7 @@ class AlokasiPetugasClassView(LoginRequiredMixin, View):
         context = {
             'title' : 'Alokasi Mitra',
             'data_mitra': models.MasterPetugas.objects.filter(~Q(status = 3), ~Q(status = 1)),
+            'data_pegawai': MasterPegawaiModel.objects.all(),
             'data_survei' : SurveyModel.objects.all(),
             'data_jabatan' : models.RoleMitra.objects.all(),
             'data_batasan_honor' : HonorModel.objects.all(),
@@ -733,8 +735,7 @@ class MasterAlokasiJsonResponseClassView(LoginRequiredMixin, View):
         if datatables.get('jabatan_filter'):
             data = data.filter(role = datatables.get('jabatan_filter'))
 
-
-        data = data.all().exclude(Q(petugas=None)|Q(role=None)|Q(survey=None))
+        data = data.all().exclude((Q(petugas=None) & Q(pegawai=None))|Q(role=None)|Q(survey=None))
         records_total = data.count()
         records_filtered = records_total
         
@@ -760,16 +761,21 @@ class MasterAlokasiJsonResponseClassView(LoginRequiredMixin, View):
         except EmptyPage:
             object_list = paginator.page(1).object_list
 
-        data = [
-            {
-                'petugas__kode_petugas': obj.petugas.kode_petugas,
-                'petugas__nama_petugas': f'<a href="{reverse_lazy("master_petugas:mitra-view-detail", kwargs={"mitra_id": obj.id})}" class="text-body" target="_blank">{obj.petugas.nama_petugas}</a>',
+        data = []
+        for obj in object_list:
+            code = obj.pegawai.nip if obj.pegawai else obj.petugas.kode_petugas 
+            name = obj.pegawai.name if obj.pegawai else obj.petugas.nama_petugas 
+            state_mitra = 0 if obj.pegawai else 1
+            
+            data.append({
+                'petugas__kode_petugas': code ,
+                'petugas__nama_petugas': f'<a href="javascript:void(0)" class="text-body">{name}</a>' if obj.pegawai else f'<a href="{reverse_lazy("master_petugas:mitra-view-detail", kwargs={"mitra_id": obj.id})}" class="text-body" target="_blank">{name}</a>',
                 'survey__nama': obj.survey.nama,
                 'role__jabatan': obj.role.jabatan,
-                'aksi': f'<a href="javascript:void(0);" onclick="editAlokPetugas({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a> <a href="javascript:void(0);" onclick="deleteAlokasi({obj.id});" class="action-icon"> <i class="mdi mdi-delete"></i></a>'
-            } for obj in object_list
-        ]
-        
+                'pegawai': 'Organik' if obj.pegawai else 'Mitra',
+                'aksi': f'<a href="javascript:void(0);" onclick="editAlokPetugas({obj.id}, {state_mitra})" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a> <a href="javascript:void(0);" onclick="deleteAlokasi({obj.id});" class="action-icon"> <i class="mdi mdi-delete"></i></a>'
+            })
+
         return {
             'draw': draw,
             'recordsTotal': records_total,

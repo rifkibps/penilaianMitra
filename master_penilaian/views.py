@@ -1229,9 +1229,95 @@ class GetNilaiMitraClassView(LoginRequiredMixin, View):
 class EntryPenilaianClassView(LoginRequiredMixin, View):
     
     def get(self, request):
+        data = models.KegiatanPenilaianModel.objects.all()
+        from master_petugas import models as model_petugas
+        for dt in data:
+            aloc = model_petugas.AlokasiPetugas.objects.filter(survey = dt.survey_id)
+            if aloc.exists():
+                continue
+
         context = {
             'title' : 'Penilaian Mitra',
         }
 
         return render(request, 'master_penilaian/entry_nilai.html', context)
-    
+
+class KegiatanPenilaianJsonResponseClassView(LoginRequiredMixin, View):
+
+    def post(self, request):    
+        data = self._datatables(request)
+        return HttpResponse(json.dumps(data, cls=DjangoJSONEncoder), content_type='application/json')
+		
+    def _datatables(self, request):
+        datatables = request.POST
+        
+        # Get Draw
+        draw = int(datatables.get('draw'))
+        start = int(datatables.get('start'))
+        length = int(datatables.get('length'))
+        page_number = int(start / length + 1)
+
+        search = datatables.get('search[value]')
+
+        order_idx = int(datatables.get('order[0][column]')) # Default 1st index for
+        order_dir = datatables.get('order[0][dir]') # Descending or Ascending
+        order_col = 'columns[' + str(order_idx) + '][data]'
+        order_col_name = datatables.get(order_col)
+
+        if (order_dir == "desc"):
+            order_col_name =  str('-' + order_col_name)
+
+        data = models.KegiatanPenilaianModel.objects
+
+        data = data.all().exclude(Q(nama_kegiatan=None)|Q(survey=None)|Q(tgl_penilaian=None)|Q(status=None)|Q(role_permitted=None))
+        records_total = data.count()
+        records_filtered = records_total
+        
+        if search:
+            data = models.KegiatanPenilaianModel.objects
+
+            data = data.filter(
+                Q(nama_kegiatan__icontains=search)|
+                Q(survey__nama__icontains=search)|
+                Q(tgl_penilaian__icontains=search)|
+                Q(status__icontains=search)|
+                Q(role_permitted__jabatan__icontains=search)
+            ).exclude(Q(nama_kegiatan=None)|Q(survey=None)|Q(sumber=None)|Q(tgl_penilaian=None)|Q(status=None)|Q(role_permitted=None))
+
+            records_total = data.count()
+            records_filtered = records_total
+        
+        data = data.order_by(order_col_name)
+        # Conf Paginator
+        paginator = Paginator(data, length)
+
+        try:
+            object_list = paginator.page(page_number).object_list
+        except PageNotAnInteger:
+            object_list = paginator.page(1).object_list
+        except EmptyPage:
+            object_list = paginator.page(1).object_list
+            {"data": 'nama_kegiatan'},
+            {"data": 'survey__nama'},
+            {"data" : 'tgl_penilaian'},
+            {"data" : 'status'},
+            {"data" : 'aksi'},
+        
+        data = [
+            {
+                'nama_kegiatan': obj.nama_kegiatan,
+                'survey__nama': obj.survey.nama,
+                'tgl_penilaian': obj.tgl_penilaian.strftime('%d-%m-%Y'),
+                'role_permitted__jabatan' : ', '.join(obj.role_permitted.values_list('jabatan', flat=True)),
+                'status': f'<span class="badge badge-primary-lighten"> {obj.get_status_display()} </span>'  if obj.status == '0' else f'<span class="badge badge-danger-lighten"> {obj.get_status_display()} </span>',
+                'aksi': f'<a href="javascript:void(0);" onclick="editKegiatanPenilaian({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a> <a href="javascript:void(0);" onclick="hapusKegiatanPenilaian({obj.id});" class="action-icon"> <i class="mdi mdi-delete"></i></a>'
+            } for obj in object_list
+        ]
+        
+        return {
+            'draw': draw,
+            'recordsTotal': records_total,
+            'recordsFiltered': records_filtered,
+            'data': data,
+        }
+

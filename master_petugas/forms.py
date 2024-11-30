@@ -162,12 +162,14 @@ class AlokasiForm(forms.ModelForm):
         model = models.AlokasiPetugas
         fields = [
             'petugas', 
+            'pegawai', 
             'survey',
             'role',
         ]
 
         labels = {
             'petugas': 'Nama Petugas', 
+            'pegawai': 'Nama Pegawai', 
             'survey': 'Nama Survei',
             'role': 'Jabatan',
         }
@@ -181,6 +183,9 @@ class AlokasiForm(forms.ModelForm):
         widgets = {
             'petugas': forms.Select(
                 attrs = attrs_input | {'class' : 'form-select', 'id': 'id_petugas_id'}
+            ),
+            'pegawai': forms.Select(
+                attrs = attrs_input | {'class' : 'form-select', 'id': 'id_pegawai_id'}
             ),
             'survey': forms.Select(
                 attrs = attrs_input | {'class' : 'form-select', 'id' : 'id_survey_id'}
