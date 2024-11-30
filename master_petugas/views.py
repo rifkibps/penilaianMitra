@@ -1115,3 +1115,125 @@ class PetugasClassView(LoginRequiredMixin, View):
 
         return render(request, 'master_petugas/petugas.html', context)
 
+class DetailPetugasPreviewClassView(LoginRequiredMixin, View):
+    
+    def _globalRank(self, request):
+        data = MasterNilaiPetugas.objects.values('petugas__petugas__kode_petugas', 'petugas__petugas__nama_petugas', 'petugas__survey__nama', 'petugas__role__jabatan', 'penilaian__kegiatan_penilaian','penilaian__kegiatan_penilaian__nama_kegiatan', 'nilai', 'catatan')
+        
+        master_data = []
+        
+        for dt in data:
+  
+            check_exist = [index for (index, d) in enumerate(master_data) if d["kode_petugas"] == dt['petugas__petugas__kode_petugas']]
+            
+            if len(check_exist) > 0:
+
+                check_exist_2 = [index for (index, d) in enumerate(master_data[check_exist[0]]['kegiatan_penilaian']) if d["id_kegiatan"] == dt['penilaian__kegiatan_penilaian']]
+                
+                if len(check_exist_2) > 0:
+                    master_data[check_exist[0]]['kegiatan_penilaian'][check_exist_2[0]]['nilai'].append(dt['nilai'])
+                    master_data[check_exist[0]]['kegiatan_penilaian'][check_exist_2[0]]['catatan'].append(dt['catatan'])
+                else:
+                    master_data[check_exist[0]]['kegiatan_penilaian'].append({
+                        'id_kegiatan' : dt['penilaian__kegiatan_penilaian'],
+                        'survey' : dt['petugas__survey__nama'],
+                        'nama_kegiatan': dt['penilaian__kegiatan_penilaian__nama_kegiatan'],
+                        'role': dt['petugas__role__jabatan'],
+                        'nilai' : [dt['nilai']],
+                        'catatan' : [dt['catatan']],
+                    })
+
+                continue
+
+            master_data.append({
+                'kode_petugas': dt['petugas__petugas__kode_petugas'],
+                'nama_petugas': dt['petugas__petugas__nama_petugas'],
+                'rerata_final': 0,
+                'ranking_final': 0,
+                'kegiatan_penilaian' : [{'id_kegiatan': dt['penilaian__kegiatan_penilaian'] , 'role' :  dt['petugas__role__jabatan'], 'survey' : dt['petugas__survey__nama'], 'nama_kegiatan': dt['penilaian__kegiatan_penilaian__nama_kegiatan'], 'nilai': [dt['nilai']], 'catatan': [dt['catatan']]}]
+            })
+
+        for dt in master_data:
+            
+            mean_data = []
+            for dt_kegiatan in dt['kegiatan_penilaian']:
+                mean_data.append(round(mean(dt_kegiatan['nilai']), 2))
+        
+            dt['rerata_final'] = round(mean(mean_data), 2)
+
+        data_sorted = sorted(master_data, key = itemgetter('rerata_final'), reverse=True)
+        for idx, dt in enumerate(data_sorted):
+            dt['ranking_final'] = idx+1
+
+        return data_sorted
+
+
+    def get(self, request, *args, **kwargs):
+        
+        mitra_id = self.kwargs['mitra_id']
+        mitra = models.MasterPetugas.objects.filter(pk = mitra_id)
+
+        if mitra.exists() == False:
+            return redirect(request.META.get('HTTP_REFERER', '/'))
+        
+        survei_ = models.AlokasiPetugas.objects.filter(petugas = mitra_id)
+        kegiatan_penilaian_ = MasterNilaiPetugas.objects.filter(petugas__petugas = mitra_id).values('penilaian__kegiatan_penilaian')
+
+        global_rank = self._globalRank(request)
+
+        # Mengurutkan penilaian berdasarkan kegiatan penilaian
+        data_nilai_mitra = {}
+        for dt in global_rank:
+            dt_kode_petugas = dt['kode_petugas']
+            dt_kegiatan_penilaian = dt['kegiatan_penilaian']
+
+            for dt_ in dt_kegiatan_penilaian:
+
+                dt_['rerata'] = round(mean(dt_['nilai']), 2)
+
+                if dt_['id_kegiatan'] in data_nilai_mitra:
+                    data_nilai_mitra[dt_['id_kegiatan']].append(dt_ | {'kode_petugas' : dt_kode_petugas})
+                else:
+                    data_nilai_mitra[dt_['id_kegiatan']] = [
+                        dt_ | {'kode_petugas' : dt_kode_petugas}
+                    ]
+
+        for idx, val in data_nilai_mitra.items():
+            sorted_ = sorted(val, key = itemgetter('rerata'), reverse=True)
+            
+            for idx2, dt_sort in enumerate(sorted_):
+                dt_sort['rank'] = f'{idx2+1} of {len(sorted_)}'
+
+            data_nilai_mitra[idx] = sorted_
+
+
+        # Formatting Data
+        data_final = []
+        for dt_ in kegiatan_penilaian_.distinct():
+            id_kegiatan_penilaian = dt_['penilaian__kegiatan_penilaian']
+            if id_kegiatan_penilaian in data_nilai_mitra:
+                filter_data = [index for (index, d) in enumerate(data_nilai_mitra[id_kegiatan_penilaian]) if d["kode_petugas"] == mitra.first().kode_petugas]
+
+                if len(filter_data) > 0:
+                    data_final.append(data_nilai_mitra[id_kegiatan_penilaian][filter_data[0]])
+
+
+        for dt in data_final:
+            dt['catatan'] = np.unique(np.array(dt['catatan']))
+        
+        check_exist = [index for (index, d) in enumerate(global_rank) if d["kode_petugas"] == mitra.first().kode_petugas]
+        global_ranking = global_rank[check_exist[0]]['ranking_final'] if len(check_exist) > 0 else ''
+
+        context = {
+            'title' : f'{mitra.first().kode_petugas} | {mitra.first().nama_petugas}',
+            'mitra' : mitra.first(),
+            'survei_followed' : survei_.count(),
+            'history_survey' : survei_,
+            'kegiatan_followed' : kegiatan_penilaian_.distinct().count(),
+            'global_rank' : global_ranking,
+            'penilaian' : data_final
+        }
+
+
+        return render(request, 'master_petugas/detail_petugas_preview.html', context)
+
