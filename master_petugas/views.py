@@ -598,21 +598,28 @@ class AlokasiPetugasClassView(LoginRequiredMixin, View):
 
         if is_ajax and request.method == 'POST':
             form = forms.AlokasiForm(request.POST)
+
             if form.is_valid():
-                data = get_object_or_404(models.MasterPetugas, pk=form.data['petugas'])
-                if data.status == '1' or data.status == '3':
-                    return JsonResponse({"status":"failed", 'message': f'Mitra dengan status {data.get_status_display()} tidak dapat dialokasikan.'}, status=200)
+                if request.POST.get('petugas') or request.POST.get('pegawai'):
+                    if request.POST.get('petugas') :
+                        data = get_object_or_404(models.MasterPetugas, pk=form.data['petugas'])
+                        if data.status == '1' or data.status == '3':
+                            return JsonResponse({"status":"failed", 'message': f'Mitra dengan status {data.get_status_display()} tidak dapat dialokasikan.'}, status=200)
 
-                check_exist_data = models.AlokasiPetugas.objects.filter(petugas = form.data['petugas'], survey = form.data['survey'])
-                
-                if check_exist_data.exists():
-                    return JsonResponse({"status":"failed", 'message': 'Data alokasi telah tersedia pada database'}, status=200)
+                        check_exist_data = models.AlokasiPetugas.objects.filter(petugas = form.data['petugas'], survey = form.data['survey'])
+                    else:
+                        data = get_object_or_404(models.MasterPegawaiModel, pk=form.data['pegawai'])
+                        check_exist_data = models.AlokasiPetugas.objects.filter(pegawai = form.data['pegawai'], survey = form.data['survey'])
+                        
+                    if check_exist_data.exists():
+                        return JsonResponse({"status":"failed", 'message': 'Data alokasi telah tersedia pada database'}, status=200)
+                    
+                    form.save()
 
-                instance = form.save()
-                user_instance = serializers.serialize('json', [ instance, ])
-                
-                # send to client side.
-                return JsonResponse({"status":"success", 'message': 'Data berhasil ditambahkan'}, status=200)
+                    return JsonResponse({"status":"success", 'message': 'Data berhasil ditambahkan'}, status=200)
+                else:
+                    return JsonResponse({"status":"failed", 'message': 'Data alokasi gagal ditambahkan'}, status=200)
+
             else:
                 return JsonResponse({"status":"failed", "error": form.errors}, status=400)
         return JsonResponse({"status":"failed", "error": ""}, status=400)
@@ -655,7 +662,6 @@ class MasterAlokasiDetailView(LoginRequiredMixin, View):
                 id = request.POST.get('id')
                 data_petugas = models.AlokasiPetugas.objects.filter(pk=id)
 
-
                 # check_nilai_mitra = MasterNilaiPetugas.objects.filter(petugas = id)
                 # if check_nilai_mitra.exists():
                 #     return JsonResponse({'status' : 'failed', 'message': 'Data alokasi petugas telah digunakan pada master data penilaian'}, status=200)
@@ -672,33 +678,39 @@ class MasterAlokasiUpdateView(LoginRequiredMixin, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-        if is_ajax:
-            print('masuk')
-            data = get_object_or_404(models.AlokasiPetugas, pk=request.POST.get('id'))
-
-            if data.petugas.status == '1' or data.petugas.status == '3':
-                return JsonResponse({"status":"failed", 'message': f'Mitra dengan status {data.petugas.get_status_display()} tidak dapat dialokasikan.'}, status=200)
-        
-            # check_nilai_mitra = MasterNilaiPetugas.objects.filter(petugas = request.POST.get('id'))
-            # if check_nilai_mitra.exists():
-            #     return JsonResponse({'status' : 'failed', 'message': 'Data alokasi petugas telah digunakan pada master data penilaian'}, status=200)
-
-            form = forms.AlokasiForm(request.POST, instance=data)
-
-            if form.is_valid():
+        if is_ajax and request.method == 'POST':
             
-                check_exist_data = models.AlokasiPetugas.objects.filter(~Q(pk=form.data['id']) & Q(petugas = form.data['petugas']) & Q(survey = form.data['survey']))
-              
-                if check_exist_data.exists():
-                    return JsonResponse({"status":"failed", 'message': 'Data alokasi telah tersedia pada database'}, status=200)
-
-                instance = form.save()
-                ser_instance = serializers.serialize('json', [ instance, ])
+            if request.POST.get('petugas') or request.POST.get('pegawai'):
                 
-                # send to client side.
-                return JsonResponse({"status":"success", "instance": ser_instance, "message": "Data berhasil diubah"}, status=200)
+                data = get_object_or_404(models.AlokasiPetugas, pk=request.POST.get('id'))
+                    
+                # check_nilai_mitra = MasterNilaiPetugas.objects.filter(petugas = request.POST.get('id'))
+                # if check_nilai_mitra.exists():
+                #     return JsonResponse({'status' : 'failed', 'message': 'Data alokasi petugas telah digunakan pada master data penilaian'}, status=200)
+
+                form = forms.AlokasiForm(request.POST, instance=data)
+
+                if form.is_valid():
+                    if request.POST.get('petugas') :
+                        if data.petugas.status == '1' or data.petugas.status == '3':
+                            return JsonResponse({"status":"failed", 'message': f'Mitra dengan status {data.petugas.get_status_display()} tidak dapat dialokasikan.'}, status=200)
+                        check_exist_data = models.AlokasiPetugas.objects.filter(~Q(pk=form.data['id']) & Q(petugas = form.data['petugas']) & Q(survey = form.data['survey']))
+                    else:
+                        check_exist_data = models.AlokasiPetugas.objects.filter(~Q(pk=form.data['id']) & Q(pegawai = form.data['pegawai']) & Q(survey = form.data['survey']))
+
+                    if check_exist_data.exists():
+                        return JsonResponse({"status":"failed", 'message': 'Data alokasi telah tersedia pada database'}, status=200)
+
+                    instance = form.save()
+                    ser_instance = serializers.serialize('json', [ instance, ])
+                    
+                    # send to client side.
+                    return JsonResponse({"status":"success", "instance": ser_instance, "message": "Data berhasil diubah"}, status=200)
+                else:
+                    return JsonResponse({"status": "failed", "error": form.errors, "message": "Terjadi kesalahan"}, status=400)
             else:
-                return JsonResponse({"status": "failed", "error": form.errors, "message": "Terjadi kesalahan"}, status=400)
+                return JsonResponse({"status":"failed", 'message': f'Tidak dapat mengupdate data alokasi mitra.'}, status=200)
+        
             
         return JsonResponse({"status": "failed", "message": "Terjadi Kesalahan"}, status=400)
 

@@ -155,40 +155,22 @@
                 <div class="card-body">
                     <h4 class="header-title mt-2 mb-3">Kegiatan Penilaian Mitra</h4>
 
-                    <div class="table-responsive">
-                        <table class="table table-centered table-nowrap table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Nama Survei/Sensus</th>
-                                    <th>Kegiatan Penilaian</th>
-                                    <th>Tanggal Penilaian</th>
-                                    <th>Status Kegiatan</th>
-                                    <th>Status Penilaian Anda</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for i in '14'  %}
-                                    <tr>
-                                        <td>PLUMKM</td>
-                                        <td>Penilaian Lapangan Petugas PLKUMKM</td>
-                                        <td>19/12/2024</td>
-                                        <td><span class="badge bg-primary p-1"> Berlangsung </span></td>
-                                        <td><span class="badge bg-success p-1"> Anda Menilai 7 / 15 Mitra </span></td>
-                                        <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
-                                    </tr>
-                                    <tr>
-                                        <td>PLUMKM</td>
-                                        <td>Penilaian Lapangan Petugas PLKUMKM</td>
-                                        <td>19/12/2024</td>
-                                        <td><span class="badge bg-success p-1"> Selesai </span></td>
-                                        <td><span class="badge bg-warning p-1"> Belum Menilai </span></td>
-                                        <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div> <!-- end table-responsive-->
+                    <table class="table table-centered table-nowrap table-hover mb-0" id="list_kegiatan_penilaian">
+                        <thead>
+                            <tr>
+                                <th>Nama Survei/Sensus</th>
+                                <th>Kegiatan Penilaian</th>
+                                <th>Tanggal Penilaian</th>
+                                <th>Status Kegiatan</th>
+                                <th>Status Penilaian Anda</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                          
+                        </tbody>
+                    </table>
+
                 </div> <!-- end card-body-->
             </div> <!-- end card-->
         </div>
@@ -202,7 +184,7 @@
                     <h4 class="header-title mt-2 mb-3">Penilaian Mitra</h4>
 
                     <div class="table-responsive">
-                        <table class="table table-centered table-nowrap table-hover mb-0">
+                        <table class="table table-centered table-nowrap table-hover mb-0" id="list-penilaian">
                             <thead>
                                 <tr>
                                     <th>Kegiatan Penilaian</th>
@@ -210,62 +192,20 @@
                                     <th>Nama Mitra</th>
                                     <th>Role</th>
                                     <th>Rerata Nilai</th>
-                                    <th>Jumlah Penilai</th>
                                     <th>Status Penilaian Anda</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
+                                {% comment %} <tr>
                                     <td>Penilaian Lapangan Petugas PLKUMKM</td>
                                     <td>Kec. Katobu</td>
                                     <td>Sitti Riskinong</td>
                                     <td>PCL</td>
                                     <td class="text-center">4.5</td>
-                                    <td>5 Orang</td>
                                     <td class="text-center"><span class="badge bg-success p-1"> Sudah Menilai </span></td>
                                     <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
-                                </tr>
-                                <tr>
-                                    <td>Penilaian Lapangan Petugas PLKUMKM</td>
-                                    <td>Kec. Sawerigadi</td>
-                                    <td>Armin Ruswanto</td>
-                                    <td>PCL</td>
-                                    <td class="text-center">4.5</td>
-                                    <td>5 Orang</td>
-                                    <td class="text-center"><span class="badge bg-success p-1"> Sudah Menilai </span></td>
-                                    <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
-                                </tr>
-                                <tr>
-                                    <td>Penilaian Lapangan Petugas PLKUMKM</td>
-                                    <td>Kec. Batalaiworu</td>
-                                    <td>Sitti Dahlia</td>
-                                    <td>PCL</td>
-                                    <td class="text-center">5</td>
-                                    <td>5 Orang</td>
-                                    <td class="text-center"><span class="badge bg-success p-1"> Sudah Menilai </span></td>
-                                    <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
-                                </tr>
-                                <tr>
-                                    <td>Penilaian Lapangan Petugas PLKUMKM</td>
-                                    <td>Kec. Lasalepa</td>
-                                    <td>Isnan Iskandar</td>
-                                    <td>PCL</td>
-                                    <td class="text-center">5</td>
-                                    <td>5 Orang</td>
-                                    <td class="text-center"><span class="badge bg-success p-1"> Sudah Menilai </span></td>
-                                    <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
-                                </tr>
-                                <tr>
-                                    <td>Penilaian Lapangan Petugas PLKUMKM</td>
-                                    <td>Kec. Parigi</td>
-                                    <td>La Ode Fajaruddin</td>
-                                    <td>PCL</td>
-                                    <td class="text-center">-</td>
-                                    <td>0</td>
-                                    <td class="text-center"><span class="badge bg-warning p-1"> Belum Menilai </span></td>
-                                    <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
-                                </tr>
+                                </tr> {% endcomment %}
                             </tbody>
                         </table>
                     </div> <!-- end table-responsive-->
@@ -466,3 +406,47 @@
 </div>
 <!-- container -->
 {% endblock content %}
+
+{% block js-extender %}
+<script>
+    var table = $("#list_kegiatan_penilaian").DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            "url": "{% url 'master_penilaian:list-penilaian-json' %}",
+            "headers": {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": '{{csrf_token}}',
+            },
+            "type": "POST"
+        },
+        columns :[
+            {"data": 'nama_kegiatan'},
+            {"data": 'survey__nama'},
+            {"data" : 'tgl_penilaian'},
+            {"data": 'status'},
+            {"data" : 'status_penilaian'},
+            {"data" : 'aksi'},
+        ],
+        lengthMenu: [5, 25, 50, 100,'All'],
+        columnDefs: [ {
+            'targets': [5], /* column index */
+            'orderable': false, /* true or false */
+            'className': "text-center"
+        }],
+        bLengthChange: false,
+        bInfo : false,
+        bFilter: false,
+        keys: !0,
+        language: {
+            paginate: {
+            previous: "<i class='mdi mdi-chevron-left'>",
+            next: "<i class='mdi mdi-chevron-right'>",
+            },
+        },
+        drawCallback: function () {
+            $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
+        },
+    });
+</script>
+{% endblock js-extender %}

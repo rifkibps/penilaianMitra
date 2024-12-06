@@ -31,12 +31,17 @@ from openpyxl.styles import Alignment
 from openpyxl.styles import Font, PatternFill
 from master_petugas import utils
 
+from master_petugas import models as model_petugas
+from master_pegawai import models as model_pegawai
+
+from django.db.models import Avg
 class PenilaianPetugasClassView(LoginRequiredMixin, View):
     
     def get(self, request):
         context = {
             'title' : 'Kegiatan Penilaian',
             'data_survei' : SurveyModel.objects.all(),
+            'data_survei_finished' : SurveyModel.objects.filter(status='2'),
             'data' : models.KegiatanPenilaianModel.objects.all(),
             'roles' : RoleMitra.objects.all(),
             'form' : forms.KegiatanPenilaianForm()
@@ -76,11 +81,7 @@ class MasterPenilaianDeleteView(LoginRequiredMixin, View):
                     check_db = models.MasterNilaiPetugas.objects.filter(penilaian__kegiatan_penilaian = id)
                     if check_db.exists():
                         return JsonResponse({'status' : 'failed', 'message': 'Data kegiatan penilaian telah digunakan pada master data penilaian'}, status=200)
-                
-                    check_db_1 = models.IndikatorKegiatanPenilaian.objects.filter(kegiatan_penilaian = id)
-                    if check_db_1.exists():
-                        return JsonResponse({'status' : 'failed', 'message': 'Data kegiatan penilaian telah digunakan pada master data penilaian'}, status=200)
-                    
+            
                     data_petugas.delete()
                     return JsonResponse({'status' : 'success', 'message': 'Data berhasil dihapus'}, status=200)
                 else:
@@ -155,7 +156,7 @@ class AlokasiGetBySurveiClassView(LoginRequiredMixin, View):
         if is_ajax:
             if request.method == 'POST':
                 penilaian_id = int(request.POST.get('penilaian_id'))
-                data = AlokasiPetugas.objects.filter(survey=request.POST.get('survey_id')).values('id', 'petugas__kode_petugas', 'petugas__nama_petugas', 'role', 'role__jabatan' )
+                data = AlokasiPetugas.objects.filter(survey=request.POST.get('survey_id'), pegawai = None).values('id', 'petugas__kode_petugas', 'petugas__nama_petugas', 'role', 'role__jabatan' )
 
                 kegiatan_penilaian = get_object_or_404(models.KegiatanPenilaianModel, pk=penilaian_id)
                 role_permitted = kegiatan_penilaian.role_permitted.values_list('id', flat=True)
@@ -164,7 +165,6 @@ class AlokasiGetBySurveiClassView(LoginRequiredMixin, View):
 
                 final_data = []
                 for dt in data :
-
                     if dt['role'] in role_permitted:
                         db_check = models.MasterNilaiPetugas.objects.filter(petugas = dt['id'], penilaian__kegiatan_penilaian = penilaian_id)
                         if db_check.exists() == False:
@@ -1229,12 +1229,6 @@ class GetNilaiMitraClassView(LoginRequiredMixin, View):
 class EntryPenilaianClassView(LoginRequiredMixin, View):
     
     def get(self, request):
-        data = models.KegiatanPenilaianModel.objects.all()
-        from master_petugas import models as model_petugas
-        for dt in data:
-            aloc = model_petugas.AlokasiPetugas.objects.filter(survey = dt.survey_id)
-            if aloc.exists():
-                continue
 
         context = {
             'title' : 'Penilaian Mitra',
@@ -1242,9 +1236,10 @@ class EntryPenilaianClassView(LoginRequiredMixin, View):
 
         return render(request, 'master_penilaian/entry_nilai.html', context)
 
+
 class KegiatanPenilaianJsonResponseClassView(LoginRequiredMixin, View):
 
-    def post(self, request):    
+    def post(self, request):
         data = self._datatables(request)
         return HttpResponse(json.dumps(data, cls=DjangoJSONEncoder), content_type='application/json')
 		
@@ -1267,57 +1262,161 @@ class KegiatanPenilaianJsonResponseClassView(LoginRequiredMixin, View):
         if (order_dir == "desc"):
             order_col_name =  str('-' + order_col_name)
 
-        data = models.KegiatanPenilaianModel.objects
+        data = models.KegiatanPenilaianModel.objects.filter(status='1')
+        data_pegawai= model_pegawai.MasterPegawaiModel.objects.filter(user=request.user.id)
 
-        data = data.all().exclude(Q(nama_kegiatan=None)|Q(survey=None)|Q(tgl_penilaian=None)|Q(status=None)|Q(role_permitted=None))
-        records_total = data.count()
-        records_filtered = records_total
-        
-        if search:
-            data = models.KegiatanPenilaianModel.objects
+        if data_pegawai.exists():
 
-            data = data.filter(
-                Q(nama_kegiatan__icontains=search)|
-                Q(survey__nama__icontains=search)|
-                Q(tgl_penilaian__icontains=search)|
-                Q(status__icontains=search)|
-                Q(role_permitted__jabatan__icontains=search)
-            ).exclude(Q(nama_kegiatan=None)|Q(survey=None)|Q(sumber=None)|Q(tgl_penilaian=None)|Q(status=None)|Q(role_permitted=None))
-
+            data = data.exclude(Q(nama_kegiatan=None)|Q(survey=None)|Q(tgl_penilaian=None)|Q(status=None)|Q(role_permitted=None))
             records_total = data.count()
             records_filtered = records_total
-        
-        data = data.order_by(order_col_name)
-        # Conf Paginator
-        paginator = Paginator(data, length)
+            
+            if search:
+                data = models.KegiatanPenilaianModel.objects.filter(status='1')
 
-        try:
-            object_list = paginator.page(page_number).object_list
-        except PageNotAnInteger:
-            object_list = paginator.page(1).object_list
-        except EmptyPage:
-            object_list = paginator.page(1).object_list
-            {"data": 'nama_kegiatan'},
-            {"data": 'survey__nama'},
-            {"data" : 'tgl_penilaian'},
-            {"data" : 'status'},
-            {"data" : 'aksi'},
-        
-        data = [
-            {
-                'nama_kegiatan': obj.nama_kegiatan,
-                'survey__nama': obj.survey.nama,
-                'tgl_penilaian': obj.tgl_penilaian.strftime('%d-%m-%Y'),
-                'role_permitted__jabatan' : ', '.join(obj.role_permitted.values_list('jabatan', flat=True)),
-                'status': f'<span class="badge badge-primary-lighten"> {obj.get_status_display()} </span>'  if obj.status == '0' else f'<span class="badge badge-danger-lighten"> {obj.get_status_display()} </span>',
-                'aksi': f'<a href="javascript:void(0);" onclick="editKegiatanPenilaian({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a> <a href="javascript:void(0);" onclick="hapusKegiatanPenilaian({obj.id});" class="action-icon"> <i class="mdi mdi-delete"></i></a>'
-            } for obj in object_list
-        ]
-        
+                data = data.filter(
+                    Q(nama_kegiatan__icontains=search)|
+                    Q(survey__nama__icontains=search)|
+                    Q(tgl_penilaian__icontains=search)|
+                    Q(status__icontains=search)|
+                    Q(role_permitted__jabatan__icontains=search)
+                ).exclude(Q(nama_kegiatan=None)|Q(survey=None)|Q(sumber=None)|Q(tgl_penilaian=None)|Q(status=None)|Q(role_permitted=None))
+
+                records_total = data.count()
+                records_filtered = records_total
+            
+            data = data.order_by(order_col_name)
+            paginator = Paginator(data, length)
+
+            try:
+                object_list = paginator.page(page_number).object_list
+            except PageNotAnInteger:
+                object_list = paginator.page(1).object_list
+            except EmptyPage:
+                object_list = paginator.page(1).object_list
+            
+            data = []
+            for obj in object_list:
+
+                aloc = model_petugas.AlokasiPetugas.objects.filter(pegawai = data_pegawai.first().pk, survey = obj.survey_id)
+
+                if aloc.exists():
+                    if obj.status == '0':
+                        state = f'bg-danger'
+                    elif obj.status == '1':
+                        state = f'bg-primary'
+                    else:
+                        state = f'bg-success'
+
+                    data.append(
+                        {
+                            'nama_kegiatan': obj.nama_kegiatan,
+                            'survey__nama': obj.survey.nama,
+                            'tgl_penilaian': obj.tgl_penilaian.strftime('%d %b %Y'),
+                            'status' :  f'<span class="badge {state} p-1"> {obj.get_status_display()} </span>',
+                            'status_penilaian' : 'Belum Menilai',
+                            'aksi': f'<a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a>'
+                        }
+                    )
+                continue
+        else:
+            records_total = 0
+            records_filtered = 0
+            data = []
+
         return {
             'draw': draw,
             'recordsTotal': records_total,
             'recordsFiltered': records_filtered,
             'data': data,
         }
+
+
+
+class MasterNilaiPetugasClassView(LoginRequiredMixin, View):
+    
+    def post(self, request):
+        data = self._datatables(request)
+        return HttpResponse(json.dumps(data, cls=DjangoJSONEncoder), content_type='application/json')
+		
+    def _datatables(self, request):
+        datatables = request.POST
+        
+        # Get Draw
+        draw = int(datatables.get('draw'))
+        start = int(datatables.get('start'))
+        length = int(datatables.get('length'))
+        page_number = int(start / length + 1)
+
+        search = datatables.get('search[value]')
+
+        order_idx = int(datatables.get('order[0][column]')) # Default 1st index for
+        order_dir = datatables.get('order[0][dir]') # Descending or Ascending
+        order_col = 'columns[' + str(order_idx) + '][data]'
+        order_col_name = datatables.get(order_col)
+
+        if (order_dir == "desc"):
+            order_col_name =  str('-' + order_col_name)
+
+        data_pegawai= model_pegawai.MasterPegawaiModel.objects.filter(user=request.user.id)
+
+        if data_pegawai.exists():
+            
+            data = (models.MasterNilaiPetugas.objects.filter(penilaian__kegiatan_penilaian = 14, penilai=data_pegawai.first().pk)
+                    .values('penilaian__kegiatan_penilaian__nama_kegiatan', 'petugas__petugas__adm_id__region', 'petugas__petugas__nama_petugas', 'petugas__role__jabatan')
+                    .order_by('petugas__petugas__nama_petugas')
+                    .annotate(avg = Avg('nilai'))
+                )
+            
+            data = models.MasterNilaiPetugas.objects.filter(penilaian__kegiatan_penilaian = 14, penilai=data_pegawai.first().pk).exclude(Q(penilai=None)|Q(petugas=None)|Q(penilaian=None))
+            
+            records_total = data.count()
+            records_filtered = records_total
+            
+            if search:
+
+                data = data.filter(
+                    Q(penilaian__kegiatan_penilaian__nama_kegiatan__icontains=search)|
+                    Q(petugas__petugas__adm_id__region__icontains=search)|
+                    Q(petugas__petugas__nama_petugas__icontains=search)|
+                    Q(petugas__role__jabatan__icontains=search)
+                ).exclude(Q(penilai=None)|Q(petugas=None)|Q(penilaian=None))
+
+                records_total = data.count()
+                records_filtered = records_total
+            
+            data = data.order_by(order_col_name)
+            paginator = Paginator(data, length)
+
+            try:
+                object_list = paginator.page(page_number).object_list
+            except PageNotAnInteger:
+                object_list = paginator.page(1).object_list
+            except EmptyPage:
+                object_list = paginator.page(1).object_list
+            
+            data = []
+            for obj in object_list:
+                data.append(
+                    {
+                        'penilaian__kegiatan_penilaian__nama_kegiatan': obj.penilaian__kegiatan_penilaian__nama_kegiatan,
+                        'survey__nama': obj.survey.nama,
+                        'tgl_penilaian': obj.tgl_penilaian.strftime('%d %b %Y'),
+                        'status' :  f'<span class="badge bg-success p-1"> {obj.get_status_display()} </span>',
+                        'status_penilaian' : 'Belum Menilai',
+                        'aksi': f'<a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a>'
+                    }
+                )
+        else:
+            records_total = 0
+            records_filtered = 0
+            data = []
+
+        return {
+            'draw': draw,
+            'recordsTotal': records_total,
+            'recordsFiltered': records_filtered,
+            'data': data,
+        }
+
 

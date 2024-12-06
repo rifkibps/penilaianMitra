@@ -20,6 +20,10 @@
         <link href="{% static 'app-design/assets/css/icons.min.css' %}" rel="stylesheet" type="text/css">
         <link href="{% static 'app-design/assets/css/app.min.css' %}" rel="stylesheet" type="text/css" id="light-style">
         <link href="{% static 'app-design/assets/css/app-dark.min.css' %}" rel="stylesheet" type="text/css" id="dark-style">
+                <!-- Main Datatables CSS -->
+        <link href="{% static 'app-design/assets/css/vendor/dataTables.bootstrap5.css' %}" rel="stylesheet" type="text/css" />
+        <link href="{% static 'app-design/assets/css/vendor/responsive.bootstrap5.css' %}" rel="stylesheet" type="text/css" />
+
         {% block css-extender %}
         {% endblock css-extender %}
     
@@ -154,13 +158,14 @@
         </div>
         <!-- END wrapper -->
 
-
+        
         <script src="{% static 'app-design/assets/js/vendor.min.js' %}"></script>
         <script src="{% static 'app-design/assets/js/app.min.js' %}"></script>
-
-        <!-- demo app -->
-        <script src="{% static 'app-design/assets/js/pages/demo.dashboard.js' %}"></script>
-        <!-- end demo js-->
+        
+        <script src="{% static 'app-design/assets/js/vendor/jquery.dataTables.min.js' %}"></script>
+        <script src="{% static 'app-design/assets/js/vendor/dataTables.bootstrap5.js' %}"></script>
+        <script src="{% static 'app-design/assets/js/vendor/dataTables.responsive.min.js' %}"></script>
+        <script src="{% static 'app-design/assets/js/vendor/responsive.bootstrap5.min.js' %}"></script>
         
         {% block js-extender %}
         {% endblock js-extender %}
