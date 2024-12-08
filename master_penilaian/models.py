@@ -17,6 +17,7 @@ class KegiatanPenilaianModel(models.Model):
        ('1', 'Berlangsung'),
        ('2', 'Selesai'),
     )
+    
     nama_kegiatan = models.CharField(max_length=256, null=False, blank=False, verbose_name='Nama Kegiatan Penilaian' )
     survey = models.ForeignKey(SurveyModel, on_delete=models.RESTRICT, blank=False, null=False, related_name='penilaian_survei')
     tgl_penilaian = models.DateField( null=False, blank=False,  verbose_name='Tanggal Penilaian')

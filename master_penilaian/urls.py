@@ -41,5 +41,4 @@ urlpatterns = [
     path('penilaian', views.EntryPenilaianClassView.as_view(), name='penilaian'),
     path('penilaian/json-response', views.KegiatanPenilaianJsonResponseClassView.as_view(), name='list-penilaian-json'),
     path('penilaian/nilai-json-response', views.MasterNilaiPetugasClassView.as_view(), name='list-nilai-json'),
-    
 ]
