@@ -154,7 +154,7 @@
             <div class="card">
                 <div class="card-body">
                     <h4 class="header-title mt-2 mb-3">Kegiatan Penilaian Mitra</h4>
-
+                    
                     <table class="table table-centered table-nowrap table-hover mb-0" id="list_kegiatan_penilaian">
                         <thead>
                             <tr>
@@ -182,33 +182,30 @@
             <div class="card">
                 <div class="card-body">
                     <h4 class="header-title mt-2 mb-3">Penilaian Mitra</h4>
-
-                    <div class="table-responsive">
-                        <table class="table table-centered table-nowrap table-hover mb-0" id="list-penilaian">
-                            <thead>
-                                <tr>
-                                    <th>Kegiatan Penilaian</th>
-                                    <th>Wilayah</th>
-                                    <th>Nama Mitra</th>
-                                    <th>Role</th>
-                                    <th>Rerata Nilai</th>
-                                    <th>Status Penilaian Anda</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% comment %} <tr>
-                                    <td>Penilaian Lapangan Petugas PLKUMKM</td>
-                                    <td>Kec. Katobu</td>
-                                    <td>Sitti Riskinong</td>
-                                    <td>PCL</td>
-                                    <td class="text-center">4.5</td>
-                                    <td class="text-center"><span class="badge bg-success p-1"> Sudah Menilai </span></td>
-                                    <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
-                                </tr> {% endcomment %}
-                            </tbody>
-                        </table>
-                    </div> <!-- end table-responsive-->
+                    <table class="table table-centered table-nowrap table-hover mb-0" id="list-penilaian">
+                        <thead>
+                            <tr>
+                                <th>Kegiatan Penilaian</th>
+                                <th>Wilayah</th>
+                                <th>Nama Mitra</th>
+                                <th>Role</th>
+                                <th>Rerata Nilai</th>
+                                <th>Status Penilaian Anda</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% comment %} <tr>
+                                <td>Penilaian Lapangan Petugas PLKUMKM</td>
+                                <td>Kec. Katobu</td>
+                                <td>Sitti Riskinong</td>
+                                <td>PCL</td>
+                                <td class="text-center">4.5</td>
+                                <td class="text-center"><span class="badge bg-success p-1"> Sudah Menilai </span></td>
+                                <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
+                            </tr> {% endcomment %}
+                        </tbody>
+                    </table>
                 </div> <!-- end card-body-->
             </div> <!-- end card-->
         </div>
@@ -431,6 +428,47 @@
         lengthMenu: [5, 25, 50, 100,'All'],
         columnDefs: [ {
             'targets': [5], /* column index */
+            'orderable': false, /* true or false */
+            'className': "text-center"
+        }],
+        bLengthChange: false,
+        bInfo : false,
+        bFilter: false,
+        keys: !0,
+        language: {
+            paginate: {
+            previous: "<i class='mdi mdi-chevron-left'>",
+            next: "<i class='mdi mdi-chevron-right'>",
+            },
+        },
+        drawCallback: function () {
+            $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
+        },
+    });
+
+    var table2 = $("#list-penilaian").DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            "url": "{% url 'master_penilaian:list-nilai-json' %}",
+            "headers": {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": '{{csrf_token}}',
+            },
+            "type": "POST"
+        },
+        columns :[
+            {"data": 'kegiatan_penilaian'},
+            {"data": 'wilayah'},
+            {"data" : 'nama'},
+            {"data": 'role'},
+            {"data" : 'rerata'},
+            {"data" : 'state'},
+            {"data" : 'aksi'},
+        ],
+        lengthMenu: [5, 25, 50, 100,'All'],
+        columnDefs: [ {
+            'targets': [6], /* column index */
             'orderable': false, /* true or false */
             'className': "text-center"
         }],

@@ -1137,9 +1137,9 @@ class GenerateTableNilaiClassView(LoginRequiredMixin, View):
                 survey_id = kegiatan.survey.id
 
                 if request.POST.get('filter_role_nilai_mitra'):
-                    alokasi_petugas = AlokasiPetugas.objects.filter(survey = survey_id, role = request.POST.get('filter_role_nilai_mitra'))
+                    alokasi_petugas = AlokasiPetugas.objects.filter(survey = survey_id, role = request.POST.get('filter_role_nilai_mitra'), pegawai = None)
                 else:
-                    alokasi_petugas = AlokasiPetugas.objects.filter(survey = survey_id)
+                    alokasi_petugas = AlokasiPetugas.objects.filter(survey = survey_id, pegawai = None)
 
                 master_nilai = models.MasterNilaiPetugas.objects.filter(penilaian__kegiatan_penilaian = kegiatan_penilaian)
                 indikator_penilaian = list(master_nilai.values_list('penilaian__indikator_penilaian__nama_indikator', flat=True).distinct())
@@ -1156,7 +1156,6 @@ class GenerateTableNilaiClassView(LoginRequiredMixin, View):
 
                 tbody_data = []
                 for idx, dt_alokasi in enumerate(alokasi_petugas):
-
                     dt_row = []
                     db_query_check = models.MasterNilaiPetugas.objects.filter(petugas = dt_alokasi.id, penilaian__kegiatan_penilaian = kegiatan.id)
                     dt_row.append(dt_alokasi.id) #[0]
@@ -1183,7 +1182,6 @@ class GenerateTableNilaiClassView(LoginRequiredMixin, View):
                         dt_row.insert(5+len(indikator_penilaian)+1, rerata)
                         tbody_data.append(dt_row)
 
-                pprint(tbody_data)
                 tbody = ''
                 for data in tbody_data:
                     tbody += '<tr>'
@@ -1229,6 +1227,42 @@ class GetNilaiMitraClassView(LoginRequiredMixin, View):
 class EntryPenilaianClassView(LoginRequiredMixin, View):
     
     def get(self, request):
+        data_pegawai= model_pegawai.MasterPegawaiModel.objects.filter(user=request.user.id)
+
+        data = models.KegiatanPenilaianModel.objects.filter(pk=14, status='1').first()
+        aloc = model_petugas.AlokasiPetugas.objects.filter(survey = data.survey, pegawai=None)
+
+        dataset = []
+        for dt in aloc:
+            qry = models.MasterNilaiPetugas.objects.filter(penilaian__kegiatan_penilaian = data.pk, penilai=data_pegawai.first().pk, petugas = dt.pk)
+
+            nilai_mitra = {
+                'kegiatan_penilaian' : data.nama_kegiatan,
+                'wilayah' : dt.petugas.adm_id.region,
+                'nama' : dt.petugas.nama_petugas,
+                'role' : dt.role.jabatan,
+                
+            }
+
+            if qry.exists():
+                qry = (qry
+                    .values('penilaian__kegiatan_penilaian__nama_kegiatan', 'petugas__petugas__adm_id__region', 'petugas__petugas__nama_petugas', 'petugas__role__jabatan')
+                    .order_by('petugas__petugas__nama_petugas')
+                    .annotate(avg = Avg('nilai'))
+                    .first()
+                )
+                dataset.append({ **nilai_mitra, **{
+                    'rerata' : qry['avg'],
+                    'state' : '<span class="badge bg-success p-1"> Sudah Menilai </span>',
+                    'aksi' : f'<a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a>'
+                }})
+                continue
+            
+            dataset.append({ **nilai_mitra, **{
+                'rerata' : '-',
+                'state' : '<span class="badge bg-warning p-1"> Belum Menilai </span>',
+                'aksi' : f'<a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a>'
+            }})
 
         context = {
             'title' : 'Penilaian Mitra',
@@ -1331,8 +1365,6 @@ class KegiatanPenilaianJsonResponseClassView(LoginRequiredMixin, View):
             'data': data,
         }
 
-
-
 class MasterNilaiPetugasClassView(LoginRequiredMixin, View):
     
     def post(self, request):
@@ -1358,35 +1390,68 @@ class MasterNilaiPetugasClassView(LoginRequiredMixin, View):
         if (order_dir == "desc"):
             order_col_name =  str('-' + order_col_name)
 
+        records_total = 0
+        records_filtered = 0
+        data = []
+        
         data_pegawai= model_pegawai.MasterPegawaiModel.objects.filter(user=request.user.id)
 
         if data_pegawai.exists():
-            
-            data = (models.MasterNilaiPetugas.objects.filter(penilaian__kegiatan_penilaian = 14, penilai=data_pegawai.first().pk)
-                    .values('penilaian__kegiatan_penilaian__nama_kegiatan', 'petugas__petugas__adm_id__region', 'petugas__petugas__nama_petugas', 'petugas__role__jabatan')
-                    .order_by('petugas__petugas__nama_petugas')
-                    .annotate(avg = Avg('nilai'))
-                )
-            
-            data = models.MasterNilaiPetugas.objects.filter(penilaian__kegiatan_penilaian = 14, penilai=data_pegawai.first().pk).exclude(Q(penilai=None)|Q(petugas=None)|Q(penilaian=None))
-            
-            records_total = data.count()
-            records_filtered = records_total
-            
+            dataKegiatan = models.KegiatanPenilaianModel.objects.filter(status='1')
+ 
             if search:
+                dataKegiatan = dataKegiatan.filter(
+                    Q(nama_kegiatan__icontains=search)
+                )
 
-                data = data.filter(
-                    Q(penilaian__kegiatan_penilaian__nama_kegiatan__icontains=search)|
-                    Q(petugas__petugas__adm_id__region__icontains=search)|
-                    Q(petugas__petugas__nama_petugas__icontains=search)|
-                    Q(petugas__role__jabatan__icontains=search)
-                ).exclude(Q(penilai=None)|Q(petugas=None)|Q(penilaian=None))
+            dataset = []
+            for dt_kegiatan in dataKegiatan:
+                aloc = model_petugas.AlokasiPetugas.objects.filter(survey = dt_kegiatan.survey, pegawai=None)
+                if search:
+                    aloc = aloc.filter(
+                        Q(petugas__petugas__adm_id__region__icontains=search)|
+                        Q(petugas__petugas__nama_petugas__icontains=search)|
+                        Q(petugas__role__jabatan__icontains=search)
+                    )
 
-                records_total = data.count()
+                for dt in aloc:
+                    role_permitted = list(dt_kegiatan.role_permitted.values_list('id', flat=True))
+
+                    if dt.role.pk not in role_permitted:
+                        continue
+
+                    nilai_mitra = {
+                        'kegiatan_penilaian' : dt_kegiatan.nama_kegiatan,
+                        'wilayah' : f'Desa {dt.petugas.adm_id.region}',
+                        'nama' : dt.petugas.nama_petugas,
+                        'role' : dt.role.jabatan,
+                    }
+
+                    qry = models.MasterNilaiPetugas.objects.filter(penilaian__kegiatan_penilaian = dt_kegiatan.pk, penilai=data_pegawai.first().pk, petugas = dt.pk)
+                    if qry.exists():
+                        qry = (qry
+                            .values('penilaian__kegiatan_penilaian__nama_kegiatan', 'petugas__petugas__adm_id__region', 'petugas__petugas__nama_petugas', 'petugas__role__jabatan')
+                            .order_by('petugas__petugas__nama_petugas')
+                            .annotate(avg = Avg('nilai'))
+                            .first()
+                        )
+                        dataset.append({ **nilai_mitra, **{
+                            'rerata' : f'{round(qry['avg'], 2)} / 5',
+                            'state' : '<span class="badge bg-success p-1"> Sudah Menilai </span>',
+                            'aksi' : f'<a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a>'
+                        }})
+                        continue
+                    
+                    dataset.append({ **nilai_mitra, **{
+                        'rerata' : '-',
+                        'state' : '<span class="badge bg-warning p-1"> Belum Menilai </span>',
+                        'aksi' : f'<a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a>'
+                    }})
+
+                records_total = len(dataset)
                 records_filtered = records_total
-            
-            data = data.order_by(order_col_name)
-            paginator = Paginator(data, length)
+
+            paginator = Paginator(dataset, length)
 
             try:
                 object_list = paginator.page(page_number).object_list
@@ -1395,23 +1460,19 @@ class MasterNilaiPetugasClassView(LoginRequiredMixin, View):
             except EmptyPage:
                 object_list = paginator.page(1).object_list
             
-            data = []
             for obj in object_list:
                 data.append(
                     {
-                        'penilaian__kegiatan_penilaian__nama_kegiatan': obj.penilaian__kegiatan_penilaian__nama_kegiatan,
-                        'survey__nama': obj.survey.nama,
-                        'tgl_penilaian': obj.tgl_penilaian.strftime('%d %b %Y'),
-                        'status' :  f'<span class="badge bg-success p-1"> {obj.get_status_display()} </span>',
-                        'status_penilaian' : 'Belum Menilai',
+                        'kegiatan_penilaian': obj['kegiatan_penilaian'],
+                        'wilayah': obj['wilayah'],
+                        'nama': obj['nama'],
+                        'role' :  obj['role'],
+                        'rerata' : obj['rerata'],
+                        'state' : obj['state'],
                         'aksi': f'<a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a>'
                     }
                 )
-        else:
-            records_total = 0
-            records_filtered = 0
-            data = []
-
+        
         return {
             'draw': draw,
             'recordsTotal': records_total,
