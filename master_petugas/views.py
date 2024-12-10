@@ -747,7 +747,7 @@ class MasterAlokasiJsonResponseClassView(LoginRequiredMixin, View):
         if datatables.get('jabatan_filter'):
             data = data.filter(role = datatables.get('jabatan_filter'))
 
-        data = data.all().exclude((Q(petugas=None) & Q(pegawai=None))|Q(role=None)|Q(survey=None))
+        data = data.all().exclude((Q(petugas=None) & Q(pegawai=None))|Q(role=None)|Q(sub_kegiatan=None))
         records_total = data.count()
         records_filtered = records_total
         
@@ -755,9 +755,9 @@ class MasterAlokasiJsonResponseClassView(LoginRequiredMixin, View):
             data = models.AlokasiPetugas.objects.filter(
                 Q(petugas__kode_petugas__icontains=search)|
                 Q(petugas__nama_petugas__icontains=search)|
-                Q(survey__nama__icontains=search)|
+                Q(sub_kegiatan__survey__nama__icontains=search)|
                 Q(role__jabatan__icontains=search)
-            ).exclude(Q(petugas=None)|Q(role=None)|Q(survey=None))
+            ).exclude(Q(petugas=None)|Q(role=None)|Q(sub_kegiatan=None))
 
             records_total = data.count()
             records_filtered = records_total
@@ -782,7 +782,7 @@ class MasterAlokasiJsonResponseClassView(LoginRequiredMixin, View):
             data.append({
                 'petugas__kode_petugas': code ,
                 'petugas__nama_petugas': f'<a href="javascript:void(0)" class="text-body">{name}</a>' if obj.pegawai else f'<a href="{reverse_lazy("master_petugas:mitra-view-detail", kwargs={"mitra_id": obj.id})}" class="text-body" target="_blank">{name}</a>',
-                'survey__nama': obj.survey.nama,
+                'sub_kegiatan__survey__nama': obj.sub_kegiatan.survey.nama,
                 'role__jabatan': obj.role.jabatan,
                 'pegawai': 'Organik' if obj.pegawai else 'Mitra',
                 'aksi': f'<a href="javascript:void(0);" onclick="editAlokPetugas({obj.id}, {state_mitra})" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a> <a href="javascript:void(0);" onclick="deleteAlokasi({obj.id});" class="action-icon"> <i class="mdi mdi-delete"></i></a>'

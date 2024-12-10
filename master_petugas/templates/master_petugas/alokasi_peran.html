@@ -320,7 +320,7 @@
             "type": "POST",
             "data": function (d){
                 return $.extend({}, d, {
-                    "survei_filter": $('#survei-select-filter').val(),
+                    "sub_kegiatan": $('#survei-select-filter').val(),
                     "jabatan_filter": $('#jabatan-select-filter').val(),
                 })
             },
@@ -329,7 +329,7 @@
         columns :[
             {"data": 'petugas__kode_petugas'},
             {"data": 'petugas__nama_petugas'},
-            {"data": 'survey__nama'},
+            {"data": 'sub_kegiatan__survey__nama'},
             {"data" : 'role__jabatan'},
             {"data" : 'pegawai'},
             {"data" : 'aksi'},

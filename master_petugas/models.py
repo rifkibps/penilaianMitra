@@ -1,5 +1,5 @@
 from django.db import models
-from master_survey.models import SurveyModel
+from master_survey.models import SurveyModel, SubKegiatanSurvei
 from .validators import int_validators
 from master_honor.models import HonorModel
 from master_pegawai.models import MasterPegawaiModel
@@ -76,18 +76,16 @@ class RoleMitra(models.Model):
    jabatan = models.CharField(max_length=128, null=False, blank=False, verbose_name='Jabatan/Peran')
    def __str__(self):
          return f"{self.jabatan}"
-   
+
 
 class AlokasiPetugas(models.Model):
-
-   petugas = models.ForeignKey(MasterPetugas, null=True, blank=True, on_delete=models.CASCADE, related_name='master_alokasi_petugas', verbose_name='Kode Petugas')
    pegawai = models.ForeignKey(MasterPegawaiModel, null=True, blank=True, on_delete=models.CASCADE, related_name='master_alokasi_pegawai', verbose_name='Pegawai')
-   survey = models.ForeignKey(SurveyModel, on_delete=models.RESTRICT, related_name='master_alokasi_survey', verbose_name='Survei/Sensus')
-   honorPerolehan = models.DecimalField(decimal_places=2, default=0, max_digits=13, verbose_name="Jumlah Honor Perolehan")
+   petugas = models.ForeignKey(MasterPetugas, null=True, blank=True, on_delete=models.CASCADE, related_name='master_alokasi_petugas', verbose_name='Kode Petugas')
    role = models.ForeignKey(RoleMitra, on_delete=models.RESTRICT, related_name='master_alokasi_role', verbose_name='Jabatan Petugas')
+   sub_kegiatan = models.ForeignKey(SubKegiatanSurvei, null=False, blank=False, on_delete=models.RESTRICT, related_name='subkegiatan_survei', verbose_name='Kegiatan Survei')
 
    def __str__(self):
-      return (f"[{self.pegawai.nip}] {self.pegawai.name}" if self.pegawai else f"[{self.petugas.kode_petugas}] {self.petugas.nama_petugas}") + ' | ' +  f'{self.survey.nama}_{self.role.jabatan}'
+      return (f"{self.pk}. [{self.pegawai.nip}] {self.pegawai.name}" if self.pegawai else f"{self.pk}. [{self.petugas.kode_petugas}] {self.petugas.nama_petugas}") + ' | ' +  f'{self.sub_kegiatan.survey.nama}_{self.role.jabatan}'
    
 
 class AlokasiPenugasan(models.Model):

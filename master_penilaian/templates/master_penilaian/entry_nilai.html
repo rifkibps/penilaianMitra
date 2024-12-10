@@ -182,6 +182,7 @@
             <div class="card">
                 <div class="card-body">
                     <h4 class="header-title mt-2 mb-3">Penilaian Mitra</h4>
+                    <input type="hidden" id="kegiatan_penilaian">
                     <table class="table table-centered table-nowrap table-hover mb-0" id="list-penilaian">
                         <thead>
                             <tr>
@@ -195,15 +196,6 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% comment %} <tr>
-                                <td>Penilaian Lapangan Petugas PLKUMKM</td>
-                                <td>Kec. Katobu</td>
-                                <td>Sitti Riskinong</td>
-                                <td>PCL</td>
-                                <td class="text-center">4.5</td>
-                                <td class="text-center"><span class="badge bg-success p-1"> Sudah Menilai </span></td>
-                                <td><a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a></td>
-                            </tr> {% endcomment %}
                         </tbody>
                     </table>
                 </div> <!-- end card-body-->
@@ -211,13 +203,11 @@
         </div>
     </div>
 
-    <div class="row">
+    <div class="row d-none" id="card-form-penilaian">
         <div class="col-xl-12">
             <div class="card">
                 <div class="card-body">
-                    <a href="" class="btn btn-sm btn-link float-end">Tutup
-                        <i class="mdi mdi-download ms-1"></i>
-                    </a>
+                    <a href="javascript:void(0)" class="btn btn-sm btn-link float-end" id="close-card-form">Tutup</a>
                     <h4 class="header-title mt-2 mb-3">Input Penilaian Mitra</h4>
 
                     <div class="row">
@@ -231,74 +221,60 @@
                                         <h5 class="mb-3">Penilai</h5>
                                     </div>
                                     <div class="col-sm-7">
-                                        <select class="form-select mb-2" id="field_survey" name="field_survey">
-                                            <option value="">Pilih Survei</option>
-                                            {% for dt in data_survei %}
-                                                    <option value="{{ dt.id }}">{{ dt.nama }}</option>
-                                                {% endfor %}
-                                            </select>
+                                        <select class="form-select mb-2" id="field_id_penilai" name="field_id_penilai" disabled>
+                                        </select>
                                     </div>
                                 </div>
 
                                 <div class="row">
                                     <div class="col-sm-5">
-                                        <h5 class="mb-3">Jabatan Penilai</h5>
+                                        <h5 class="mb-3">Role Penilai</h5>
                                     </div>
                                     <div class="col-sm-7">
-                                        <select class="form-select mb-2" id="field_survey" name="field_survey">
-                                            <option value="">Pilih Survei</option>
-                                            {% for dt in data_survei %}
-                                                    <option value="{{ dt.id }}">{{ dt.nama }}</option>
-                                                {% endfor %}
-                                            </select>
+                                        <select class="form-select mb-2" id="field_role_penilai" name="field_role_penilai" disabled>
+                                        </select>
                                     </div>
                                 </div>
 
-                                <div class="row">
-                                    <div class="col-sm-5">
-                                        <h5 class="mb-3">Survei</h5>
-                                    </div>
-                                    <div class="col-sm-7">
-                                        <select class="form-select mb-2" id="field_survey" name="field_survey">
-                                            <option value="">Pilih Survei</option>
-                                            {% for dt in data_survei %}
-                                                    <option value="{{ dt.id }}">{{ dt.nama }}</option>
-                                                {% endfor %}
-                                            </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-6">
                                 <div class="row">
                                     <div class="col-sm-5">
                                         <h5 class="mb-3">Kegiatan Penilaian</h5>
                                     </div>
                                     <div class="col-sm-7">
-                                        <select class="form-select mb-2 d-inline" id="field_kegiatan" name="field_kegiatan">
-                                            <option value="">Pilih Kegiatan</option>
-                                            </select>
+                                        <select class="form-select mb-2 d-inline" id="field_kegiatan_penilaian" name="field_kegiatan_penilaian" disabled>
+                                        </select>
                                     </div>
                                 </div>
                                 
+                            </div>
+                            <div class="col-6">
                                 <div class="row">
                                     <div class="col-sm-5">
-                                        <h5 class="mb-3">Mitra</h5>
+                                        <h5 class="mb-3">Survei</h5>
                                     </div>
                                     <div class="col-sm-7">
-                                        <select class="form-select mb-2 d-inline" id="field_mitra" name="field_mitra">
-                                            <option value="">Pilih Mitra</option>
-                                            </select>
+                                        <select class="form-select mb-2" id="field_survey" name="field_survey" disabled>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm-5">
+                                        <h5 class="mb-3">Petugas</h5>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <select class="form-select mb-2 d-inline" id="field_petugas" name="field_petugas" disabled>
+                                        </select>
                                     </div>
                                 </div>
 
                                 <div class="row mb-2">
                                     <div class="col-sm-5">
-                                        <h5 class="mb-3">Jabatan Mitra</h5>
+                                        <h5 class="mb-3">Role Petugas</h5>
                                     </div>
                                     <div class="col-sm-7">
-                                        <select class="form-select mb-2 d-inline" id="field_mitra" name="field_mitra">
-                                            <option value="">PPL</option>
-                                            </select>
+                                        <select class="form-select mb-2 d-inline" id="field_role_petugas" name="field_role_petugas" disabled>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -306,7 +282,7 @@
                         <hr>
                     </div>
                     <div class="table-responsive mt-2 mb-3">
-                        <table class="table table-sm table-centered table-nowrap table-hover mb-0">
+                        <table class="table table-sm table-centered table-nowrap table-hover mb-0" id="table_form_penilaian">
                             <thead>
                                 <tr class="bg-info text-white">
                                     <th>No</th>
@@ -316,77 +292,8 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>1</td>
-                                    <td>Aspek Pemahaman</td>
-                                    <td>
-                                        <input type="number" class="form-control d-inline" name="nilai_indikator_42" placeholder="Isikan nilai" alt="Isikan nilai" min="0" max="100" onkeyup="if(this.value > 100 || this.value < 0) this.value = null;">   
-                                    </td>
-                                    <td>
-                                        <textarea class="form-control" name="catatan_indikator_42" cols="30" rows="5"></textarea>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>2</td>
-                                    <td>Aspek Teknik Wawancara</td>
-                                    <td>
-                                        <input type="number" class="form-control d-inline" name="nilai_indikator_43" placeholder="Isikan nilai" alt="Isikan nilai" min="0" max="100" onkeyup="if(this.value > 100 || this.value < 0) this.value = null;">   
-                                    </td>
-                                    <td>
-                                        <textarea class="form-control" name="catatan_indikator_43" cols="30" rows="5"></textarea>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>3</td>
-                                    <td>Aspek Ketepatan Waktu</td>
-                                    <td>
-                                        <input type="number" class="form-control d-inline" name="nilai_indikator_44" placeholder="Isikan nilai" alt="Isikan nilai" min="0" max="100" onkeyup="if(this.value > 100 || this.value < 0) this.value = null;">   
-                                    </td>
-                                    <td>
-                                        <textarea class="form-control" name="catatan_indikator_44" cols="30" rows="5"></textarea>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>4</td>
-                                    <td>Aspek Kerjasama</td>
-                                    <td>
-                                        <input type="number" class="form-control d-inline" name="nilai_indikator_45" placeholder="Isikan nilai" alt="Isikan nilai" min="0" max="100" onkeyup="if(this.value > 100 || this.value < 0) this.value = null;">   
-                                    </td>
-                                    <td>
-                                        <textarea class="form-control" name="catatan_indikator_45" cols="30" rows="5"></textarea>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>5</td>
-                                    <td>Aspek Kejujuran</td>
-                                    <td>
-                                        <input type="number" class="form-control d-inline" name="nilai_indikator_46" placeholder="Isikan nilai" alt="Isikan nilai" min="0" max="100" onkeyup="if(this.value > 100 || this.value < 0) this.value = null;">   
-                                    </td>
-                                    <td>
-                                        <textarea class="form-control" name="catatan_indikator_46" cols="30" rows="5"></textarea>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>6</td>
-                                    <td>Aspek Kualitas Isian</td>
-                                    <td>
-                                        <input type="number" class="form-control d-inline" name="nilai_indikator_47" placeholder="Isikan nilai" alt="Isikan nilai" min="0" max="100" onkeyup="if(this.value > 100 || this.value < 0) this.value = null;">   
-                                    </td>
-                                    <td>
-                                        <textarea class="form-control" name="catatan_indikator_47" cols="30" rows="5"></textarea>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>7</td>
-                                    <td>Aspek Pertanggungjawaban</td>
-                                    <td>
-                                        <input type="number" class="form-control d-inline" name="nilai_indikator_48" placeholder="Isikan nilai" alt="Isikan nilai" min="0" max="100" onkeyup="if(this.value > 100 || this.value < 0) this.value = null;">   
-                                    </td>
-                                    <td>
-                                        <textarea class="form-control" name="catatan_indikator_48" cols="30" rows="5"></textarea>
-                                    </td>
-                                </tr>
-                        </tbody>
+                              
+                            </tbody>
                         </table>
                     </div> <!-- end table-responsive-->
                     
@@ -406,7 +313,8 @@
 
 {% block js-extender %}
 <script>
-    var table = $("#list_kegiatan_penilaian").DataTable({
+
+    let table = $("#list_kegiatan_penilaian").DataTable({
         processing: true,
         serverSide: true,
         ajax: {
@@ -418,8 +326,8 @@
             "type": "POST"
         },
         columns :[
-            {"data": 'nama_kegiatan'},
-            {"data": 'survey__nama'},
+            {"data": 'kegiatan_survey__nama_kegiatan'},
+            {"data": 'kegiatan_survey__kegiatan_survey__survey__nama'},
             {"data" : 'tgl_penilaian'},
             {"data": 'status'},
             {"data" : 'status_penilaian'},
@@ -446,7 +354,7 @@
         },
     });
 
-    var table2 = $("#list-penilaian").DataTable({
+    let table2 = $("#list-penilaian").DataTable({
         processing: true,
         serverSide: true,
         ajax: {
@@ -454,6 +362,11 @@
             "headers": {
                 "X-Requested-With": "XMLHttpRequest",
                 "X-CSRFToken": '{{csrf_token}}',
+            },
+            "data": function (d){
+                return $.extend({}, d, {
+                    "kegiatan_penilaian": $('#kegiatan_penilaian').val(),
+                })
             },
             "type": "POST"
         },
@@ -486,5 +399,46 @@
             $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
         },
     });
+
+    let pushValuePenilaian = (id) => {
+        $('#kegiatan_penilaian').val(id)
+        table2.draw()
+    }
+
+    let entryPenilaian = (id1, id2) => {
+        
+        $.ajax({
+            url: '{% url 'master_penilaian:list-indicator-json' %}',
+            type: "POST",   
+            dataType: "json",
+            data :  {'id_kegiatan' : id1, 'id_alokasi' : id2},
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": '{{csrf_token}}',
+            },
+            success: (response) => {
+                $('#field_id_penilai').html(response.data.penilai_opts)
+                $('#field_role_penilai').html(response.data.role_penilai_opts)
+                $('#field_kegiatan_penilaian').html(response.data.kegiatan_opts)
+                $('#field_survey').html(response.data.survei_opts)
+                $('#field_petugas').html(response.data.petugas_opts)
+                $('#field_role_petugas').html(response.data.role_petugas_opts)
+
+                $('#table_form_penilaian tbody').html(response.data.tbody)
+                $('#card-form-penilaian').removeClass('d-none')
+                
+            },
+            error: (error) => {
+                console.log(error);
+            }
+        });
+
+    }
+
+    $('#close-card-form').on('click', () => {
+        $('.form-select').val('')
+        $('#table_form_penilaian tbody').html('')
+        $('#card-form-penilaian').addClass('d-none')
+    })
 </script>
 {% endblock js-extender %}

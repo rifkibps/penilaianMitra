@@ -41,7 +41,6 @@ class PenilaianPetugasClassView(LoginRequiredMixin, View):
         context = {
             'title' : 'Kegiatan Penilaian',
             'data_survei' : SurveyModel.objects.all(),
-            'data_survei_finished' : SurveyModel.objects.filter(status='2'),
             'data' : models.KegiatanPenilaianModel.objects.all(),
             'roles' : RoleMitra.objects.all(),
             'form' : forms.KegiatanPenilaianForm()
@@ -203,7 +202,7 @@ class MasterPenilaianJsonResponseClassView(LoginRequiredMixin, View):
         data = models.KegiatanPenilaianModel.objects
 
         if datatables.get('survei_filter'):
-            data = data.filter(survey = datatables.get('survei_filter'))
+            data = data.filter(kegiatan_survey = datatables.get('survei_filter'))
         
         if datatables.get('status_filter'):
             data = data.filter(status = datatables.get('status_filter'))
@@ -211,7 +210,7 @@ class MasterPenilaianJsonResponseClassView(LoginRequiredMixin, View):
         if datatables.get('role_filter'):
             data = data.filter(role_permitted = datatables.get('role_filter'))
 
-        data = data.all().exclude(Q(nama_kegiatan=None)|Q(survey=None)|Q(tgl_penilaian=None)|Q(status=None)|Q(role_permitted=None))
+        data = data.all().exclude(Q(kegiatan_survey=None)|Q(tgl_penilaian=None)|Q(status=None)|Q(role_permitted=None)|Q(role_penilai_permitted=None)|Q(status=None))
         records_total = data.count()
         records_filtered = records_total
         
@@ -219,7 +218,8 @@ class MasterPenilaianJsonResponseClassView(LoginRequiredMixin, View):
             data = models.KegiatanPenilaianModel.objects
 
             if datatables.get('survei_filter'):
-                data = data.filter(survey = datatables.get('survei_filter'))
+                data = data.filter(kegiatan_survey = datatables.get('survei_filter'))
+
             
             if datatables.get('status_filter'):
                 data = data.filter(status = datatables.get('status_filter'))
@@ -228,12 +228,13 @@ class MasterPenilaianJsonResponseClassView(LoginRequiredMixin, View):
                 data = data.filter(role_permitted = datatables.get('role_filter'))
 
             data = data.filter(
-                Q(nama_kegiatan__icontains=search)|
-                Q(survey__nama__icontains=search)|
+                Q(kegiatan_survey__nama_kegiatan__icontains=search)|
+                Q(kegiatan_survey__survey__nama__icontains=search)|
                 Q(tgl_penilaian__icontains=search)|
                 Q(status__icontains=search)|
-                Q(role_permitted__jabatan__icontains=search)
-            ).exclude(Q(nama_kegiatan=None)|Q(survey=None)|Q(sumber=None)|Q(tgl_penilaian=None)|Q(status=None)|Q(role_permitted=None))
+                Q(role_permitted__jabatan__icontains=search)|
+                Q(role_penilai_permitted__jabatan__icontains=search)
+            ).exclude(Q(kegiatan_survey=None)|Q(tgl_penilaian=None)|Q(status=None)|Q(role_permitted=None)|Q(role_penilai_permitted=None)|Q(status=None))
 
             records_total = data.count()
             records_filtered = records_total
@@ -248,20 +249,15 @@ class MasterPenilaianJsonResponseClassView(LoginRequiredMixin, View):
             object_list = paginator.page(1).object_list
         except EmptyPage:
             object_list = paginator.page(1).object_list
-            {"data": 'nama_kegiatan'},
-            {"data": 'survey__nama'},
-            {"data" : 'tgl_penilaian'},
-            {"data" : 'status'},
-            {"data" : 'aksi'},
         
         data = [
            
             {
-                'nama_kegiatan': obj.nama_kegiatan,
-                'survey__nama': obj.survey.nama,
-                'tgl_penilaian': obj.tgl_penilaian.strftime('%d-%m-%Y'),
+                'kegiatan_survey__nama_kegiatan': obj.kegiatan_survey.nama_kegiatan,
+                'tgl_penilaian': obj.tgl_penilaian.strftime('%d-%b-%Y'),
                 'role_permitted__jabatan' : ', '.join(obj.role_permitted.values_list('jabatan', flat=True)),
-                'status': f'<span class="badge badge-primary-lighten"> {obj.get_status_display()} </span>'  if obj.status == '0' else f'<span class="badge badge-danger-lighten"> {obj.get_status_display()} </span>',
+                'role_penilai_permitted__jabatan' : ', '.join(obj.role_penilai_permitted.values_list('jabatan', flat=True)),
+                'status': f'<span class="badge badge-primary-lighten"> {obj.get_status_display()} </span>'  if obj.status == '0' else f'<span class="badge badge-primary-lighten"> {obj.get_status_display()} </span>',
                 'aksi': f'<a href="javascript:void(0);" onclick="editKegiatanPenilaian({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a> <a href="javascript:void(0);" onclick="hapusKegiatanPenilaian({obj.id});" class="action-icon"> <i class="mdi mdi-delete"></i></a>'
             } for obj in object_list
         ]
@@ -529,6 +525,8 @@ class IndikatorKegiatanPenilaianJsonResponseClassView(LoginRequiredMixin, View):
             data = data.filter(indikator_penilaian = datatables.get('indikator_filter'))
 
         data = data.all().exclude(Q(kegiatan_penilaian=None)|Q(indikator_penilaian=None))
+
+        
         records_total = data.count()
         records_filtered = records_total
         
@@ -543,8 +541,8 @@ class IndikatorKegiatanPenilaianJsonResponseClassView(LoginRequiredMixin, View):
                 data = data.filter(indikator_penilaian = datatables.get('indikator_filter'))
 
             data = data.filter(
-                Q(kegiatan_penilaian__survey__nama=search)|
-                Q(kegiatan_penilaian__nama_kegiatan__icontains=search)|
+                Q(kegiatan_penilaian__kegiatan_survey__survey__nama=search)|
+                Q(kegiatan_penilaian__kegiatan_survey__nama_kegiatan__icontains=search)|
                 Q(indikator_penilaian__nama_indikator__icontains=search)
             ).exclude(Q(kegiatan_penilaian=None)|Q(indikator_penilaian=None))
 
@@ -552,6 +550,7 @@ class IndikatorKegiatanPenilaianJsonResponseClassView(LoginRequiredMixin, View):
             records_filtered = records_total
         
         data = data.order_by(order_col_name)
+        
         # Conf Paginator
         paginator = Paginator(data, length)
 
@@ -561,15 +560,15 @@ class IndikatorKegiatanPenilaianJsonResponseClassView(LoginRequiredMixin, View):
             object_list = paginator.page(1).object_list
         except EmptyPage:
             object_list = paginator.page(1).object_list
-         
+
         data = [
             {
-                'kegiatan_penilaian__nama_kegiatan': obj.kegiatan_penilaian.nama_kegiatan,
+                'kegiatan_penilaian__kegiatan_survey__nama_kegiatan': obj.kegiatan_penilaian.kegiatan_survey.nama_kegiatan,
                 'indikator_penilaian__nama_indikator': obj.indikator_penilaian.nama_indikator,
                 'aksi': f'<a href="javascript:void(0);" onclick="editIndikatorKegiatan({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a> <a href="javascript:void(0);" onclick="deleteIndikatorKegiatan({obj.id});" class="action-icon"> <i class="mdi mdi-delete"></i></a>'
             } for obj in object_list
         ]
-        
+
         return {
             'draw': draw,
             'recordsTotal': records_total,
@@ -1209,61 +1208,24 @@ class GetNilaiMitraClassView(LoginRequiredMixin, View):
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
-        if is_ajax:
-            if request.method == 'POST':
-                id_alokasi = request.POST.get('id_alokasi')
-                id_kegiatan = request.POST.get('id_kegiatan')
-                data_mitra = AlokasiPetugas.objects.values('id', 'petugas__kode_petugas', 'petugas__nama_petugas', 'role__jabatan', 'survey__id', 'survey__nama').get(pk=id_alokasi)
-                data_kegiatan = models.KegiatanPenilaianModel.objects.values('id', 'nama_kegiatan').get(pk = id_kegiatan)
-                nilai_mitra = models.MasterNilaiPetugas.objects.filter(petugas = id_alokasi, penilaian__kegiatan_penilaian=id_kegiatan).values('penilaian', 'penilaian__indikator_penilaian__nama_indikator', 'nilai' , 'catatan' )
+        if is_ajax and request.method == 'POST':
+            id_alokasi = request.POST.get('id_alokasi')
+            id_kegiatan = request.POST.get('id_kegiatan')
+            data_mitra = AlokasiPetugas.objects.values('id', 'petugas__kode_petugas', 'petugas__nama_petugas', 'role__jabatan', 'survey__id', 'survey__nama').get(pk=id_alokasi)
+            data_kegiatan = models.KegiatanPenilaianModel.objects.values('id', 'nama_kegiatan').get(pk = id_kegiatan)
+            nilai_mitra = models.MasterNilaiPetugas.objects.filter(petugas = id_alokasi, penilaian__kegiatan_penilaian=id_kegiatan).values('penilaian', 'penilaian__indikator_penilaian__nama_indikator', 'nilai' , 'catatan' )
 
-                if nilai_mitra.exists():
-                    return JsonResponse({'status': 'success', 'data_kegiatan': data_kegiatan, 'data_mitra': data_mitra, 'nilai_mitra': list(nilai_mitra)}, status=200)
-                else:
-                    return JsonResponse({'status': 'failed', 'message': 'Data tidak tersedia'}, status=200)
+            if nilai_mitra.exists():
+                return JsonResponse({'status': 'success', 'data_kegiatan': data_kegiatan, 'data_mitra': data_mitra, 'nilai_mitra': list(nilai_mitra)}, status=200)
+            else:
+                return JsonResponse({'status': 'failed', 'message': 'Data tidak tersedia'}, status=200)
                 
         return JsonResponse({'status': 'Invalid request'}, status=400) 
 
 class EntryPenilaianClassView(LoginRequiredMixin, View):
     
     def get(self, request):
-        data_pegawai= model_pegawai.MasterPegawaiModel.objects.filter(user=request.user.id)
-
-        data = models.KegiatanPenilaianModel.objects.filter(pk=14, status='1').first()
-        aloc = model_petugas.AlokasiPetugas.objects.filter(survey = data.survey, pegawai=None)
-
-        dataset = []
-        for dt in aloc:
-            qry = models.MasterNilaiPetugas.objects.filter(penilaian__kegiatan_penilaian = data.pk, penilai=data_pegawai.first().pk, petugas = dt.pk)
-
-            nilai_mitra = {
-                'kegiatan_penilaian' : data.nama_kegiatan,
-                'wilayah' : dt.petugas.adm_id.region,
-                'nama' : dt.petugas.nama_petugas,
-                'role' : dt.role.jabatan,
-                
-            }
-
-            if qry.exists():
-                qry = (qry
-                    .values('penilaian__kegiatan_penilaian__nama_kegiatan', 'petugas__petugas__adm_id__region', 'petugas__petugas__nama_petugas', 'petugas__role__jabatan')
-                    .order_by('petugas__petugas__nama_petugas')
-                    .annotate(avg = Avg('nilai'))
-                    .first()
-                )
-                dataset.append({ **nilai_mitra, **{
-                    'rerata' : qry['avg'],
-                    'state' : '<span class="badge bg-success p-1"> Sudah Menilai </span>',
-                    'aksi' : f'<a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a>'
-                }})
-                continue
-            
-            dataset.append({ **nilai_mitra, **{
-                'rerata' : '-',
-                'state' : '<span class="badge bg-warning p-1"> Belum Menilai </span>',
-                'aksi' : f'<a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a>'
-            }})
-
+        survey = SurveyModel
         context = {
             'title' : 'Penilaian Mitra',
         }
@@ -1301,7 +1263,7 @@ class KegiatanPenilaianJsonResponseClassView(LoginRequiredMixin, View):
 
         if data_pegawai.exists():
 
-            data = data.exclude(Q(nama_kegiatan=None)|Q(survey=None)|Q(tgl_penilaian=None)|Q(status=None)|Q(role_permitted=None))
+            data = data.exclude(Q(kegiatan_survey=None)|Q(tgl_penilaian=None)|Q(status=None)|Q(role_permitted=None)|Q(role_penilai_permitted=None))
             records_total = data.count()
             records_filtered = records_total
             
@@ -1309,12 +1271,13 @@ class KegiatanPenilaianJsonResponseClassView(LoginRequiredMixin, View):
                 data = models.KegiatanPenilaianModel.objects.filter(status='1')
 
                 data = data.filter(
-                    Q(nama_kegiatan__icontains=search)|
-                    Q(survey__nama__icontains=search)|
+                    Q(kegiatan_survey__nama_kegiatan__icontains=search)|
+                    Q(kegiatan_survey__survey__nama__icontains=search)|
                     Q(tgl_penilaian__icontains=search)|
                     Q(status__icontains=search)|
-                    Q(role_permitted__jabatan__icontains=search)
-                ).exclude(Q(nama_kegiatan=None)|Q(survey=None)|Q(sumber=None)|Q(tgl_penilaian=None)|Q(status=None)|Q(role_permitted=None))
+                    Q(role_permitted__jabatan__icontains=search)|
+                    Q(role_penilai_permitted__jabatan__icontains=search)
+                ).exclude(Q(kegiatan_survey=None)|Q(tgl_penilaian=None)|Q(status=None)|Q(role_permitted=None)|Q(role_penilai_permitted=None))
 
                 records_total = data.count()
                 records_filtered = records_total
@@ -1332,7 +1295,7 @@ class KegiatanPenilaianJsonResponseClassView(LoginRequiredMixin, View):
             data = []
             for obj in object_list:
 
-                aloc = model_petugas.AlokasiPetugas.objects.filter(pegawai = data_pegawai.first().pk, survey = obj.survey_id)
+                aloc = model_petugas.AlokasiPetugas.objects.filter(pegawai = data_pegawai.first().pk, sub_kegiatan = obj.kegiatan_survey)
 
                 if aloc.exists():
                     if obj.status == '0':
@@ -1344,12 +1307,12 @@ class KegiatanPenilaianJsonResponseClassView(LoginRequiredMixin, View):
 
                     data.append(
                         {
-                            'nama_kegiatan': obj.nama_kegiatan,
-                            'survey__nama': obj.survey.nama,
+                            'kegiatan_survey__nama_kegiatan': obj.kegiatan_survey.nama_kegiatan,
+                            'kegiatan_survey__kegiatan_survey__survey__nama': obj.kegiatan_survey.survey.nama,
                             'tgl_penilaian': obj.tgl_penilaian.strftime('%d %b %Y'),
                             'status' :  f'<span class="badge {state} p-1"> {obj.get_status_display()} </span>',
                             'status_penilaian' : 'Belum Menilai',
-                            'aksi': f'<a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a>'
+                            'aksi': f'<a href="javascript:void(0);" class="action-icon" onclick="pushValuePenilaian({obj.id})"><i class="mdi mdi-square-edit-outline"></i></a>'
                         }
                     )
                 continue
@@ -1397,16 +1360,21 @@ class MasterNilaiPetugasClassView(LoginRequiredMixin, View):
         data_pegawai= model_pegawai.MasterPegawaiModel.objects.filter(user=request.user.id)
 
         if data_pegawai.exists():
+
             dataKegiatan = models.KegiatanPenilaianModel.objects.filter(status='1')
- 
+            
+            if datatables.get('kegiatan_penilaian'):
+                dataKegiatan = dataKegiatan.filter(pk = datatables.get('kegiatan_penilaian'))
+
             if search:
                 dataKegiatan = dataKegiatan.filter(
-                    Q(nama_kegiatan__icontains=search)
+                    Q(kegiatan_survey__nama_kegiatan__icontains=search)
                 )
 
             dataset = []
             for dt_kegiatan in dataKegiatan:
-                aloc = model_petugas.AlokasiPetugas.objects.filter(survey = dt_kegiatan.survey, pegawai=None)
+                aloc = model_petugas.AlokasiPetugas.objects.filter(sub_kegiatan = dt_kegiatan.kegiatan_survey, pegawai=None)
+                
                 if search:
                     aloc = aloc.filter(
                         Q(petugas__petugas__adm_id__region__icontains=search)|
@@ -1421,29 +1389,32 @@ class MasterNilaiPetugasClassView(LoginRequiredMixin, View):
                         continue
 
                     nilai_mitra = {
-                        'kegiatan_penilaian' : dt_kegiatan.nama_kegiatan,
+                        'id_alokasi' : dt.id,
+                        'id_kegiatan_penilaian' : dt_kegiatan.id,
+                        'kegiatan_penilaian' : dt_kegiatan.kegiatan_survey.nama_kegiatan,
                         'wilayah' : f'Desa {dt.petugas.adm_id.region}',
                         'nama' : dt.petugas.nama_petugas,
                         'role' : dt.role.jabatan,
                     }
 
                     qry = models.MasterNilaiPetugas.objects.filter(penilaian__kegiatan_penilaian = dt_kegiatan.pk, penilai=data_pegawai.first().pk, petugas = dt.pk)
+
                     if qry.exists():
                         qry = (qry
-                            .values('penilaian__kegiatan_penilaian__nama_kegiatan', 'petugas__petugas__adm_id__region', 'petugas__petugas__nama_petugas', 'petugas__role__jabatan')
+                            .values('penilaian__kegiatan_penilaian__kegiatan_survey__nama_kegiatan', 'petugas__petugas__adm_id__region', 'petugas__petugas__nama_petugas', 'petugas__role__jabatan')
                             .order_by('petugas__petugas__nama_petugas')
                             .annotate(avg = Avg('nilai'))
                             .first()
                         )
                         dataset.append({ **nilai_mitra, **{
-                            'rerata' : f'{round(qry['avg'], 2)} / 5',
+                            'rerata' : f'{round(qry['avg'], 2)}',
                             'state' : '<span class="badge bg-success p-1"> Sudah Menilai </span>',
                             'aksi' : f'<a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a>'
                         }})
                         continue
                     
                     dataset.append({ **nilai_mitra, **{
-                        'rerata' : '-',
+                        'rerata' : '0',
                         'state' : '<span class="badge bg-warning p-1"> Belum Menilai </span>',
                         'aksi' : f'<a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a>'
                     }})
@@ -1469,10 +1440,15 @@ class MasterNilaiPetugasClassView(LoginRequiredMixin, View):
                         'role' :  obj['role'],
                         'rerata' : obj['rerata'],
                         'state' : obj['state'],
-                        'aksi': f'<a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a>'
+                        'aksi': f'<a href="javascript:void(0);" class="action-icon" onclick="entryPenilaian({obj["id_kegiatan_penilaian"]}, {obj["id_alokasi"]})"><i class="mdi mdi-square-edit-outline"></i></a>'
                     }
                 )
         
+        if '-' in order_col_name:
+            data = sorted(data, key=lambda x: x[order_col_name.replace("-", "")], reverse=True)
+        else:
+            data = sorted(data, key=lambda x: x[order_col_name])
+
         return {
             'draw': draw,
             'recordsTotal': records_total,
@@ -1481,3 +1457,51 @@ class MasterNilaiPetugasClassView(LoginRequiredMixin, View):
         }
 
 
+class IndikatorPenilaianPetugasClassView(LoginRequiredMixin, View):
+
+    def post(self, request):
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+        if is_ajax and request.method == 'POST':
+            id_alokasi = request.POST.get('id_alokasi')
+            id_kegiatan = request.POST.get('id_kegiatan')
+            
+            data_petugas = model_petugas.AlokasiPetugas.objects.filter(id=id_alokasi)
+            data_pegawai = model_pegawai.MasterPegawaiModel.objects.filter(user=request.user.id)
+            dataKegiatan = models.KegiatanPenilaianModel.objects.filter(pk= id_kegiatan, status='1')
+            
+            if data_pegawai.exists() and dataKegiatan.exists() and data_petugas.exists():
+
+                penilai = data_pegawai.first()
+                data_petugas = data_petugas.first()
+                dataKegiatan = dataKegiatan.first()
+                role_penilai = model_petugas.AlokasiPetugas.objects.filter(sub_kegiatan=dataKegiatan.kegiatan_survey, pegawai=penilai.pk).first()
+
+                input_selected = {
+                    'role_penilai_opts' : f'<option value="{role_penilai.id}" selected>{role_penilai.role.jabatan}</option>',
+                    'penilai_opts' : f'<option value="{penilai.id}" selected>[{penilai.nip}] {penilai.name}</option>',
+                    'kegiatan_opts' : f'<option value="{dataKegiatan.id}" selected>Penilaian {dataKegiatan.kegiatan_survey.nama_kegiatan}</option>',
+                    'survei_opts' : f'<option value="{dataKegiatan.kegiatan_survey.survey.id}" selected>{dataKegiatan.kegiatan_survey.survey.nama}</option>',
+                    'petugas_opts' : f'<option value="{data_petugas.petugas.pk}" selected>{data_petugas.petugas.nama_petugas}</option>',
+                    'role_petugas_opts' : f'<option value="{data_petugas.role.id}" selected>{data_petugas.role.jabatan}</option>'
+                }
+
+                list_indicators = models.IndikatorKegiatanPenilaian.objects.filter(kegiatan_penilaian = dataKegiatan.pk)
+
+                opt = ''
+                for idx, dt in enumerate(list_indicators):
+                    opt +=  f"""<tr>
+                                <td>{idx+1}</td>
+                                <td>{dt.indikator_penilaian.nama_indikator}</td>
+                                <td>
+                                    <input type="number" class="form-control d-inline" name="nilai_indikator_{dt.pk}" placeholder="Isikan nilai" alt="Isikan nilai" min="{dt.n_min}" max="{dt.n_max}" onkeyup="if(this.value > {dt.n_max} || this.value < {dt.n_min}) this.value = null;">   
+                                </td>
+                                <td>
+                                    <textarea class="form-control" name="catatan_indikator_{dt.pk}" cols="30" rows="5"></textarea>
+                                </td>
+                            </tr>"""
+                    
+                input_selected['tbody'] = opt
+                return JsonResponse({'status': 'success', 'data': input_selected}, status=200)
+                
+        return JsonResponse({'status': 'Invalid request'}, status=400) 

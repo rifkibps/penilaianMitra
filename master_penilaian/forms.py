@@ -43,11 +43,11 @@ class KegiatanPenilaianForm(forms.ModelForm):
 
         model = models.KegiatanPenilaianModel
         fields = [
-            'nama_kegiatan', 
-            'survey',
+            'kegiatan_survey', 
             'tgl_penilaian',
             'status',
             'role_permitted',
+            'role_penilai_permitted',
         ]
 
         labels = {
@@ -64,22 +64,21 @@ class KegiatanPenilaianForm(forms.ModelForm):
         }
 
         widgets = {
-            'nama_kegiatan': forms.TextInput(
-                attrs = attrs_input
-            ),
-            'survey': forms.Select(
-                attrs = attrs_input | {'class' : 'form-select', 'id' : 'id_survey_id'}
+            'kegiatan_survey': forms.Select(
+                attrs = attrs_input | {'class' : 'form-select'}
             ),
             'tgl_penilaian': forms.DateInput(
                 attrs = attrs_input  | {'type' : 'date'}
             ),
-            'status': forms.Select(
-                attrs = attrs_input | {'class' : 'form-select'}
-            ),
             'role_permitted': forms.SelectMultiple(
                  attrs = attrs_input | {'size' : '10', 'style' : "height: 100%;"}
             ),
-            
+             'role_penilai_permitted': forms.SelectMultiple(
+                 attrs = attrs_input | {'size' : '10', 'style' : "height: 100%;"}
+            ),
+                  'status': forms.Select(
+                attrs = attrs_input | {'class' : 'form-select'}
+            ),
         }
 
 

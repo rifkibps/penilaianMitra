@@ -17,7 +17,6 @@ class SurveiForm(forms.ModelForm):
             'deskripsi',
             'tgl_mulai',
             'tgl_selesai',
-            'status'
         ]
 
         labels = {
@@ -25,7 +24,6 @@ class SurveiForm(forms.ModelForm):
             'deskripsi' : 'Deskripsi Survei',
             'tgl_mulai' : 'Tanggal Mulai',
             'tgl_selesai': 'Tanggal Berakhir',
-            'status': 'Status Survei'
         }
 
         attrs_input = {
@@ -47,9 +45,6 @@ class SurveiForm(forms.ModelForm):
             'tgl_selesai': forms.DateInput(
                 attrs = attrs_input | {'type': 'date'}
             ),
-            'status': forms.Select(
-                attrs = attrs_input |  {'class' : 'form-select'}
-            )
         }
 
 class SurveiFormUpload(forms.Form):

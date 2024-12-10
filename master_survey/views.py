@@ -54,22 +54,17 @@ class SurveyJsonResponseClassView(LoginRequiredMixin, View):
             order_col_name =  str('-' + order_col_name)
 
         data_survey = models.SurveyModel.objects
-        if datatables.get('status_filter'):
-            data_survey = data_survey.filter(status = datatables.get('status_filter'))
-        
-        data_survey = data_survey.exclude(Q(nama=None)|Q(deskripsi=None)|Q(tgl_mulai=None)|Q(tgl_selesai=None)|Q(status=None))
+        data_survey = data_survey.exclude(Q(nama=None)|Q(deskripsi=None)|Q(tgl_mulai=None)|Q(tgl_selesai=None))
 
         records_total = data_survey.count()
         records_filtered = records_total
         
         if search:
             data_survey = models.SurveyModel.objects
-            if datatables.get('status_filter'):
-                data_survey = data_survey.filter(status = datatables.get('status_filter'))
 
             data_survey = data_survey.filter(
                 Q(nama__icontains=search)|Q(deskripsi__icontains=search)|Q(tgl_mulai__icontains=search)|Q(tgl_selesai__icontains=search)|Q(salary=search)
-            ).exclude(Q(nama=None)|Q(deskripsi=None)|Q(tgl_mulai=None)|Q(tgl_selesai=None)|Q(status=None))
+            ).exclude(Q(nama=None)|Q(deskripsi=None)|Q(tgl_mulai=None)|Q(tgl_selesai=None))
 
             records_total = data_survey.count()
             records_filtered = records_total
@@ -90,24 +85,15 @@ class SurveyJsonResponseClassView(LoginRequiredMixin, View):
 
         for obj in object_list:
 
-            if obj.status == '0':
-                class_status = 'badge-primary-lighten'
-            elif obj.status == '1':
-                class_status = 'badge-danger-lighten'
-            else:
-                class_status = 'badge-success-lighten'
-
             data.append(
             {
                 'nama': obj.nama,
                 'tgl_mulai': obj.tgl_mulai.strftime('%d-%m-%Y'),
                 'tgl_selesai': obj.tgl_selesai.strftime('%d-%m-%Y'),
                 'deskripsi': obj.deskripsi[:32] + '...',
-                'status' : f'<span class="badge {class_status}"> {obj.get_status_display()} </span>',
                 'aksi': f'<a href="javascript:void(0);" onclick="editSurvei({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a> <a href="javascript:void(0);" onclick="deleteSurvei({obj.id});" class="action-icon"> <i class="mdi mdi-delete"></i></a>'
-                 
             })
-
+        print(data)
         return {
             'draw': draw,
             'recordsTotal': records_total,

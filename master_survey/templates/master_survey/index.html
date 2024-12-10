@@ -83,7 +83,6 @@
                                         <th>Tanggal Mulai</th>
                                         <th>Tanggal Selesai</th>
                                         <th>Deskripsi</th>
-                                        <th>Status Aktif</th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -313,23 +312,17 @@
                 "X-CSRFToken": '{{csrf_token}}',
             },
             "type": "POST",
-            "data": function (d){
-                return $.extend({}, d, {
-                    "status_filter": $('#status-select-filter').val(),
-                })
-            },
         },
         columns :[
             {"data": 'nama'},
             {"data" : 'tgl_mulai'},
             {"data" : 'tgl_selesai'},
-            {"data": 'deskripsi'},
-            {"data" : 'status'},
+            {"data":  'deskripsi'},
             {"data" : 'aksi'},
         ],
         lengthMenu: [5, 25, 50, 100,'All'],
         columnDefs: [ {
-            'targets': [5], /* column index */
+            'targets': [4], /* column index */
             'orderable': false, /* true or false */
         }],
         keys: !0,

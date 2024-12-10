@@ -161,16 +161,16 @@ class AlokasiForm(forms.ModelForm):
 
         model = models.AlokasiPetugas
         fields = [
+            'sub_kegiatan',
             'petugas', 
             'pegawai', 
-            'survey',
             'role',
         ]
 
         labels = {
             'petugas': 'Nama Petugas', 
             'pegawai': 'Nama Pegawai', 
-            'survey': 'Nama Survei',
+            'sub_kegiatan': 'Nama Kegiatan',
             'role': 'Jabatan',
         }
 
@@ -187,8 +187,8 @@ class AlokasiForm(forms.ModelForm):
             'pegawai': forms.Select(
                 attrs = attrs_input | {'class' : 'form-select', 'id': 'id_pegawai_id'}
             ),
-            'survey': forms.Select(
-                attrs = attrs_input | {'class' : 'form-select', 'id' : 'id_survey_id'}
+            'sub_kegiatan': forms.Select(
+                attrs = attrs_input | {'class' : 'form-select', 'id' : 'id_sub_kegiatan_id'}
             ),
             'role': forms.Select(
                 attrs = attrs_input | {'class' : 'form-select',  'id' : 'id_role_id'}

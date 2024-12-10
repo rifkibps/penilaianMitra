@@ -1,6 +1,6 @@
 from django.db import models
 from master_survey.models import SurveyModel
-from master_petugas.models import AlokasiPetugas, RoleMitra
+from master_petugas.models import AlokasiPetugas, RoleMitra, SubKegiatanSurvei
 from master_pegawai.models import MasterPegawaiModel
 
 class IndikatorPenilaian(models.Model):
@@ -17,15 +17,18 @@ class KegiatanPenilaianModel(models.Model):
        ('1', 'Berlangsung'),
        ('2', 'Selesai'),
     )
-    
-    nama_kegiatan = models.CharField(max_length=256, null=False, blank=False, verbose_name='Nama Kegiatan Penilaian' )
-    survey = models.ForeignKey(SurveyModel, on_delete=models.RESTRICT, blank=False, null=False, related_name='penilaian_survei')
+
+   #  survey = models.ForeignKey(SurveyModel, on_delete=models.RESTRICT, blank=False, null=False, related_name='penilaian_survei') # Harus dihapus ini, diganti ke alokasi
+   #  nama_kegiatan = models.CharField(max_length=256, null=False, blank=False, verbose_name='Nama Kegiatan Penilaian' )# Harus dihapus ini, diganti ke alokasiPetugas
+
+    kegiatan_survey = models.ForeignKey(SubKegiatanSurvei, on_delete=models.RESTRICT, blank=False, null=False, related_name='penilaian_survei', verbose_name='Kegiatan Survei')
     tgl_penilaian = models.DateField( null=False, blank=False,  verbose_name='Tanggal Penilaian')
-    role_permitted = models.ManyToManyField(RoleMitra)
+    role_permitted = models.ManyToManyField(RoleMitra, verbose_name='Role Petugas', related_name='role_permitted_petugas')
+    role_penilai_permitted = models.ManyToManyField(RoleMitra, verbose_name='Role Penilai', related_name='role_permitted_penilai')
     status = models.CharField(max_length=1, choices=status, default=0, null=False, blank=False, verbose_name='Status Penilaian')
     
     def __str__(self):
-        return f"{self.id}. {self.nama_kegiatan} [{self.survey.nama}]"
+        return f"{self.id}. {self.kegiatan_survey.nama_kegiatan}"
    
 class IndikatorKegiatanPenilaian(models.Model):
    kegiatan_penilaian = models.ForeignKey(KegiatanPenilaianModel, on_delete=models.CASCADE, related_name='kegiatan_penilaian_petugas')
@@ -41,7 +44,7 @@ class IndikatorKegiatanPenilaian(models.Model):
    n_max = models.IntegerField(null=False, blank=False, default=5, verbose_name='Batas Maksimal')
    
    def __str__(self):
-      return f"{self.kegiatan_penilaian.nama_kegiatan} [{self.indikator_penilaian}]"
+      return f"{self.kegiatan_penilaian.kegiatan_survey.nama_kegiatan} [{self.indikator_penilaian}]"
 
 class MasterNilaiPetugas(models.Model):
 

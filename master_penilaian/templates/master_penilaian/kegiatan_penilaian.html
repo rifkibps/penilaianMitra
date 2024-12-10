@@ -80,9 +80,9 @@
                                 <thead>
                                     <tr>
                                         <th>Kegiatan Penilaian</th>
-                                        <th>Survei</th>
                                         <th>Tgl Penilaian</th>
-                                        <th>Role Permitted</th>
+                                        <th>Role Petugas</th>
+                                        <th>Role Penilai</th>
                                         <th>Status</th>
                                         <th>Aksi</th> 
                                     </tr>
@@ -134,7 +134,7 @@
                                     <div class="form-floating errors" id="form_{{form.survey.id_for_label}}">
                                         <select name="survey" class="form-select" required id="id_survey_id">
                                             <option value="" selected="">---------</option>
-                                            {% for dt in data_survei_finished %}
+                                            {% for dt in data_survei %}
                                                 <option value="{{dt.id}}">{{dt.nama}} [{{dt.tgl_mulai|date:'d-M-Y'}} s.d. {{dt.tgl_selesai|date:'d-M-Y'}}]</option>
                                             {% endfor %}
                                           </select>
@@ -256,10 +256,10 @@
             "type": "POST"
         },
         columns :[
-            {"data": 'nama_kegiatan'},
-            {"data": 'survey__nama'},
+            {"data": 'kegiatan_survey__nama_kegiatan'},
             {"data" : 'tgl_penilaian'},
             {"data": 'role_permitted__jabatan'},
+            {"data": 'role_penilai_permitted__jabatan'},
             {"data" : 'status'},
             {"data" : 'aksi'},
         ],
