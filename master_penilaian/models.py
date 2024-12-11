@@ -48,7 +48,7 @@ class IndikatorKegiatanPenilaian(models.Model):
 
 class MasterNilaiPetugas(models.Model):
 
-   penilai = models.ForeignKey(MasterPegawaiModel, on_delete=models.CASCADE,  related_name='penilai')
+   penilai = models.ForeignKey(AlokasiPetugas, on_delete=models.CASCADE,  related_name='penilai')
    petugas = models.ForeignKey(AlokasiPetugas, on_delete=models.CASCADE,  related_name='nilai_petugas')
    penilaian = models.ForeignKey(IndikatorKegiatanPenilaian, on_delete=models.RESTRICT, related_name='indikator_kegiatan_penilaian')
    nilai = models.SmallIntegerField(null=True, blank=True, verbose_name='Nilai Kegiatan Petugas')

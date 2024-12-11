@@ -42,4 +42,6 @@ urlpatterns = [
     path('penilaian/json-response', views.KegiatanPenilaianJsonResponseClassView.as_view(), name='list-penilaian-json'),
     path('penilaian/nilai-json-response', views.MasterNilaiPetugasClassView.as_view(), name='list-nilai-json'),
     path('penilaian/get-indicator', views.IndikatorPenilaianPetugasClassView.as_view(), name='list-indicator-json'),
+    
+    path('penilaian/rank-petugas', views.MasterGlobalRankPetugasClassView.as_view(), name='rank-petugas-json'),
 ]

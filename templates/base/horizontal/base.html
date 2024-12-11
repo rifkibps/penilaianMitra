@@ -166,7 +166,15 @@
         <script src="{% static 'app-design/assets/js/vendor/dataTables.bootstrap5.js' %}"></script>
         <script src="{% static 'app-design/assets/js/vendor/dataTables.responsive.min.js' %}"></script>
         <script src="{% static 'app-design/assets/js/vendor/responsive.bootstrap5.min.js' %}"></script>
-        
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+        <script>
+            var swalWithBootstrapButtons = Swal.mixin({
+                customClass: {
+                  confirmButton: 'btn btn-primary'},
+                buttonsStyling: true
+            })
+        </script>
         {% block js-extender %}
         {% endblock js-extender %}
     </body>

@@ -124,21 +124,14 @@
                         <table class="table table-centered table-hover mb-0" id="ranking-global">
                             <thead>
                                 <tr>
-                                    <th>Wilayah</th>
+                                    <th>Wilayah (Kecamatan)</th>
                                     <th>Nama Mitra</th>
                                     <th class="text-center">Rerata Nilai</th>
                                     <th>Ranking</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for i in '1234567891'  %}
-                                    <tr>
-                                        <td>Katobu</td>
-                                        <td>Rifki Gustiawan</td>
-                                        <td class="text-center">4.9</td>
-                                        <td>5 / 259</td>
-                                    </tr>
-                                {% endfor %}
+                               
                             </tbody>
                         </table>
                     </div> <!-- end table-responsive-->
@@ -210,99 +203,101 @@
                     <a href="javascript:void(0)" class="btn btn-sm btn-link float-end" id="close-card-form">Tutup</a>
                     <h4 class="header-title mt-2 mb-3">Input Penilaian Mitra</h4>
 
-                    <div class="row">
-                        <p>Silahkan isikan data Penilaian Peserta.</p>
-                        <input type="hidden" name="id" id="id_id">
-
-                        <div class="row mt-3">
-                            <div class="col-6">
-                                <div class="row">
-                                    <div class="col-sm-5">
-                                        <h5 class="mb-3">Penilai</h5>
+                    <form action="{% url 'master_penilaian:penilaian' %}" method="POST" id="formPenilaianPetugas">
+                        {% csrf_token %}
+                        <div class="row">
+                            <p>Silahkan isikan Penilaian Petugas.</p>
+                            <input type="hidden" name="id" id="id_id">
+                            <div class="row mt-3">
+                                <div class="col-6">
+                                    <div class="row">
+                                        <div class="col-sm-5">
+                                            <h5 class="mb-3">Penilai</h5>
+                                        </div>
+                                        <div class="col-sm-7">
+                                            <select class="form-select mb-2" id="field_id_penilai" name="field_id_penilai">
+                                            </select>
+                                        </div>
                                     </div>
-                                    <div class="col-sm-7">
-                                        <select class="form-select mb-2" id="field_id_penilai" name="field_id_penilai" disabled>
-                                        </select>
+
+                                    <div class="row">
+                                        <div class="col-sm-5">
+                                            <h5 class="mb-3">Role Penilai</h5>
+                                        </div>
+                                        <div class="col-sm-7">
+                                            <select class="form-select mb-2" id="field_role_penilai" name="field_role_penilai">
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-sm-5">
+                                            <h5 class="mb-3">Kegiatan Penilaian</h5>
+                                        </div>
+                                        <div class="col-sm-7">
+                                            <select class="form-select mb-2 d-inline" id="field_kegiatan_penilaian" name="field_kegiatan_penilaian">
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                                <div class="col-6">
+                                    <div class="row">
+                                        <div class="col-sm-5">
+                                            <h5 class="mb-3">Survei</h5>
+                                        </div>
+                                        <div class="col-sm-7">
+                                            <select class="form-select mb-2" id="field_survey" name="field_survey">
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-sm-5">
+                                            <h5 class="mb-3">Petugas</h5>
+                                        </div>
+                                        <div class="col-sm-7">
+                                            <select class="form-select mb-2 d-inline" id="field_mitra" name="field_mitra">
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-2">
+                                        <div class="col-sm-5">
+                                            <h5 class="mb-3">Role Petugas</h5>
+                                        </div>
+                                        <div class="col-sm-7">
+                                            <select class="form-select mb-2 d-inline" id="field_role_petugas" name="field_role_petugas">
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
-
-                                <div class="row">
-                                    <div class="col-sm-5">
-                                        <h5 class="mb-3">Role Penilai</h5>
-                                    </div>
-                                    <div class="col-sm-7">
-                                        <select class="form-select mb-2" id="field_role_penilai" name="field_role_penilai" disabled>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-sm-5">
-                                        <h5 class="mb-3">Kegiatan Penilaian</h5>
-                                    </div>
-                                    <div class="col-sm-7">
-                                        <select class="form-select mb-2 d-inline" id="field_kegiatan_penilaian" name="field_kegiatan_penilaian" disabled>
-                                        </select>
-                                    </div>
-                                </div>
+                            </div>
+                            <hr>
+                        </div>
+                        <div class="table-responsive mt-2 mb-3">
+                            <table class="table table-sm table-centered table-nowrap table-hover mb-0" id="table_form_penilaian">
+                                <thead>
+                                    <tr class="bg-info text-white">
+                                        <th>No</th>
+                                        <th>Indikator Penilaian</th>
+                                        <th>Penilaian</th>
+                                        <th>Catatan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
                                 
-                            </div>
-                            <div class="col-6">
-                                <div class="row">
-                                    <div class="col-sm-5">
-                                        <h5 class="mb-3">Survei</h5>
-                                    </div>
-                                    <div class="col-sm-7">
-                                        <select class="form-select mb-2" id="field_survey" name="field_survey" disabled>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-sm-5">
-                                        <h5 class="mb-3">Petugas</h5>
-                                    </div>
-                                    <div class="col-sm-7">
-                                        <select class="form-select mb-2 d-inline" id="field_petugas" name="field_petugas" disabled>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="row mb-2">
-                                    <div class="col-sm-5">
-                                        <h5 class="mb-3">Role Petugas</h5>
-                                    </div>
-                                    <div class="col-sm-7">
-                                        <select class="form-select mb-2 d-inline" id="field_role_petugas" name="field_role_petugas" disabled>
-                                        </select>
-                                    </div>
-                                </div>
+                                </tbody>
+                            </table>
+                        </div> <!-- end table-responsive-->
+                        
+                        <div class="row mt-3">
+                            <div class="col-lg">        
+                                <button type="submit" class="btn btn-primary" id="submitformPenilaianPetugas">Simpan Penilaian</button>
                             </div>
                         </div>
-                        <hr>
-                    </div>
-                    <div class="table-responsive mt-2 mb-3">
-                        <table class="table table-sm table-centered table-nowrap table-hover mb-0" id="table_form_penilaian">
-                            <thead>
-                                <tr class="bg-info text-white">
-                                    <th>No</th>
-                                    <th>Indikator Penilaian</th>
-                                    <th>Penilaian</th>
-                                    <th>Catatan</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                              
-                            </tbody>
-                        </table>
-                    </div> <!-- end table-responsive-->
-                    
-                    <div class="row mt-3">
-                        <div class="col-lg">        
-                            <button type="submit" class="btn btn-primary" id="submitformPenilaianPetugas">Simpan Penilaian</button>
-                            <button type="button" class="btn btn-danger" id="ResetformPenilaianPetugas">Reset Form</button>
-                        </div>
-                    </div>
+                    </form>
+
                 </div> <!-- end card-body-->
             </div> <!-- end card-->
         </div>
@@ -400,6 +395,33 @@
         },
     });
 
+    let table3 = $('#ranking-global').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+            "url": "{% url 'master_penilaian:rank-petugas-json' %}",
+            "headers": {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": '{{csrf_token}}',
+            },
+            "type": "POST"
+        },
+        columns :[
+            {"data": 'wilayah'},
+            {"data" : 'petugas'},
+            {"data" : 'rerata'},
+            {"data" : 'rank'},
+        ],
+        columnDefs: [ {
+            'targets': [2,3], /* column index */
+            'className': "text-center"
+        }],
+        bLengthChange: false,
+        bPaginate: false,
+        bInfo : false,
+        bFilter: false,
+    });
+
     let pushValuePenilaian = (id) => {
         $('#kegiatan_penilaian').val(id)
         table2.draw()
@@ -421,7 +443,7 @@
                 $('#field_role_penilai').html(response.data.role_penilai_opts)
                 $('#field_kegiatan_penilaian').html(response.data.kegiatan_opts)
                 $('#field_survey').html(response.data.survei_opts)
-                $('#field_petugas').html(response.data.petugas_opts)
+                $('#field_mitra').html(response.data.petugas_opts)
                 $('#field_role_petugas').html(response.data.role_petugas_opts)
 
                 $('#table_form_penilaian tbody').html(response.data.tbody)
@@ -434,6 +456,34 @@
         });
 
     }
+
+    $('#formPenilaianPetugas').on('submit', function(e){
+
+        e.preventDefault()
+
+        var serializedData = $(this).serialize();
+
+        $.ajax({
+            type: 'POST',
+            url: $(this).attr('action'),
+            data: serializedData,
+            success: function (response) {
+                if (response.status == 'success'){
+                    
+                    Swal.fire(
+                            'Data berhasil disimpan',
+                            response.messages,
+                            'success'
+                    )
+    
+                    table2.ajax.reload();
+                }
+            },
+            error: function (response) {
+                console.log(response)
+            }
+        })
+    })
 
     $('#close-card-form').on('click', () => {
         $('.form-select').val('')

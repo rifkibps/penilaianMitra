@@ -135,7 +135,8 @@ class PenilaianMitraForm(forms.Form):
             if 'nilai_indikator_' in key:
 
                 df.append({
-                    'petugas' : self.data['field_mitra'],
+                    'petugas' : self.data['field_mitra'], #ID ALOKASI
+                    'penilai' : self.data['field_id_penilai'], #ID ALOKASI
                     'penilaian' : key.replace('nilai_indikator_', ''),
                     'nilai': value
                 })

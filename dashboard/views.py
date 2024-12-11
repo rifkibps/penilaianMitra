@@ -25,7 +25,7 @@ class MainDashboardClassView(LoginRequiredMixin, View):
             'mitra' : MasterPetugas.objects.all().count(),
             'mitra_block' : MasterPetugas.objects.filter(status =3).count(),
             'survey' : SurveyModel.objects.all().count(),
-            'survey_finish' : SurveyModel.objects.filter(status = 2).count(),
+            'survey_finish' : SurveyModel.objects.filter(state = 2).count(),
             'penilaian' : KegiatanPenilaianModel.objects.all().count(),
             'penilaian_active' : KegiatanPenilaianModel.objects.filter(~Q(status = 1)).count(),
             'data_penilaian' : KegiatanPenilaianModel.objects.all(),

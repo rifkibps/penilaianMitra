@@ -5,6 +5,7 @@ from django.db import models
 class SurveyModel(models.Model):
    
    status = (
+       ('0', 'Belum Aktif'),
        ('1', 'Berlangsung'),
        ('2', 'Selesai')
     )

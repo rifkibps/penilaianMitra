@@ -1121,9 +1121,42 @@ class MasterRoleExportClassView(LoginRequiredMixin, View):
 class PetugasClassView(LoginRequiredMixin, View):
     
     def get(self, request):
+
+        master_mitra = models.MasterPetugas.objects.all()
+
+        dataset = []
+        for dt in master_mitra:
+
+            alokasi_petugas = models.AlokasiPetugas.objects.filter(petugas = dt.pk)
+
+            jml_kegiatan = 0
+            if alokasi_petugas.exists():
+                jml_kegiatan = alokasi_petugas.count()
+
+                jml_penilai = 0
+                for dt_ in alokasi_petugas:
+                    check_penilaian = MasterNilaiPetugas.objects.filter(petugas = dt_.id, penilaian__kegiatan_penilaian__kegiatan_survey = dt_.sub_kegiatan).values('penilai_id').distinct()
+
+                    if check_penilaian.exists():
+                        jml_penilai += check_penilaian.count()
+
+                
+            dataset.append(
+                {
+                    'kode_petugas' : dt.kode_petugas,
+                    'nama_petugas' : dt.nama_petugas,
+                    'adm_id' : dt.adm_id.region,
+                    'no_telp' : dt.no_telp,
+                    'email' : dt.email,
+                    'jml_kegiatan' : jml_kegiatan,
+                    'jml_penilai' : jml_penilai,
+                    'status' : '<span class="badge bg-success p-1"> Mitra Rekomendasi </span>'
+                }
+            )
+
         context = {
             'title' : 'Data Mitra',
-            }
+        }
 
         return render(request, 'master_petugas/petugas.html', context)
 
@@ -1246,6 +1279,112 @@ class DetailPetugasPreviewClassView(LoginRequiredMixin, View):
             'penilaian' : data_final
         }
 
-
         return render(request, 'master_petugas/detail_petugas_preview.html', context)
+
+
+class ListPetugasClassView(LoginRequiredMixin, View):
+    
+    def post(self, request):    
+        data_wilayah = self._datatables(request)
+        return HttpResponse(json.dumps(data_wilayah, cls=DjangoJSONEncoder), content_type='application/json')
+		
+    def _datatables(self, request):
+        datatables = request.POST
+        
+        # Get Draw
+        draw = int(datatables.get('draw'))
+        start = int(datatables.get('start'))
+        length = int(datatables.get('length'))
+        page_number = int(start / length + 1)
+
+        search = datatables.get('search[value]')
+
+        order_idx = int(datatables.get('order[0][column]')) # Default 1st index for 
+        order_dir = datatables.get('order[0][dir]') # Descending or Ascending
+        order_col = 'columns[' + str(order_idx) + '][data]'
+        order_col_name = datatables.get(order_col)
+
+        if (order_dir == "desc"):
+            order_col_name =  str('-' + order_col_name)
+
+        data = models.MasterPetugas.objects.all()
+        
+        if search:
+            data = data.filter(
+                Q(adm_id__code__icontains=search)|
+                Q(adm_id__region__icontains=search)|
+                Q(kode_petugas__icontains=search)|
+                Q(nama_petugas__icontains=search)|
+                Q(nik__icontains=search)|
+                Q(email__icontains=search)|
+                Q(no_telp__icontains=search)
+            )
+
+        dataset = []
+        for dt in data:
+            alokasi_petugas = models.AlokasiPetugas.objects.filter(petugas = dt.pk)
+
+            jml_kegiatan = 0
+            if alokasi_petugas.exists():
+                jml_kegiatan = alokasi_petugas.count()
+
+                jml_penilai = 0
+                for dt_ in alokasi_petugas:
+                    check_penilaian = MasterNilaiPetugas.objects.filter(petugas = dt_.id, penilaian__kegiatan_penilaian__kegiatan_survey = dt_.sub_kegiatan).values('penilai_id').distinct()
+
+                    if check_penilaian.exists():
+                        jml_penilai += check_penilaian.count()
+
+            dataset.append(
+                {
+                    'kode_petugas' : dt.kode_petugas,
+                    'nama_petugas' : dt.nama_petugas,
+                    'adm_id__region' : dt.adm_id.region,
+                    'no_telp' : dt.no_telp if dt.no_telp else '-',
+                    'email' : dt.email,
+                    'jml_kegiatan' : jml_kegiatan,
+                    'jml_penilai' : jml_penilai,
+                    'status' : '<span class="badge bg-success p-1"> Mitra Rekomendasi </span>'
+                }
+            )
+
+        records_total = len(dataset)
+        records_filtered = records_total
+
+        if '-' in order_col_name:
+            data = sorted(dataset, key=lambda x: x[order_col_name.replace("-", "")], reverse=True)
+        else:
+            data = sorted(dataset, key=lambda x: x[order_col_name])
+        
+        # Conf Paginator
+        paginator = Paginator(data, length)
+
+        try:
+            object_list = paginator.page(page_number).object_list
+        except PageNotAnInteger:
+            object_list = paginator.page(1).object_list
+        except EmptyPage:
+            object_list = paginator.page(1).object_list
+
+        data = [
+            {
+                'kode_petugas' : obj['kode_petugas'],
+                'nama_petugas' : obj['nama_petugas'],
+                'adm_id__region' : obj['adm_id__region'],
+                'no_telp' : obj['no_telp'],
+                'email' : obj['email'],
+                'jml_kegiatan' : obj['jml_kegiatan'],
+                'jml_penilai' : obj['jml_penilai'],
+                'status' : obj['status'],
+                'aksi': f'<button class="btn btn-primary"><i class="mdi mdi-square-edit-outline"></i></button>',
+            } for obj in object_list
+        ]
+        pprint(data)
+        return {
+            'draw': draw,
+            'recordsTotal': records_total,
+            'recordsFiltered': records_filtered,
+            'data': data,
+        }
+
 
