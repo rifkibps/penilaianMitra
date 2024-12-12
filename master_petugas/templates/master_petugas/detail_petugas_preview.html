@@ -67,24 +67,31 @@
             <div class="card">
                 <div class="card-body">
                     <h4 class="header-title mt-0 mb-3">Informasi Mitra</h4>
-                    <p class="text-muted font-13">
-                        {{mitra.alamat}}
-                    </p>
-    
+                    <p class="text-muted"><strong>Nama Lengkap :</strong><span class="ms-2">{{mitra.nama_petugas}}</span></p>
+                    <p class="text-muted"><strong>ID Petugas :</strong><span class="ms-2">{{mitra.kode_petugas}}</span></p>
+                    <p class="text-muted"><strong>Kecamatan :</strong><span class="ms-2">{{mitra.alamat}}</span></p>
+                   
                     <hr>
-    
-                    <div class="text-start">
-                        <p class="text-muted"><strong>Nama Lengkap :</strong> <span class="ms-2">{{mitra.nama_petugas}}</span></p>
-    
-                        <p class="text-muted"><strong>ID Petugas :</strong><span class="ms-2">{{mitra.kode_petugas}}</span></p>
-                        <p class="text-muted"><strong>NIK :</strong> <span class="ms-2">{{mitra.nik}}</span></p>
-                        <p class="text-muted"><strong>NPWP :</strong> <span class="ms-2">{{mitra.npwp}}</span></p>
-                        <p class="text-muted"><strong>Tanggal Lahir :</strong> <span class="ms-2">{{mitra.tgl_lahir}}</span></p>
-                        <p class="text-muted"><strong>Pendidikan :</strong> <span class="ms-2">{{mitra.get_pendidikan_display}}</span></p>
-                        <p class="text-muted"><strong>Pekerjaan :</strong> <span class="ms-2">{{mitra.pekerjaan}}</span></p>
-                        <p class="text-muted"><strong>Agama :</strong> <span class="ms-2">{{mitra.get_agama_display}}</span></p>
-                        <p class="text-muted"><strong>Email :</strong> <span class="ms-2">{{mitra.email}}</span></p>
-    
+                    
+                    <div class="row">
+                        <div class="col-md-6 col-sm-6">
+                            <div class="text-start">
+                                <p class="text-muted"><strong>NIK :</strong> <span class="ms-2">{{mitra.nik}}</span></p>
+                                <p class="text-muted"><strong>NPWP :</strong> <span class="ms-2">{% if mitra.npwp %} {{mitra.npwp}} {% else %}-{% endif %}</span></p>
+                                <p class="text-muted"><strong>Tanggal Lahir :</strong> <span class="ms-2">{{mitra.tgl_lahir|date:"d M Y"}}</span></p>
+                                <p class="text-muted"><strong>Pendidikan :</strong> <span class="ms-2">{{mitra.get_pendidikan_display}}</span></p>
+                                <p class="text-muted"><strong>Pekerjaan :</strong> <span class="ms-2">{{mitra.pekerjaan}}</span></p>
+                                <p class="text-muted"><strong>Agama :</strong> <span class="ms-2">{{mitra.get_agama_display}}</span></p>
+                                <p class="text-muted"><strong>Email :</strong> <span class="ms-2">{{mitra.email}}</span></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-sm-6">
+                            <div class="text-start px-2">
+                                <p class="text-muted"><strong>Nama Bank :</strong> <span class="ms-2">{% if mitra.bank %} {{mitra.get_bank_display}} {% else %}-{% endif %}</span></p>
+                                <p class="text-muted"><strong>Atas Nama :</strong> <span class="ms-2">{% if mitra.pemilik_rek %} {{mitra.pemilik_rek}} {% else %}-{% endif %}</span></p>
+                                <p class="text-muted"><strong>Nomor Rekening :</strong> <span class="ms-2">{% if mitra.rekening %} {{mitra.rekening}} {% else %}-{% endif %}</span></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -103,50 +110,29 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>Penilaian</th>
+                                    <th>Survei</th>
+                                    <th>Kegiatan</th>
                                     <th class="text-center">Jabatan</th>
+                                    <th class="text-center">Tahun</th>
                                     <th class="text-center">Rata-rata</th>
                                     <th class="text-center">Ranking</th>
                                 </tr>
                             </thead>
                             <tbody>
-    
-                                {% for dt in penilaian %}
-                                    <tr>
-                                        <td>{{forloop.counter}}</td>
-                                        <td>{{dt.nama_kegiatan}}</td>
-                                        <td class="text-center">{{dt.role}}</td>
-                                        <td class="text-center"><span class="badge bg-primary">{{dt.rerata}}</span></td>
-                                        <td class="text-center">{{dt.rank}}</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div> <!-- end table responsive-->
-                </div> <!-- end col-->
-            </div> <!-- end row-->
-    
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="header-title mb-3"><i class="mdi mdi-clipboard-text-multiple me-1"></i> Survei yang Diikuti</h4>
-    
-                    <div class="table-responsive">
-                        <table class="table table-hover table-centered mb-0">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Survei</th>
-                                    <th class="text-center">Jabatan</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-    
-                                {% for dt in history_survey %}
-                                    <tr>
-                                        <td>{{forloop.counter}}</td>
-                                        <td>{{dt.survey.nama}}</td>
-                                        <td class="text-center"><span class="badge bg-primary">{{dt.role.jabatan}}</span></td>
-                                    </tr>
+                                
+                                {% for i in '123456'  %}
+                                    {% for dt in penilaian %}
+                                        <tr>
+                                            <td>{{i}}</td>
+                                            <td>{{dt.survey}}</td>
+                                            <td>{{dt.nama_kegiatan}}</td>
+                                            <td class="text-center">{{dt.role}}</td>
+                                            <td class="text-center">{{dt.tahun|date:"Y"}}</td>
+                                            <td class="text-center"><span class="badge bg-primary">{{dt.rerata}}</span></td>
+                                            <td class="text-center">{{dt.rank}}</td>
+                                        </tr>
+                                    {% endfor %}
+                                
                                 {% endfor %}
                             </tbody>
                         </table>
@@ -172,9 +158,11 @@
                                 <tr>
                                     <th>#</th>
                                     <th>Survei</th>
+                                    <th>Pelaksanaan Kegiatan</th>
                                     <th>Jabatan</th>
-                                    <th>Penilaian Kegiatan</th>
+                                    <th>Periode Kegiatan</th>
                                     <th>Catatan Personal</th>
+                                    <th>Status Rekomendasi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -182,16 +170,26 @@
                                 <tr>
                                     <td>{{forloop.counter}}</td>
                                     <td>{{dt.survey}}</td>
-                                    <td>{{dt.role}}</td>
                                     <td>{{dt.nama_kegiatan}}</td>
+                                    <td>{{dt.role}}</td>
+                                    <td>{{dt.tahun|date:"d M Y"}}</td>
                                     <td>
                                         <ul>
                                             {% for dt_ in dt.catatan  %}             
-                                            <li>
-                                                {{dt_}}
-                                            </li>
+                                                {% if dt_  %}
+                                                <li>
+                                                    {{dt_}}. <strong>[Nilai 5]</strong>
+                                                </li>
+                                                {% endif %}
                                             {% endfor %}
                                         </ul>
+                                    </td>
+                                    <td>
+                                        <ol class="px-0" style="list-style:none;">
+                                            <li><span class="badge bg-success p-1" style="margin:2px">Direkomendasikan: 100 %</span></li>
+                                            <li><span class="badge bg-warning p-1" style="margin:2px">Tidak Direkomendasikan: 0 %</span></li>
+                                            <li><span class="badge bg-danger p-1" style="margin:2px">Ajuan Blacklist: 0 %</span></li>
+                                        </ol>
                                     </td>
                                 </tr> 
                                 {% endfor %}

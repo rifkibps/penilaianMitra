@@ -1163,7 +1163,7 @@ class PetugasClassView(LoginRequiredMixin, View):
 class DetailPetugasPreviewClassView(LoginRequiredMixin, View):
     
     def _globalRank(self, request):
-        data = MasterNilaiPetugas.objects.values('petugas__petugas__kode_petugas', 'petugas__petugas__nama_petugas', 'petugas__survey__nama', 'petugas__role__jabatan', 'penilaian__kegiatan_penilaian','penilaian__kegiatan_penilaian__nama_kegiatan', 'nilai', 'catatan')
+        data = MasterNilaiPetugas.objects.values('petugas__petugas__kode_petugas', 'petugas__petugas__nama_petugas', 'petugas__sub_kegiatan__survey__nama', 'petugas__sub_kegiatan__survey__tgl_mulai', 'petugas__role__jabatan', 'penilaian__kegiatan_penilaian','petugas__sub_kegiatan__nama_kegiatan', 'nilai', 'catatan')
         
         master_data = []
         
@@ -1181,8 +1181,9 @@ class DetailPetugasPreviewClassView(LoginRequiredMixin, View):
                 else:
                     master_data[check_exist[0]]['kegiatan_penilaian'].append({
                         'id_kegiatan' : dt['penilaian__kegiatan_penilaian'],
-                        'survey' : dt['petugas__survey__nama'],
-                        'nama_kegiatan': dt['penilaian__kegiatan_penilaian__nama_kegiatan'],
+                        'survey' : dt['petugas__sub_kegiatan__survey__nama'],
+                        'tahun' : dt['petugas__sub_kegiatan__survey__tgl_mulai'],
+                        'nama_kegiatan': dt['petugas__sub_kegiatan__nama_kegiatan'],
                         'role': dt['petugas__role__jabatan'],
                         'nilai' : [dt['nilai']],
                         'catatan' : [dt['catatan']],
@@ -1195,7 +1196,7 @@ class DetailPetugasPreviewClassView(LoginRequiredMixin, View):
                 'nama_petugas': dt['petugas__petugas__nama_petugas'],
                 'rerata_final': 0,
                 'ranking_final': 0,
-                'kegiatan_penilaian' : [{'id_kegiatan': dt['penilaian__kegiatan_penilaian'] , 'role' :  dt['petugas__role__jabatan'], 'survey' : dt['petugas__survey__nama'], 'nama_kegiatan': dt['penilaian__kegiatan_penilaian__nama_kegiatan'], 'nilai': [dt['nilai']], 'catatan': [dt['catatan']]}]
+                'kegiatan_penilaian' : [{'id_kegiatan': dt['penilaian__kegiatan_penilaian'] , 'role' :  dt['petugas__role__jabatan'], 'survey' : dt['petugas__sub_kegiatan__survey__nama'], 'tahun' : dt['petugas__sub_kegiatan__survey__tgl_mulai'], 'nama_kegiatan': dt['petugas__sub_kegiatan__nama_kegiatan'], 'nilai': [dt['nilai']], 'catatan': [dt['catatan']]}]
             })
 
         for dt in master_data:
@@ -1222,7 +1223,6 @@ class DetailPetugasPreviewClassView(LoginRequiredMixin, View):
             return redirect(request.META.get('HTTP_REFERER', '/'))
         
         survei_ = models.AlokasiPetugas.objects.filter(petugas = mitra_id)
-        kegiatan_penilaian_ = MasterNilaiPetugas.objects.filter(petugas__petugas = mitra_id).values('penilaian__kegiatan_penilaian')
 
         global_rank = self._globalRank(request)
 
@@ -1253,7 +1253,9 @@ class DetailPetugasPreviewClassView(LoginRequiredMixin, View):
 
 
         # Formatting Data
+        kegiatan_penilaian_ = MasterNilaiPetugas.objects.filter(petugas__petugas = mitra_id).values('penilaian__kegiatan_penilaian')
         data_final = []
+        
         for dt_ in kegiatan_penilaian_.distinct():
             id_kegiatan_penilaian = dt_['penilaian__kegiatan_penilaian']
             if id_kegiatan_penilaian in data_nilai_mitra:
@@ -1273,7 +1275,6 @@ class DetailPetugasPreviewClassView(LoginRequiredMixin, View):
             'title' : f'{mitra.first().kode_petugas} | {mitra.first().nama_petugas}',
             'mitra' : mitra.first(),
             'survei_followed' : survei_.count(),
-            'history_survey' : survei_,
             'kegiatan_followed' : kegiatan_penilaian_.distinct().count(),
             'global_rank' : global_ranking,
             'penilaian' : data_final
@@ -1337,6 +1338,7 @@ class ListPetugasClassView(LoginRequiredMixin, View):
 
             dataset.append(
                 {
+                    'id' : dt.id,
                     'kode_petugas' : dt.kode_petugas,
                     'nama_petugas' : dt.nama_petugas,
                     'adm_id__region' : dt.adm_id.region,
@@ -1376,10 +1378,10 @@ class ListPetugasClassView(LoginRequiredMixin, View):
                 'jml_kegiatan' : obj['jml_kegiatan'],
                 'jml_penilai' : obj['jml_penilai'],
                 'status' : obj['status'],
-                'aksi': f'<button class="btn btn-primary"><i class="mdi mdi-square-edit-outline"></i></button>',
+                'aksi': f'<a href="{reverse_lazy("master_petugas:detail-petugas", kwargs={"mitra_id": obj["id"]})}" target="_blank" class="btn btn-primary"><i class="mdi mdi-square-edit-outline"></i></a>',
+                
             } for obj in object_list
         ]
-        pprint(data)
         return {
             'draw': draw,
             'recordsTotal': records_total,

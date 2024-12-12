@@ -64,8 +64,8 @@
                                             <img src="{{ user.profile.image.url }}" alt="user-image" class="rounded-circle">
                                         </span>
                                         <span>
-                                            <span class="account-user-name">{{request.user.get_full_name}}</span>
-                                            <span class="account-position">{{request.user.groups.first.name}}</span>
+                                            <span class="account-user-name">{{request.user.user_pegawai.name}}</span>
+                                            <span class="account-position">{{request.user.user_pegawai.jabatan.jabatan}}</span>
                                         </span>
                                     </a>
                                     <div class="dropdown-menu dropdown-menu-end dropdown-menu-animated topbar-dropdown-menu profile-dropdown" aria-labelledby="topbar-userdrop">

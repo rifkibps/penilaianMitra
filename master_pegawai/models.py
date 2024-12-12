@@ -17,7 +17,7 @@ class PangkatPegawaiModel(models.Model):
 
 class MasterPegawaiModel(models.Model):
 
-   user = models.OneToOneField(User, on_delete=models.RESTRICT, null=True, blank=True, verbose_name='User Account')
+   user = models.OneToOneField(User, on_delete=models.RESTRICT, null=True, blank=True, related_name="user_pegawai", verbose_name='User Account')
    name = models.CharField(max_length=64, null=False, blank=False, verbose_name='Nama')
    nip = models.CharField(max_length=9, null=False, blank=False, unique=True, verbose_name='NIP')
    nip_bps = models.CharField(max_length=18, null=False, blank=False, unique=True, verbose_name='NIP BPS')
