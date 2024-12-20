@@ -17,6 +17,7 @@ class SurveiForm(forms.ModelForm):
             'deskripsi',
             'tgl_mulai',
             'tgl_selesai',
+            'state',
         ]
 
         labels = {
@@ -24,6 +25,7 @@ class SurveiForm(forms.ModelForm):
             'deskripsi' : 'Deskripsi Survei',
             'tgl_mulai' : 'Tanggal Mulai',
             'tgl_selesai': 'Tanggal Berakhir',
+            'state': 'Status Survei',
         }
 
         attrs_input = {
@@ -45,7 +47,46 @@ class SurveiForm(forms.ModelForm):
             'tgl_selesai': forms.DateInput(
                 attrs = attrs_input | {'type': 'date'}
             ),
+            'state': forms.Select(
+                attrs = attrs_input | {'class': 'form-select'}
+            ),
         }
+
+class SubKegiatanSurveiForm(forms.ModelForm):
+
+    class Meta:
+        model = models.SubKegiatanSurvei
+
+        fields = [
+            'nama_kegiatan',
+            'survey',
+            'status',
+        ]
+
+        labels = {
+            'nama_kegiatan' : 'Nama Kegiatan',
+            'survey' : 'Survei',
+            'status' : 'Status Kegiatan',
+        }
+
+        attrs_input = {
+            'class' : 'form-control',
+            'required': 'required',
+            'placeholder': '...'
+        }
+
+        widgets = {
+            'nama_kegiatan': forms.TextInput(
+                attrs = attrs_input
+            ),
+            'survey': forms.Select(
+                attrs = attrs_input | {'class': 'form-select'}
+            ),
+            'status': forms.Select(
+                attrs = attrs_input | {'class': 'form-select'}
+            ),
+        }
+
 
 class SurveiFormUpload(forms.Form):
     import_file = forms.FileField(allow_empty_file=False,validators=[FileExtensionValidator(allowed_extensions=['xlsx'])], label="Import Kegiatan Pendataan", widget=forms.FileInput(

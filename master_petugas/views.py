@@ -21,8 +21,7 @@ from master_penilaian.models import MasterNilaiPetugas, KegiatanPenilaianModel
 
 import numpy as np
 from openpyxl import Workbook
-from openpyxl.styles import Alignment
-from openpyxl.styles import Font, PatternFill
+from openpyxl.styles import Font, PatternFill, Alignment
 from . import utils
 from pprint import pprint
 
@@ -35,6 +34,8 @@ from django.db.models.functions import Length
 
 from master_honor.models import HonorModel
 from master_pegawai.models import MasterPegawaiModel
+
+from master_penilaian.helpers import get_summarize_penilaian
 # Packages for upload master petugas
 
 # Create your views here.
@@ -1012,7 +1013,7 @@ class MasterRoleJsonResponseClassView(LoginRequiredMixin, View):
         data = [
             {
                 'jabatan': obj.jabatan,
-                'aksi': f'<button onclick="editRole({obj.id})" class="btn btn-primary"><i class="mdi mdi-square-edit-outline"></i></button> <button onclick="deleteRole({obj.id});" class="btn btn-danger"> <i class="mdi mdi-delete"></i></button>',
+                'aksi':f'<a href="javascript:void(0);" onclick="editRole({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline font-15"></i></a> <a href="javascript:void(0);" onclick="hapusJabatan({obj.id});" class="action-icon"> <i class="mdi mdi-delete font-15"></i></a>',
             } for obj in object_list
         ]
         
@@ -1140,7 +1141,7 @@ class PetugasClassView(LoginRequiredMixin, View):
                     if check_penilaian.exists():
                         jml_penilai += check_penilaian.count()
 
-                
+            
             dataset.append(
                 {
                     'kode_petugas' : dt.kode_petugas,

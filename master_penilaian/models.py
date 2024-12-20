@@ -18,9 +18,6 @@ class KegiatanPenilaianModel(models.Model):
        ('2', 'Selesai'),
     )
 
-   #  survey = models.ForeignKey(SurveyModel, on_delete=models.RESTRICT, blank=False, null=False, related_name='penilaian_survei') # Harus dihapus ini, diganti ke alokasi
-   #  nama_kegiatan = models.CharField(max_length=256, null=False, blank=False, verbose_name='Nama Kegiatan Penilaian' )# Harus dihapus ini, diganti ke alokasiPetugas
-
     kegiatan_survey = models.ForeignKey(SubKegiatanSurvei, on_delete=models.RESTRICT, blank=False, null=False, related_name='penilaian_survei', verbose_name='Kegiatan Survei')
     tgl_penilaian = models.DateField( null=False, blank=False,  verbose_name='Tanggal Penilaian')
     role_permitted = models.ManyToManyField(RoleMitra, verbose_name='Role Petugas', related_name='role_permitted_petugas')

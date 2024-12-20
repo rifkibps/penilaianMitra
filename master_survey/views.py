@@ -85,15 +85,22 @@ class SurveyJsonResponseClassView(LoginRequiredMixin, View):
 
         for obj in object_list:
 
+            if obj.state == '0':
+                bg_class = 'bg-warning'
+            elif obj.state == '1':
+                bg_class = 'bg-primary'
+            else:
+                bg_class = 'bg-success'
+
             data.append(
             {
                 'nama': obj.nama,
-                'tgl_mulai': obj.tgl_mulai.strftime('%d-%m-%Y'),
-                'tgl_selesai': obj.tgl_selesai.strftime('%d-%m-%Y'),
-                'deskripsi': obj.deskripsi[:32] + '...',
+                'tgl_mulai': obj.tgl_mulai.strftime('%d %B %Y') + ' s.d. ' + obj.tgl_selesai.strftime('%d %B %Y'),
+                'deskripsi': obj.deskripsi,
+                'state': f'<span class="badge {bg_class} p-1">{obj.get_state_display()}</span>',
                 'aksi': f'<a href="javascript:void(0);" onclick="editSurvei({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a> <a href="javascript:void(0);" onclick="deleteSurvei({obj.id});" class="action-icon"> <i class="mdi mdi-delete"></i></a>'
             })
-        print(data)
+
         return {
             'draw': draw,
             'recordsTotal': records_total,
@@ -322,3 +329,95 @@ class MasterSurveyUploadClassView(LoginRequiredMixin, View):
                 return JsonResponse({"status": "error", "messages": error_messages})
 
         return JsonResponse({"error": ""}, status=403)  
+
+
+class MasterKegiatanSurveiClassView(LoginRequiredMixin, View):
+    
+    def get(self, request):
+        context = {
+            'title' : 'Kegiatan Survei',
+            'form_kegiatan': forms.SubKegiatanSurveiForm()
+        }
+        
+        return render(request, 'master_survey/kegiatan-survei.html', context)
+
+class MasterKegiatanSurveiJsonClassView(LoginRequiredMixin, View):
+
+    def post(self, request):
+        
+        data_wilayah = self._datatables(request)
+        return HttpResponse(json.dumps(data_wilayah, cls=DjangoJSONEncoder), content_type='application/json')
+		
+    def _datatables(self, request):
+        datatables = request.POST
+        
+        # Get Draw
+        draw = int(datatables.get('draw'))
+        start = int(datatables.get('start'))
+        length = int(datatables.get('length'))
+        page_number = int(start / length + 1)
+
+        search = datatables.get('search[value]')
+
+        order_idx = int(datatables.get('order[0][column]')) # Default 1st index for
+        order_dir = datatables.get('order[0][dir]') # Descending or Ascending
+        order_col = 'columns[' + str(order_idx) + '][data]'
+        order_col_name = datatables.get(order_col)
+
+        if (order_dir == "desc"):
+            order_col_name =  str('-' + order_col_name)
+
+        data_survey = models.SubKegiatanSurvei.objects
+        data_survey = data_survey.exclude(Q(nama_kegiatan=None)|Q(survey=None)|Q(status=None))
+
+        records_total = data_survey.count()
+        records_filtered = records_total
+        
+        if search:
+            data_survey = models.SubKegiatanSurvei.objects
+
+            data_survey = data_survey.filter(
+                Q(nama_kegiatan__icontains=search)|Q(survey__nama__icontains=search)|Q(survey__tgl_mulai__icontains=search)
+            ).exclude(Q(nama_kegiatan=None)|Q(survey=None)|Q(status=None))
+
+            records_total = data_survey.count()
+            records_filtered = records_total
+        
+        data_survey = data_survey.order_by(order_col_name)
+        # Conf Paginator
+        paginator = Paginator(data_survey, length)
+
+        try:
+            object_list = paginator.page(page_number).object_list
+        except PageNotAnInteger:
+            object_list = paginator.page(1).object_list
+        except EmptyPage:
+            object_list = paginator.page(1).object_list
+
+        data = []
+
+        for obj in object_list:
+
+            if obj.status == '0':
+                bg_class = 'bg-warning'
+            elif obj.status == '1':
+                bg_class = 'bg-primary'
+            else:
+                bg_class = 'bg-success'
+
+            data.append(
+            {
+                'nama_kegiatan': obj.nama_kegiatan,
+                'survey__nama': obj.survey.nama,
+                'survey__tgl_mulai': obj.survey.tgl_mulai.strftime('%Y'),
+                'status': f'<span class="badge {bg_class} p-1">{obj.get_status_display()}</span>',
+                'aksi': f'<a href="javascript:void(0);" onclick="editSubKegiatan({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a> <a href="javascript:void(0);" onclick="deleteSubKegiatan({obj.id});" class="action-icon"> <i class="mdi mdi-delete"></i></a>'
+            })
+
+        return {
+            'draw': draw,
+            'recordsTotal': records_total,
+            'recordsFiltered': records_filtered,
+            'data': data,
+        }
+

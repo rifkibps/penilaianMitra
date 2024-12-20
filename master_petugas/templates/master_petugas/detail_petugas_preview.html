@@ -119,20 +119,16 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                
-                                {% for i in '123456'  %}
-                                    {% for dt in penilaian %}
-                                        <tr>
-                                            <td>{{i}}</td>
-                                            <td>{{dt.survey}}</td>
-                                            <td>{{dt.nama_kegiatan}}</td>
-                                            <td class="text-center">{{dt.role}}</td>
-                                            <td class="text-center">{{dt.tahun|date:"Y"}}</td>
-                                            <td class="text-center"><span class="badge bg-primary">{{dt.rerata}}</span></td>
-                                            <td class="text-center">{{dt.rank}}</td>
-                                        </tr>
-                                    {% endfor %}
-                                
+                                {% for dt in penilaian %}
+                                    <tr>
+                                        <td>{{forloop.counter}}</td>
+                                        <td>{{dt.survey}}</td>
+                                        <td>{{dt.nama_kegiatan}}</td>
+                                        <td class="text-center">{{dt.role}}</td>
+                                        <td class="text-center">{{dt.tahun|date:"Y"}}</td>
+                                        <td class="text-center"><span class="badge bg-primary">{{dt.rerata}}</span></td>
+                                        <td class="text-center">{{dt.rank}}</td>
+                                    </tr>
                                 {% endfor %}
                             </tbody>
                         </table>

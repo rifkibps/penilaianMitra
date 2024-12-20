@@ -27,12 +27,12 @@ from master_survey.models import SurveyModel
 import itertools
 import numpy as np
 from openpyxl import Workbook
-from openpyxl.styles import Alignment
-from openpyxl.styles import Font, PatternFill
+from openpyxl.styles import Font, PatternFill, Alignment
 from master_petugas import utils
 
 from master_petugas import models as model_petugas
 from master_pegawai import models as model_pegawai
+from . import helpers
 
 from django.db.models import Avg
 class PenilaianPetugasClassView(LoginRequiredMixin, View):
@@ -254,7 +254,7 @@ class MasterPenilaianJsonResponseClassView(LoginRequiredMixin, View):
                 'role_permitted__jabatan' : ', '.join(obj.role_permitted.values_list('jabatan', flat=True)),
                 'role_penilai_permitted__jabatan' : ', '.join(obj.role_penilai_permitted.values_list('jabatan', flat=True)),
                 'status': f'<span class="badge badge-primary-lighten"> {obj.get_status_display()} </span>'  if obj.status == '0' else f'<span class="badge badge-primary-lighten"> {obj.get_status_display()} </span>',
-                'aksi': f'<a href="javascript:void(0);" onclick="editKegiatanPenilaian({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a> <a href="javascript:void(0);" onclick="hapusKegiatanPenilaian({obj.id});" class="action-icon"> <i class="mdi mdi-delete"></i></a>'
+                'aksi': f'<a href="javascript:void(0);" onclick="editKegiatanPenilaian({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline font-15"></i></a> <a href="javascript:void(0);" onclick="hapusKegiatanPenilaian({obj.id});" class="action-icon"> <i class="mdi mdi-delete font-15"></i></a>'
             } for obj in object_list
         ]
         
@@ -358,7 +358,7 @@ class IndiakatorPenilaianJsonResponseClassView(LoginRequiredMixin, View):
             {
                 'nama_indikator': obj.nama_indikator,
                 'deskripsi_penilaian': obj.deskripsi_penilaian,
-                'aksi': f'<button class="btn btn-primary" onclick="editIndikator({obj.id})">Edit</button> <button class="btn btn-danger" onclick="deleteIndikator({obj.id});">Delete</button>'
+                'aksi': f'<td><a href="javascript:void(0);" onclick="editIndikator({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline font-15"></i></a> <a href="javascript:void(0);" onclick="deleteIndikator({obj.id});" class="action-icon"> <i class="mdi mdi-delete font-15"></i></a></td>'
             } for obj in object_list
         ]
         
@@ -559,7 +559,7 @@ class IndikatorKegiatanPenilaianJsonResponseClassView(LoginRequiredMixin, View):
             {
                 'kegiatan_penilaian__kegiatan_survey__nama_kegiatan': obj.kegiatan_penilaian.kegiatan_survey.nama_kegiatan,
                 'indikator_penilaian__nama_indikator': obj.indikator_penilaian.nama_indikator,
-                'aksi': f'<a href="javascript:void(0);" onclick="editIndikatorKegiatan({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a> <a href="javascript:void(0);" onclick="deleteIndikatorKegiatan({obj.id});" class="action-icon"> <i class="mdi mdi-delete"></i></a>'
+                'aksi': f'<a href="javascript:void(0);" onclick="editIndikatorKegiatan({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline font-15"></i></a> <a href="javascript:void(0);" onclick="deleteIndikatorKegiatan({obj.id});" class="action-icon"> <i class="mdi mdi-delete font-15"></i></a>'
             } for obj in object_list
         ]
 
@@ -1213,9 +1213,14 @@ class GetNilaiMitraClassView(LoginRequiredMixin, View):
 class EntryPenilaianClassView(LoginRequiredMixin, View):
     
     def get(self, request):
-
+        
+        summarize = helpers.get_summarize_penilaian(request.user.id)
         context = {
             'title' : 'Penilaian Mitra',
+            'jml_kegiatan' : summarize['jml_kegiatan'],
+            'jml_penilaian_aktif' : summarize['jml_penilaian_aktif'],
+            'jml_mitra_belum_dinilai' : summarize['jml_mitra_belum_dinilai'],
+            'jml_mitra_dinilai' : summarize['jml_mitra_dinilai'],
         }
 
         return render(request, 'master_penilaian/entry_nilai.html', context)

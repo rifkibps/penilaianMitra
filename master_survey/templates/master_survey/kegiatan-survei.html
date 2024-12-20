@@ -10,7 +10,7 @@
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
                     <li class="breadcrumb-item"><a href="javascript: void(0);">Manajemen Survei</a></li>
-                    <li class="breadcrumb-item active">Manajemen Survei</li>
+                    <li class="breadcrumb-item active">Kegiatan Survei</li>
                 </ol>
             </div>
             <h4 class="page-title">{{title}}</h4>
@@ -38,9 +38,9 @@
   <div class="col-12">
       <div class="card">
           <div class="card-body">
-              <h4 class="header-title">Master Survei</h4>
+              <h4 class="header-title">Master Kegiatan Survei</h4>
               <p class="text-muted font-14">
-                  Master survei berisi informasi kegiatan survei yang sedang atau telah dilaksanakan di BPS Kabupaten Muna
+                  Master kegiatan survei berisi informasi kegiatan survei baik lapangan maupun pengolahan yang sedang atau telah dilaksanakan di BPS Kabupaten Muna. Satu survei bisa memiliki lebih dari satu pelaksanaan kegiatan.
               </p>
 
               <ul class="nav nav-tabs nav-bordered mb-3">
@@ -80,9 +80,9 @@
                             <table id="basic-datatable" class="table table-centered table-striped w-100 dt-responsive nowrap">
                                 <thead>
                                     <tr>
-                                        <th>Nama Survei</th>
-                                        <th>Periode Survei</th>
-                                        <th>Deskripsi</th>
+                                        <th>Nama Kegiatan</th>
+                                        <th>Survei</th>
+                                        <th>Tahun</th>
                                         <th>Status</th>
                                         <th></th>
                                     </tr>
@@ -103,19 +103,19 @@
                             <input type="hidden" name="id" id="id_id">
                             <div class="row mt-3">
                                 <div class="col-lg-6">
-                                    <h5 class="mb-3">{{ form.nama.label }}</h5>
-                                    <div class="form-floating errors" id="form_{{form.nama.id_for_label}}">
-                                        {{form.nama}}
-                                        <label for="{{form.nama.id_for_label}}">{{ form.nama.label }}</label>
-                                        <div class="invalid-feedback" id="msg-{{form.nama.id_for_label}}">
+                                    <h5 class="mb-3">{{ form.nama_kegiatan.label }}</h5>
+                                    <div class="form-floating errors" id="form_{{form.nama_kegiatan.id_for_label}}">
+                                        {{form.nama_kegiatan}}
+                                        <label for="{{form.nama_kegiatan.id_for_label}}">{{ form.nama_kegiatan.label }}</label>
+                                        <div class="invalid-feedback" id="msg-{{form.nama_kegiatan.id_for_label}}">
                                         </div>
                                     </div>
                                     
-                                    <h5 class="mb-3 mt-4">{{ form.deskripsi.label }}</h5>
-                                    <div class="form-floating errors" id="form_{{form.deskripsi.id_for_label}}">
-                                        {{form.deskripsi}}
-                                        <label for="{{form.deskripsi.id_for_label}}">{{ form.deskripsi.label }}</label>
-                                        <div class="invalid-feedback" id="msg-{{form.deskripsi.id_for_label}}">
+                                    <h5 class="mb-3 mt-4">{{ form.status.label }}</h5>
+                                    <div class="form-floating errors" id="form_{{form.status.id_for_label}}">
+                                        {{form.status}}
+                                        <label for="{{form.status.id_for_label}}">{{ form.status.label }}</label>
+                                        <div class="invalid-feedback" id="msg-{{form.status.id_for_label}}">
                                         </div>
                                     </div>
                     
@@ -141,17 +141,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <h5 class="mb-3 mt-4">{{ form.state.label }}</h5>
-                                            <div class="form-floating errors" id="form_{{form.state.id_for_label}}">
-                                                {{form.state}}
-                                                <label for="{{form.state.id_for_label}}">{{ form.state.label }}</label>
-                                                <div class="invalid-feedback" id="msg-{{form.state.id_for_label}}">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                     
                                 </div>
                             </div>
                             <br>
@@ -305,7 +295,7 @@
         processing: true,
         serverSide: true,
         ajax: {
-            "url": "{% url 'master_survei:datatable-json' %}",
+            "url": "{% url 'master_survei:kegiatan-survey-json' %}",
             "headers": {
                 "X-Requested-With": "XMLHttpRequest",
                 "X-CSRFToken": '{{csrf_token}}',
@@ -313,10 +303,10 @@
             "type": "POST",
         },
         columns :[
-            {"data": 'nama'},
-            {"data" : 'tgl_mulai'},
-            {"data":  'deskripsi'},
-            {"data":  'state'},
+            {"data": 'nama_kegiatan'},
+            {"data" : 'survey__nama'},
+            {"data":  'survey__tgl_mulai'},
+            {"data":  'status'},
             {"data" : 'aksi'},
         ],
         lengthMenu: [5, 25, 50, 100,'All'],
