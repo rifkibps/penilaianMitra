@@ -8,7 +8,7 @@
         <title>{{title}}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta content="A fully featured admin theme which can be used to build CRM, CMS, etc." name="description">
-        <meta content="Coderthemes" name="author">
+        <meta content="Sistem Penilaian Mitra BPS Muna" name="BPS Kabupaten Muna">
         <!-- App favicon -->
         <link rel="shortcut icon" href="assets/images/favicon.ico">
 
@@ -64,8 +64,13 @@
                                             <img src="{{ user.profile.image.url }}" alt="user-image" class="rounded-circle">
                                         </span>
                                         <span>
-                                            <span class="account-user-name">{{request.user.user_pegawai.name}}</span>
-                                            <span class="account-position">{{request.user.user_pegawai.jabatan.jabatan}}</span>
+                                            {% if request.user.user_pegawai %}
+                                                <span class="account-user-name">{{request.user.user_pegawai.name}}</span>
+                                                <span class="account-position">{{request.user.user_pegawai.jabatan.jabatan}}</span>
+                                            {% else %}
+                                                <span class="account-user-name">{{request.user.get_full_name}}</span>
+                                                <span class="account-position">{{request.user.groups.first.name}}</span>
+                                            {% endif %}
                                         </span>
                                     </a>
                                     <div class="dropdown-menu dropdown-menu-end dropdown-menu-animated topbar-dropdown-menu profile-dropdown" aria-labelledby="topbar-userdrop">
@@ -108,14 +113,22 @@
                                     <ul class="navbar-nav">
                                         <li class="nav-item">
                                             <a class="nav-link" href="{% url 'master_penilaian:penilaian' %}">
-                                                <i class="uil-dashboard me-1"></i>Dashboard Penilaian Mitra
+                                                <i class="uil-dashboard me-1"></i>Dashboard Penilaian
                                             </a>
                                         </li>
                                         <li class="nav-item">
                                             <a class="nav-link" href="{% url 'master_petugas:petugas' %}">
-                                                <i class="uil-dashboard me-1"></i>Rekam Jejak Mitra
+                                                <i class="uil-dashboard me-1"></i>Data Mitra
                                             </a>
                                         </li>
+                                        {% if user.is_staff  %}
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="{% url 'dashboard:index' %}">
+                                                    <i class="uil-dashboard me-1"></i>Manajemen Mitra
+                                                </a>
+                                            </li>
+                                        {% endif %}
+
                                     </ul>
                                 </div>
                             </nav>

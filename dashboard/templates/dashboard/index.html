@@ -124,7 +124,7 @@
                             <select class="form-select mb-1" id="kegiatan_filter" name="kegiatan_filter" style="width:200px; height:40px">
                                 <option value="">Kegiatan Penilaian</option>
                                 {% for dt in data_penilaian  %}
-                                    <option value="{{dt.id}}">{{dt.nama_kegiatan}}</option>
+                                    <option value="{{dt.id}}">{{dt.kegiatan_survey.nama_kegiatan}}</option>
                                 {% endfor %}
                              </select>&ensp;
                             <button type="button" class="btn btn-success mb-2 me-1" id="redraw-table"><i class="mdi mdi-refresh"></i></button>
@@ -141,8 +141,8 @@
                                 <th>Jabatan</th>
                                 <th>Kegiatan Penilaian</th>
                                 <th>Mean</th>
-                                <th>Rank</th>
                                 <th>Global Mean</th>
+                                <th>Rank</th>
                                 <th>Global Rank</th>
                             </tr>
                         </thead>
@@ -239,10 +239,10 @@ var table = $("#ranking-mitra").DataTable({
     columns :[
         {"data": 'petugas__petugas__nama_petugas'},
         {"data": 'petugas__role__jabatan'},
-        {"data" : 'penilaian__kegiatan_penilaian__nama_kegiatan'},
+        {"data" : 'detail_nilai__indikator_penilaian__kegiatan_penilaian__kegiatan_survey__nama_kegiatan'},
         {"data" : 'rerata'},
-        {"data" : 'ranking'},
         {"data" : 'rerata_final'},
+        {"data" : 'ranking'},
         {"data" : 'ranking_final'},
     ], 
     keys: !0,

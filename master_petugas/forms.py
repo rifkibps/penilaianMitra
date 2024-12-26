@@ -81,14 +81,14 @@ class MasterPetugasForm(forms.ModelForm):
         form_data = self.cleaned_data
         data_not_cleaned = self.data
 
-        if form_data.get('kode_petugas') is not None:
+        if form_data.get('kode_petugas') is not None or len(form_data.get('kode_petugas')) > 0:
             # Validasi Kode Petugas
             if form_data['kode_petugas'].isnumeric() == False or len(form_data['kode_petugas']) != 12:
                 self._errors['kode_petugas'] = self.error_class(['Format Kode Petugas/Sobat ID harus berupa angka 12 digit.'])
             else:
                 check_code = models.MasterPetugas.objects.filter(kode_petugas=form_data['kode_petugas'])
                 if check_code.exists():
-                    if data_not_cleaned.get('id') is not None:
+                    if len(data_not_cleaned.get('id')) > 0:
                         if check_code.first().id != int(data_not_cleaned.get('id')):
                             self._errors['kode_petugas'] = self.error_class(['Kode Petugas telah terdaftar pada database'])
                     else:
@@ -101,7 +101,7 @@ class MasterPetugasForm(forms.ModelForm):
             else:
                 check_kk = models.MasterPetugas.objects.filter(nik=form_data['nik'])
                 if check_kk.exists():
-                    if data_not_cleaned.get('id') is not None:
+                    if len(data_not_cleaned.get('id')) > 0:
                         if check_kk.first().id != int(data_not_cleaned.get('id')):
                             self._errors['nik'] = self.error_class(['No KK telah terdaftar pada database'])
                     else:
@@ -113,7 +113,7 @@ class MasterPetugasForm(forms.ModelForm):
             else:
                 check_npwp = models.MasterPetugas.objects.filter(npwp=form_data['npwp'])
                 if check_npwp.exists():
-                    if data_not_cleaned.get('id') is not None:
+                    if len(data_not_cleaned.get('id')) > 0:
                         if check_npwp.first().id != int(data_not_cleaned.get('id')):
                             self._errors['npwp'] = self.error_class(['No NPWP telah terdaftar pada database'])
                     else:
@@ -126,7 +126,7 @@ class MasterPetugasForm(forms.ModelForm):
         if form_data.get('email') is not None:
             check_email = models.MasterPetugas.objects.filter(email=form_data['email'].strip())
             if check_email.exists():
-                if data_not_cleaned.get('id') is not None:
+                if len(data_not_cleaned.get('id')) > 0:
                     if check_email.first().id != int(data_not_cleaned.get('id')):
                         self._errors['email'] = self.error_class(['Email telah terdaftar pada database'])
                 else:
@@ -146,12 +146,11 @@ class MasterPetugasForm(forms.ModelForm):
                 else:
                     check_rekening = models.MasterPetugas.objects.filter(rekening=form_data['rekening'])
                     if check_rekening.exists():
-                        if data_not_cleaned.get('id') is not None:
+                        if len(data_not_cleaned.get('id')) > 0:
                             if check_rekening.first().id != int(data_not_cleaned.get('id')):
                                 self._errors['rekening'] = self.error_class(['Rekening telah terdaftar pada database'])
                         else:
                             self._errors['rekening'] = self.error_class(['Rekening telah terdaftar pada database'])
-
 
         return self.cleaned_data
     
@@ -243,7 +242,7 @@ class MasterPetugasFormUpload(forms.Form):
         df.columns = headers
         df.drop(columns=df.columns[0], axis=1, inplace=True)
 
-        df_required = df.drop(['Jenis Bank', 'Nomor Rekening', 'Pemilik Rekening'], axis=1)
+        df_required = df.drop(['NPWP', 'Jenis Bank', 'Nomor Rekening', 'Pemilik Rekening'], axis=1)
         df_null = df_required[df_required.isna().any(axis=1)]
         for idx, i in df_null.iterrows():
             null_cols = ', '.join(str(e).capitalize() for e in i[i.isna()].index)

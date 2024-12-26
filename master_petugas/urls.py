@@ -36,5 +36,4 @@ urlpatterns = [
     path('petugas', views.PetugasClassView.as_view(), name='petugas'),
     path('petugas/preview/<int:mitra_id>', views.DetailPetugasPreviewClassView.as_view(), name='detail-petugas'),
     path('petugas/json-response', views.ListPetugasClassView.as_view(), name='list-petugas-json'),
-
 ]

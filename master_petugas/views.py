@@ -17,7 +17,7 @@ import itertools
 
 from .resources import MasterPetugasResource, MasterAlokasiResource, MasterRoleResource
 from master_survey.models import SurveyModel
-from master_penilaian.models import MasterNilaiPetugas, KegiatanPenilaianModel
+from master_penilaian.models import MasterPenilaianPetugas, MasterNilaiPetugas, KegiatanPenilaianModel
 
 import numpy as np
 from openpyxl import Workbook
@@ -42,19 +42,17 @@ from master_penilaian.helpers import get_summarize_penilaian
 
 class MasterPetugasJsonResponseClassView(LoginRequiredMixin, View):
 
-    def post(self, request):    
+    def post(self, request):
         data_wilayah = self._datatables(request)
         return HttpResponse(json.dumps(data_wilayah, cls=DjangoJSONEncoder), content_type='application/json')
 		
     def _datatables(self, request):
         datatables = request.POST
-
         # Get Draw
         draw = int(datatables.get('draw'))
         start = int(datatables.get('start'))
         length = int(datatables.get('length'))
         page_number = int(start / length + 1)
-
         search = datatables.get('search[value]')
 
         order_idx = int(datatables.get('order[0][column]')) # Default 1st index for
@@ -65,9 +63,7 @@ class MasterPetugasJsonResponseClassView(LoginRequiredMixin, View):
         if (order_dir == "desc"):
             order_col_name =  str('-' + order_col_name)
 
-
         data = models.MasterPetugas.objects
-
         if datatables.get('adm_filter'):
             data = data.filter(Q(adm_id__code__icontains=datatables.get('adm_filter')))
 
@@ -86,20 +82,7 @@ class MasterPetugasJsonResponseClassView(LoginRequiredMixin, View):
         if datatables.get('status_filter'):
             data = data.filter(status = datatables.get('status_filter'))
 
-        data = data.all().exclude(Q(kode_petugas=None)|Q(nama_petugas=None)|Q(nik=None)|Q(email=None)|Q(no_telp=None)|Q(status=None))
-        records_total = data.count()
-        records_filtered = records_total
-        
         if search:
-
-            data = models.MasterPetugas.objects
-
-            if datatables.get('pendidikan_filter'):
-                data = data.filter(pendidikan = datatables.get('pendidikan_filter'))
-
-            if datatables.get('status_filter'):
-                data = data.filter(status = datatables.get('status_filter'))
-
             data = data.filter(
                 Q(kode_petugas__icontains=search)|
                 Q(nama_petugas__icontains=search)|
@@ -107,11 +90,14 @@ class MasterPetugasJsonResponseClassView(LoginRequiredMixin, View):
                 Q(email__icontains=search)|
                 Q(no_telp__icontains=search)|
                 Q(status__icontains=search)
-            ).exclude(Q(nama_petugas=None)|Q(nik=None)|Q(email=None)|Q(no_telp=None)|Q(status=None))
+            )
 
-            records_total = data.count()
-            records_filtered = records_total
+        records_total = data.count()
+        records_filtered = records_total
         
+        data = data.all()
+        
+
         data = data.order_by(order_col_name)
         # Conf Paginator
         paginator = Paginator(data, length)
@@ -126,7 +112,6 @@ class MasterPetugasJsonResponseClassView(LoginRequiredMixin, View):
         data = []
 
         for obj in object_list:
-            
             if obj.status == '0':
                 class_badge = 'badge badge-success-lighten'
             elif obj.status == '1':
@@ -144,7 +129,7 @@ class MasterPetugasJsonResponseClassView(LoginRequiredMixin, View):
                         'no_telp': obj.no_telp,
                         'status': f'<span class="badge {class_badge}"> {obj.get_status_display()} </span>',
                         'aksi': f'<a href="javascript:void(0);" onclick="editPetugas({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline font-15"></i></a> <a href="javascript:void(0);" onclick="hapusPetugas({obj.id});" class="action-icon"> <i class="mdi mdi-delete font-15"></i></a>'
-                })
+            })
             
         return {
             'draw': draw,
@@ -384,6 +369,7 @@ class MasterPetugasUploadClassView(LoginRequiredMixin, View):
 
             if form.is_valid():
                 df = form.cleaned_data
+                pprint(df)
                 objs = []
                 for idx in range(len(df['id'])):
                     objs.append(
@@ -417,32 +403,78 @@ class MasterPetugasUploadClassView(LoginRequiredMixin, View):
 
 class MasterPetugasDetailViewClassView(LoginRequiredMixin, View):
     
-    def _globalRank(self, request):
-        data = MasterNilaiPetugas.objects.values('petugas__petugas__kode_petugas', 'petugas__petugas__nama_petugas', 'petugas__survey__nama', 'petugas__role__jabatan', 'penilaian__kegiatan_penilaian','penilaian__kegiatan_penilaian__nama_kegiatan', 'nilai', 'catatan')
+    # def _globalRank(self, request):
+    #     data = MasterPenilaianPetugas.objects.values('petugas__petugas__kode_petugas', 'petugas__petugas__nama_petugas', 'petugas__sub_kegiatan__survey__nama', 'petugas__sub_kegiatan__survey__tgl_mulai', 'petugas__role__jabatan', 'detail_nilai__indikator_penilaian__kegiatan_penilaian','petugas__sub_kegiatan__nama_kegiatan', 'detail_nilai__nilai', 'detail_nilai__catatan')
+       
+    #     master_data = []
         
-        master_data = []
-        
-        for dt in data:
+    #     for dt in data:
   
+    #         check_exist = [index for (index, d) in enumerate(master_data) if d["kode_petugas"] == dt['petugas__petugas__kode_petugas']]
+            
+    #         if len(check_exist) > 0:
+
+    #             check_exist_2 = [index for (index, d) in enumerate(master_data[check_exist[0]]['kegiatan_penilaian']) if d["id_kegiatan"] == dt['penilaian__kegiatan_penilaian']]
+                
+    #             if len(check_exist_2) > 0:
+    #                 master_data[check_exist[0]]['kegiatan_penilaian'][check_exist_2[0]]['nilai'].append(dt['nilai'])
+    #                 master_data[check_exist[0]]['kegiatan_penilaian'][check_exist_2[0]]['catatan'].append(dt['catatan'])
+    #             else:
+    #                 master_data[check_exist[0]]['kegiatan_penilaian'].append({
+    #                     'id_kegiatan' : dt['penilaian__kegiatan_penilaian'],
+    #                     'survey' : dt['petugas__survey__nama'],
+    #                     'nama_kegiatan': dt['penilaian__kegiatan_penilaian__nama_kegiatan'],
+    #                     'role': dt['petugas__role__jabatan'],
+    #                     'nilai' : [dt['nilai']],
+    #                     'catatan' : [dt['catatan']],
+    #                 })
+
+    #             continue
+
+    #         master_data.append({
+    #             'kode_petugas': dt['petugas__petugas__kode_petugas'],
+    #             'nama_petugas': dt['petugas__petugas__nama_petugas'],
+    #             'rerata_final': 0,
+    #             'ranking_final': 0,
+    #             'kegiatan_penilaian' : [{'id_kegiatan': dt['penilaian__kegiatan_penilaian'] , 'role' :  dt['petugas__role__jabatan'], 'survey' : dt['petugas__survey__nama'], 'nama_kegiatan': dt['penilaian__kegiatan_penilaian__nama_kegiatan'], 'nilai': [dt['nilai']], 'catatan': [dt['catatan']]}]
+    #         })
+
+    #     for dt in master_data:
+            
+    #         mean_data = []
+    #         for dt_kegiatan in dt['kegiatan_penilaian']:
+    #             mean_data.append(round(mean(dt_kegiatan['nilai']), 2))
+        
+    #         dt['rerata_final'] = round(mean(mean_data), 2)
+
+    #     data_sorted = sorted(master_data, key = itemgetter('rerata_final'), reverse=True)
+    #     for idx, dt in enumerate(data_sorted):
+    #         dt['ranking_final'] = idx+1
+
+    #     return data_sorted
+
+    def _globalRank(self, request):
+        data = MasterPenilaianPetugas.objects.values('petugas__petugas__kode_petugas', 'petugas__petugas__nama_petugas', 'petugas__sub_kegiatan__survey__nama', 'petugas__sub_kegiatan__survey__tgl_mulai', 'petugas__role__jabatan', 'detail_nilai__indikator_penilaian__kegiatan_penilaian','petugas__sub_kegiatan__nama_kegiatan', 'detail_nilai__nilai', 'detail_nilai__catatan')
+        master_data = []
+        for dt in data:
             check_exist = [index for (index, d) in enumerate(master_data) if d["kode_petugas"] == dt['petugas__petugas__kode_petugas']]
             
             if len(check_exist) > 0:
-
-                check_exist_2 = [index for (index, d) in enumerate(master_data[check_exist[0]]['kegiatan_penilaian']) if d["id_kegiatan"] == dt['penilaian__kegiatan_penilaian']]
+                check_exist_2 = [index for (index, d) in enumerate(master_data[check_exist[0]]['kegiatan_penilaian']) if d["id_kegiatan"] == dt['detail_nilai__indikator_penilaian__kegiatan_penilaian']]
                 
                 if len(check_exist_2) > 0:
-                    master_data[check_exist[0]]['kegiatan_penilaian'][check_exist_2[0]]['nilai'].append(dt['nilai'])
-                    master_data[check_exist[0]]['kegiatan_penilaian'][check_exist_2[0]]['catatan'].append(dt['catatan'])
+                    master_data[check_exist[0]]['kegiatan_penilaian'][check_exist_2[0]]['nilai'].append(dt['detail_nilai__nilai'])
+                    master_data[check_exist[0]]['kegiatan_penilaian'][check_exist_2[0]]['catatan'].append(dt['detail_nilai__catatan'])
                 else:
                     master_data[check_exist[0]]['kegiatan_penilaian'].append({
-                        'id_kegiatan' : dt['penilaian__kegiatan_penilaian'],
-                        'survey' : dt['petugas__survey__nama'],
-                        'nama_kegiatan': dt['penilaian__kegiatan_penilaian__nama_kegiatan'],
+                        'id_kegiatan' : dt['detail_nilai__indikator_penilaian__kegiatan_penilaian'],
+                        'survey' : dt['petugas__sub_kegiatan__survey__nama'],
+                        'tahun' : dt['petugas__sub_kegiatan__survey__tgl_mulai'],
+                        'nama_kegiatan': dt['petugas__sub_kegiatan__nama_kegiatan'],
                         'role': dt['petugas__role__jabatan'],
-                        'nilai' : [dt['nilai']],
-                        'catatan' : [dt['catatan']],
+                        'nilai' : [dt['detail_nilai__nilai']],
+                        'catatan' : [dt['detail_nilai__catatan']],
                     })
-
                 continue
 
             master_data.append({
@@ -450,11 +482,10 @@ class MasterPetugasDetailViewClassView(LoginRequiredMixin, View):
                 'nama_petugas': dt['petugas__petugas__nama_petugas'],
                 'rerata_final': 0,
                 'ranking_final': 0,
-                'kegiatan_penilaian' : [{'id_kegiatan': dt['penilaian__kegiatan_penilaian'] , 'role' :  dt['petugas__role__jabatan'], 'survey' : dt['petugas__survey__nama'], 'nama_kegiatan': dt['penilaian__kegiatan_penilaian__nama_kegiatan'], 'nilai': [dt['nilai']], 'catatan': [dt['catatan']]}]
+                'kegiatan_penilaian' : [{'id_kegiatan': dt['detail_nilai__indikator_penilaian__kegiatan_penilaian'] , 'role' :  dt['petugas__role__jabatan'], 'survey' : dt['petugas__sub_kegiatan__survey__nama'], 'tahun' : dt['petugas__sub_kegiatan__survey__tgl_mulai'], 'nama_kegiatan': dt['petugas__sub_kegiatan__nama_kegiatan'], 'nilai': [dt['detail_nilai__nilai']], 'catatan': [dt['detail_nilai__catatan']]}]
             })
 
         for dt in master_data:
-            
             mean_data = []
             for dt_kegiatan in dt['kegiatan_penilaian']:
                 mean_data.append(round(mean(dt_kegiatan['nilai']), 2))
@@ -467,7 +498,6 @@ class MasterPetugasDetailViewClassView(LoginRequiredMixin, View):
 
         return data_sorted
 
-
     def get(self, request, *args, **kwargs):
         
         mitra_id = self.kwargs['mitra_id']
@@ -478,7 +508,7 @@ class MasterPetugasDetailViewClassView(LoginRequiredMixin, View):
 
         survei_ = models.AlokasiPetugas.objects.filter(petugas = mitra_id)
 
-        kegiatan_penilaian_ = MasterNilaiPetugas.objects.filter(petugas__petugas = mitra_id).values('penilaian__kegiatan_penilaian')
+        kegiatan_penilaian_ = MasterPenilaianPetugas.objects.filter(petugas__petugas = mitra_id).values('detail_nilai__indikator_penilaian__kegiatan_penilaian')
 
         global_rank = self._globalRank(request)
 
@@ -511,7 +541,7 @@ class MasterPetugasDetailViewClassView(LoginRequiredMixin, View):
         # Formatting Data
         data_final = []
         for dt_ in kegiatan_penilaian_.distinct():
-            id_kegiatan_penilaian = dt_['penilaian__kegiatan_penilaian']
+            id_kegiatan_penilaian = dt_['detail_nilai__indikator_penilaian__kegiatan_penilaian']
             if id_kegiatan_penilaian in data_nilai_mitra:
                 filter_data = [index for (index, d) in enumerate(data_nilai_mitra[id_kegiatan_penilaian]) if d["kode_petugas"] == mitra.first().kode_petugas]
 
@@ -1057,15 +1087,12 @@ class MasterRoleDetailView(LoginRequiredMixin, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-
         if is_ajax:
             if request.method == 'POST':
-                
                 id = request.POST.get('id')
                 role = models.RoleMitra.objects.filter(pk=id)
 
                 if role.exists():
-                    
                     check_kegiatan_penilaian = KegiatanPenilaianModel.objects.filter(role_permitted = id)
                     if check_kegiatan_penilaian.exists():
                         return JsonResponse({'status' : 'failed', 'message': 'Data role petugas telah digunakan pada master data penilaian'}, status=200)
@@ -1086,9 +1113,7 @@ class MasterRoleUpdateView(LoginRequiredMixin, View):
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         if is_ajax:
-
             data = get_object_or_404(models.RoleMitra, pk=request.POST.get('id'))
-
             check_kegiatan_penilaian = KegiatanPenilaianModel.objects.filter(role_permitted = request.POST.get('id'))
             if check_kegiatan_penilaian.exists():
                 return JsonResponse({'status' : 'failed', 'message': 'Data role petugas telah digunakan pada master data penilaian'}, status=200)
@@ -1101,7 +1126,6 @@ class MasterRoleUpdateView(LoginRequiredMixin, View):
             if form.is_valid():
                 instance = form.save()
                 ser_instance = serializers.serialize('json', [ instance, ])
-                
                 # send to client side.
                 return JsonResponse({"status" : "success", "instance": ser_instance, 'message': 'Data berhasil diubah'}, status=200)
             else:
@@ -1110,10 +1134,8 @@ class MasterRoleUpdateView(LoginRequiredMixin, View):
 
 class MasterRoleExportClassView(LoginRequiredMixin, View):
     def get(self, request):
-    
         resource = MasterRoleResource()
         dataset = resource.export()
-
         response = HttpResponse(dataset.xls, content_type='application/vnd.ms-excel')
         response['Content-Disposition'] = 'attachment; filename="Jabatan Petugas.xls"'
         return response
@@ -1122,26 +1144,19 @@ class MasterRoleExportClassView(LoginRequiredMixin, View):
 class PetugasClassView(LoginRequiredMixin, View):
     
     def get(self, request):
-
         master_mitra = models.MasterPetugas.objects.all()
-
         dataset = []
         for dt in master_mitra:
-
             alokasi_petugas = models.AlokasiPetugas.objects.filter(petugas = dt.pk)
-
             jml_kegiatan = 0
             if alokasi_petugas.exists():
                 jml_kegiatan = alokasi_petugas.count()
-
                 jml_penilai = 0
                 for dt_ in alokasi_petugas:
-                    check_penilaian = MasterNilaiPetugas.objects.filter(petugas = dt_.id, penilaian__kegiatan_penilaian__kegiatan_survey = dt_.sub_kegiatan).values('penilai_id').distinct()
-
+                    check_penilaian = MasterPenilaianPetugas.objects.filter(petugas = dt_.id, detail_nilai__indikator_penilaian__kegiatan_penilaian__kegiatan_survey = dt_.sub_kegiatan).values('penilai_id').distinct()
                     if check_penilaian.exists():
                         jml_penilai += check_penilaian.count()
 
-            
             dataset.append(
                 {
                     'kode_petugas' : dt.kode_petugas,
@@ -1164,32 +1179,27 @@ class PetugasClassView(LoginRequiredMixin, View):
 class DetailPetugasPreviewClassView(LoginRequiredMixin, View):
     
     def _globalRank(self, request):
-        data = MasterNilaiPetugas.objects.values('petugas__petugas__kode_petugas', 'petugas__petugas__nama_petugas', 'petugas__sub_kegiatan__survey__nama', 'petugas__sub_kegiatan__survey__tgl_mulai', 'petugas__role__jabatan', 'penilaian__kegiatan_penilaian','petugas__sub_kegiatan__nama_kegiatan', 'nilai', 'catatan')
-        
+        data = MasterPenilaianPetugas.objects.values('petugas__petugas__kode_petugas', 'petugas__petugas__nama_petugas', 'petugas__sub_kegiatan__survey__nama', 'petugas__sub_kegiatan__survey__tgl_mulai', 'petugas__role__jabatan', 'detail_nilai__indikator_penilaian__kegiatan_penilaian','petugas__sub_kegiatan__nama_kegiatan', 'detail_nilai__nilai', 'detail_nilai__catatan')
         master_data = []
-        
         for dt in data:
-  
             check_exist = [index for (index, d) in enumerate(master_data) if d["kode_petugas"] == dt['petugas__petugas__kode_petugas']]
             
             if len(check_exist) > 0:
-
-                check_exist_2 = [index for (index, d) in enumerate(master_data[check_exist[0]]['kegiatan_penilaian']) if d["id_kegiatan"] == dt['penilaian__kegiatan_penilaian']]
+                check_exist_2 = [index for (index, d) in enumerate(master_data[check_exist[0]]['kegiatan_penilaian']) if d["id_kegiatan"] == dt['detail_nilai__indikator_penilaian__kegiatan_penilaian']]
                 
                 if len(check_exist_2) > 0:
-                    master_data[check_exist[0]]['kegiatan_penilaian'][check_exist_2[0]]['nilai'].append(dt['nilai'])
-                    master_data[check_exist[0]]['kegiatan_penilaian'][check_exist_2[0]]['catatan'].append(dt['catatan'])
+                    master_data[check_exist[0]]['kegiatan_penilaian'][check_exist_2[0]]['nilai'].append(dt['detail_nilai__nilai'])
+                    master_data[check_exist[0]]['kegiatan_penilaian'][check_exist_2[0]]['catatan'].append(dt['detail_nilai__catatan'])
                 else:
                     master_data[check_exist[0]]['kegiatan_penilaian'].append({
-                        'id_kegiatan' : dt['penilaian__kegiatan_penilaian'],
+                        'id_kegiatan' : dt['detail_nilai__indikator_penilaian__kegiatan_penilaian'],
                         'survey' : dt['petugas__sub_kegiatan__survey__nama'],
                         'tahun' : dt['petugas__sub_kegiatan__survey__tgl_mulai'],
                         'nama_kegiatan': dt['petugas__sub_kegiatan__nama_kegiatan'],
                         'role': dt['petugas__role__jabatan'],
-                        'nilai' : [dt['nilai']],
-                        'catatan' : [dt['catatan']],
+                        'nilai' : [dt['detail_nilai__nilai']],
+                        'catatan' : [dt['detail_nilai__catatan']],
                     })
-
                 continue
 
             master_data.append({
@@ -1197,11 +1207,10 @@ class DetailPetugasPreviewClassView(LoginRequiredMixin, View):
                 'nama_petugas': dt['petugas__petugas__nama_petugas'],
                 'rerata_final': 0,
                 'ranking_final': 0,
-                'kegiatan_penilaian' : [{'id_kegiatan': dt['penilaian__kegiatan_penilaian'] , 'role' :  dt['petugas__role__jabatan'], 'survey' : dt['petugas__sub_kegiatan__survey__nama'], 'tahun' : dt['petugas__sub_kegiatan__survey__tgl_mulai'], 'nama_kegiatan': dt['petugas__sub_kegiatan__nama_kegiatan'], 'nilai': [dt['nilai']], 'catatan': [dt['catatan']]}]
+                'kegiatan_penilaian' : [{'id_kegiatan': dt['detail_nilai__indikator_penilaian__kegiatan_penilaian'] , 'role' :  dt['petugas__role__jabatan'], 'survey' : dt['petugas__sub_kegiatan__survey__nama'], 'tahun' : dt['petugas__sub_kegiatan__survey__tgl_mulai'], 'nama_kegiatan': dt['petugas__sub_kegiatan__nama_kegiatan'], 'nilai': [dt['detail_nilai__nilai']], 'catatan': [dt['detail_nilai__catatan']]}]
             })
 
         for dt in master_data:
-            
             mean_data = []
             for dt_kegiatan in dt['kegiatan_penilaian']:
                 mean_data.append(round(mean(dt_kegiatan['nilai']), 2))
@@ -1216,7 +1225,6 @@ class DetailPetugasPreviewClassView(LoginRequiredMixin, View):
 
 
     def get(self, request, *args, **kwargs):
-        
         mitra_id = self.kwargs['mitra_id']
         mitra = models.MasterPetugas.objects.filter(pk = mitra_id)
 
@@ -1224,7 +1232,6 @@ class DetailPetugasPreviewClassView(LoginRequiredMixin, View):
             return redirect(request.META.get('HTTP_REFERER', '/'))
         
         survei_ = models.AlokasiPetugas.objects.filter(petugas = mitra_id)
-
         global_rank = self._globalRank(request)
 
         # Mengurutkan penilaian berdasarkan kegiatan penilaian
@@ -1234,9 +1241,7 @@ class DetailPetugasPreviewClassView(LoginRequiredMixin, View):
             dt_kegiatan_penilaian = dt['kegiatan_penilaian']
 
             for dt_ in dt_kegiatan_penilaian:
-
                 dt_['rerata'] = round(mean(dt_['nilai']), 2)
-
                 if dt_['id_kegiatan'] in data_nilai_mitra:
                     data_nilai_mitra[dt_['id_kegiatan']].append(dt_ | {'kode_petugas' : dt_kode_petugas})
                 else:
@@ -1252,19 +1257,16 @@ class DetailPetugasPreviewClassView(LoginRequiredMixin, View):
 
             data_nilai_mitra[idx] = sorted_
 
-
         # Formatting Data
-        kegiatan_penilaian_ = MasterNilaiPetugas.objects.filter(petugas__petugas = mitra_id).values('penilaian__kegiatan_penilaian')
+        kegiatan_penilaian_ = MasterPenilaianPetugas.objects.filter(petugas__petugas = mitra_id).values('detail_nilai__indikator_penilaian__kegiatan_penilaian')
         data_final = []
         
         for dt_ in kegiatan_penilaian_.distinct():
-            id_kegiatan_penilaian = dt_['penilaian__kegiatan_penilaian']
+            id_kegiatan_penilaian = dt_['detail_nilai__indikator_penilaian__kegiatan_penilaian']
             if id_kegiatan_penilaian in data_nilai_mitra:
                 filter_data = [index for (index, d) in enumerate(data_nilai_mitra[id_kegiatan_penilaian]) if d["kode_petugas"] == mitra.first().kode_petugas]
-
                 if len(filter_data) > 0:
                     data_final.append(data_nilai_mitra[id_kegiatan_penilaian][filter_data[0]])
-
 
         for dt in data_final:
             dt['catatan'] = np.unique(np.array(dt['catatan']))
@@ -1298,7 +1300,6 @@ class ListPetugasClassView(LoginRequiredMixin, View):
         start = int(datatables.get('start'))
         length = int(datatables.get('length'))
         page_number = int(start / length + 1)
-
         search = datatables.get('search[value]')
 
         order_idx = int(datatables.get('order[0][column]')) # Default 1st index for 
@@ -1310,7 +1311,6 @@ class ListPetugasClassView(LoginRequiredMixin, View):
             order_col_name =  str('-' + order_col_name)
 
         data = models.MasterPetugas.objects.all()
-        
         if search:
             data = data.filter(
                 Q(adm_id__code__icontains=search)|
@@ -1325,15 +1325,21 @@ class ListPetugasClassView(LoginRequiredMixin, View):
         dataset = []
         for dt in data:
             alokasi_petugas = models.AlokasiPetugas.objects.filter(petugas = dt.pk)
+            state_petugas = 'bg-success'
+            if dt.status == '1':
+                state_petugas = 'bg-warning'
+            elif dt.status == '2':
+                state_petugas = 'bg-primary'
+            elif dt.status == '3':
+                state_petugas = 'bg-danger'
 
             jml_kegiatan = 0
             if alokasi_petugas.exists():
                 jml_kegiatan = alokasi_petugas.count()
-
                 jml_penilai = 0
-                for dt_ in alokasi_petugas:
-                    check_penilaian = MasterNilaiPetugas.objects.filter(petugas = dt_.id, penilaian__kegiatan_penilaian__kegiatan_survey = dt_.sub_kegiatan).values('penilai_id').distinct()
 
+                for dt_ in alokasi_petugas:
+                    check_penilaian = MasterPenilaianPetugas.objects.filter(petugas = dt_.id, detail_nilai__indikator_penilaian__kegiatan_penilaian__kegiatan_survey = dt_.sub_kegiatan).values('penilai_id').distinct()
                     if check_penilaian.exists():
                         jml_penilai += check_penilaian.count()
 
@@ -1347,7 +1353,7 @@ class ListPetugasClassView(LoginRequiredMixin, View):
                     'email' : dt.email,
                     'jml_kegiatan' : jml_kegiatan,
                     'jml_penilai' : jml_penilai,
-                    'status' : '<span class="badge bg-success p-1"> Mitra Rekomendasi </span>'
+                    'status' : f'<span class="badge {state_petugas} p-1"> {dt.get_status_display()} </span>'
                 }
             )
 
@@ -1361,7 +1367,6 @@ class ListPetugasClassView(LoginRequiredMixin, View):
         
         # Conf Paginator
         paginator = Paginator(data, length)
-
         try:
             object_list = paginator.page(page_number).object_list
         except PageNotAnInteger:
@@ -1380,7 +1385,6 @@ class ListPetugasClassView(LoginRequiredMixin, View):
                 'jml_penilai' : obj['jml_penilai'],
                 'status' : obj['status'],
                 'aksi': f'<a href="{reverse_lazy("master_petugas:detail-petugas", kwargs={"mitra_id": obj["id"]})}" target="_blank" class="btn btn-primary"><i class="mdi mdi-square-edit-outline"></i></a>',
-                
             } for obj in object_list
         ]
         return {

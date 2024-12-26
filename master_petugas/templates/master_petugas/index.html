@@ -2,7 +2,6 @@
 
 {% load static %}
 
-
 {% block nav_content %}
 <!-- start page title -->
 <div class="row">
@@ -44,7 +43,7 @@
               <ul class="nav nav-tabs nav-bordered mb-3">
                 <li class="nav-item">
                     <a href="#petugas-preview" data-bs-toggle="tab" aria-expanded="false" class="nav-link active" onclick="resetForm()">
-                        Preview
+                        Daftar Mitra/Petugas
                     </a>
                 </li>
                 <li class="nav-item">
@@ -112,7 +111,7 @@
                                 <div class="col-lg-6">
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <div class="form-floating errors" id="form_{{form.adm_id.id_for_label}}">
+                                            <div class="form-floating mt-1 errors" id="form_{{form.adm_id.id_for_label}}">
                                                 <select name="{{form.adm_id.name}}" class="form-select" placeholder="..." id="id_adm_id_id" required="">
                                                     <option value="" selected="">---------</option>
                                                     {% for dt in adm.desa %}
@@ -125,7 +124,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="form-floating errors" id="form_{{form.kode_petugas.id_for_label}}">
+                                            <div class="form-floating mt-1 errors" id="form_{{form.kode_petugas.id_for_label}}">
                                                 {{form.kode_petugas}}
                                                 <label for="{{form.kode_petugas.id_for_label}}">{{ form.kode_petugas.label }}</label>
                                                 <div class="invalid-feedback" id="msg-{{form.kode_petugas.id_for_label}}">
@@ -135,7 +134,7 @@
                                     </div>
                                 </div>
                                 <div class="col-lg-6">
-                                    <div class="form-floating errors" id="form_{{form.nama_petugas.id_for_label}}">
+                                    <div class="form-floating mt-1 errors" id="form_{{form.nama_petugas.id_for_label}}">
                                         {{form.nama_petugas}}
                                         <label for="{{form.nama_petugas.id_for_label}}">{{ form.nama_petugas.label }}</label>
                                         <div class="invalid-feedback" id="msg-{{form.nama_petugas.id_for_label}}">
@@ -149,7 +148,7 @@
                                 <div class="col-lg-6">
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <div class="form-floating errors" id="form_{{form.nik.id_for_label}}">
+                                            <div class="form-floating mt-1 errors" id="form_{{form.nik.id_for_label}}">
                                                 {{form.nik}}
                                                 <label for="{{form.nik.id_for_label}}">{{ form.nik.label }}</label>
                                                 <div class="invalid-feedback" id="msg-{{form.nik.id_for_label}}">
@@ -157,7 +156,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="form-floating errors" id="form_{{form.tgl_lahir.id_for_label}}">
+                                            <div class="form-floating mt-1 errors" id="form_{{form.tgl_lahir.id_for_label}}">
                                                 {{form.tgl_lahir}}
                                                 <label for="{{form.tgl_lahir.id_for_label}}">{{ form.tgl_lahir.label }}</label>
                                                 <div class="invalid-feedback" id="msg-{{form.tgl_lahir.id_for_label}}">
@@ -169,7 +168,7 @@
                                 <div class="col-lg-6">
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <div class="form-floating errors" id="form_{{form.jk.id_for_label}}">
+                                            <div class="form-floating mt-1 errors" id="form_{{form.jk.id_for_label}}">
                                                 {{form.jk}}
                                                 <label for="{{form.jk.id_for_label}}">{{ form.jk.label }}</label>
                                                 <div class="invalid-feedback" id="msg-{{form.jk.id_for_label}}">
@@ -177,7 +176,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="form-floating errors" id="form_{{form.agama.id_for_label}}">
+                                            <div class="form-floating mt-1 errors" id="form_{{form.agama.id_for_label}}">
                                                 {{form.agama}}
                                                 <label for="{{form.agama.id_for_label}}">{{ form.agama.label }}</label>
                                                 <div class="invalid-feedback" id="msg-{{form.agama.id_for_label}}">
@@ -194,7 +193,7 @@
                                 <div class="col-lg-6">
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <div class="form-floating errors" id="form_{{form.pendidikan.id_for_label}}">
+                                            <div class="form-floating mt-1 errors" id="form_{{form.pendidikan.id_for_label}}">
                                                 {{form.pendidikan}}
                                                 <label for="{{form.pendidikan.id_for_label}}">{{ form.pendidikan.label }}</label>
                                                 <div class="invalid-feedback" id="msg-{{form.pendidikan.id_for_label}}">
@@ -202,7 +201,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="form-floating errors" id="form_{{form.pekerjaan.id_for_label}}">
+                                            <div class="form-floating mt-1 errors" id="form_{{form.pekerjaan.id_for_label}}">
                                                 {{form.pekerjaan}}
                                                 <label for="{{form.pekerjaan.id_for_label}}">{{ form.pekerjaan.label }}</label>
                                                 <div class="invalid-feedback" id="msg-{{form.pekerjaan.id_for_label}}">
@@ -214,7 +213,7 @@
                                 <div class="col-lg-6">
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <div class="form-floating errors" id="form_{{form.npwp.id_for_label}}">
+                                            <div class="form-floating mt-1 errors" id="form_{{form.npwp.id_for_label}}">
                                                 {{form.npwp}}
                                                 <label for="{{form.npwp.id_for_label}}">{{ form.npwp.label }}</label>
                                                 <div class="invalid-feedback" id="msg-{{form.npwp.id_for_label}}">
@@ -223,7 +222,7 @@
                                         </div>
 
                                         <div class="col-md-6">
-                                            <div class="form-floating errors" id="form_{{form.email.id_for_label}}">
+                                            <div class="form-floating mt-1 errors" id="form_{{form.email.id_for_label}}">
                                                 {{form.email}}
                                                 <label for="{{form.email.id_for_label}}">{{ form.email.label }}</label>
                                                 <div class="invalid-feedback" id="msg-{{form.email.id_for_label}}">
@@ -240,7 +239,7 @@
                                 <div class="col-lg-6">
                                     <div class="row">
                                         <div class="col-md-12">
-                                            <div class="form-floating errors" id="form_{{form.alamat.id_for_label}}">
+                                            <div class="form-floating mt-1 errors" id="form_{{form.alamat.id_for_label}}">
                                                 {{form.alamat}}
                                                 <label for="{{form.alamat.id_for_label}}">{{ form.alamat.label }}</label>
                                                 <div class="invalid-feedback" id="msg-{{form.alamat.id_for_label}}">
@@ -252,7 +251,7 @@
                                 <div class="col-lg-6">
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <div class="form-floating errors" id="form_{{form.no_telp.id_for_label}}">
+                                            <div class="form-floating mt-1 errors" id="form_{{form.no_telp.id_for_label}}">
                                                 {{form.no_telp}}
                                                 <label for="{{form.no_telp.id_for_label}}">{{ form.no_telp.label }}</label>
                                                 <div class="invalid-feedback" id="msg-{{form.no_telp.id_for_label}}">
@@ -260,7 +259,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="form-floating errors" id="form_{{form.status.id_for_label}}">
+                                            <div class="form-floating mt-1 errors" id="form_{{form.status.id_for_label}}">
                                                 {{form.status}}
                                                 <label for="{{form.status.id_for_label}}">{{ form.status.label }}</label>
                                                 <div class="invalid-feedback" id="msg-{{form.status.id_for_label}}">
@@ -273,10 +272,10 @@
 
                             <div class="row mt-3">
                                 <p class="mb-2">Kepemilikan Rekening</p>
-                                <div class="col-lg-6">
+                                <div class="col-lg-8">
                                     <div class="row">
                                         <div class="col-md-4">
-                                            <div class="form-floating" id="form_{{form.bank.id_for_label}}">
+                                            <div class="form-floating mt-1" id="form_{{form.bank.id_for_label}}">
                                                 {{form.bank}}
                                                 <label for="{{form.bank.id_for_label}}">{{ form.bank.label }}</label>
                                                 <div class="invalid-feedback" id="msg-{{form.bank.id_for_label}}">
@@ -284,7 +283,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-4">
-                                            <div class="form-floating" id="form_{{form.rekening.id_for_label}}">
+                                            <div class="form-floating mt-1" id="form_{{form.rekening.id_for_label}}">
                                                 {{form.rekening}}
                                                 <label for="{{form.rekening.id_for_label}}">{{ form.rekening.label }}</label>
                                                 <div class="invalid-feedback" id="msg-{{form.rekening.id_for_label}}">
@@ -292,7 +291,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-4">
-                                            <div class="form-floating" id="form_{{form.pemilik_rek.id_for_label}}">
+                                            <div class="form-floating mt-1" id="form_{{form.pemilik_rek.id_for_label}}">
                                                 {{form.pemilik_rek}}
                                                 <label for="{{form.pemilik_rek.id_for_label}}">{{ form.pemilik_rek.label }}</label>
                                                 <div class="invalid-feedback" id="msg-{{form.pemilik_rek.id_for_label}}">
@@ -618,7 +617,7 @@
                 if (i==1){
                     var throws = '<tr>'
                         
-                    for (var key of row.slice(0, 14)){
+                    for (var key of row.slice(0, 17)){
                         throws += '<th>' + key + '</th>'
                     }
 
@@ -629,14 +628,14 @@
                 if (i>1){
                     var tdrows = '<tr>'
                     var isnull = 0
-                    for (var key of row.slice(0, 14)){
+                    for (var key of row.slice(0, 17)){
                         if ( key == null ){
                             isnull += 1
                         }
                         tdrows += '<td>' + key + '</td>'
                     }
                     tdrows += '</tr>'
-                    if (isnull < 14) {
+                    if (isnull < 17) {
                         $('#'+table_id+' tbody').append(tdrows) 
                     }
                 }
@@ -730,18 +729,16 @@
     }
     
     function clearFormValidation(form){
-        $(form + ' .form-control').each(function(i, obj) {
-            $(obj).removeClass('is_invalid')
-            $(obj).trigger('change')
+        $('.form-control').each(function(i, obj) {
+            $(this).removeClass('is-invalid')
         });
 
-        $(form + ' .form-select').each(function(j, objs) {
-            $(objs).removeClass('is_invalid')
-            $(objs).trigger('change')
+        $('.form-select').each(function(j, obj) {
+            $(this).removeClass('is-invalid')
         });
         
         $('.invalid-feedback').each(function(i, obj) {
-            $(obj).html('')
+            $(this).html('')
         });
     }
 
@@ -901,8 +898,8 @@
     });
 
     function checkSubmit(){
-        var serializedData = $('#formMasterPetugas').serialize();
         clearFormValidation('#formMasterPetugas')
+        var serializedData = $('#formMasterPetugas').serialize();
         
         $.ajax({
             type: 'POST',
@@ -916,6 +913,8 @@
                 table.ajax.reload();
                 $('.nav-tabs a[href="#petugas-preview"]').tab('show');
                 $('#formMasterPetugas')[0].reset();
+                $('#formMasterPetugas').trigger("reset");
+                clearFormValidation('#formMasterPetugas')
             },
             error: function (response) {
                 var errors = response["responseJSON"]["error"]

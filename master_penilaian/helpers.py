@@ -29,7 +29,7 @@ def get_summarize_penilaian(user_id):
                                 jml_mitra_belum_dinilai += alokasi_mitra.count()
                                 
                                 for dt__ in alokasi_mitra:
-                                    nilai_mitra = models.MasterNilaiPetugas.objects.filter(penilai = dt_kegiatan['id'], petugas = dt__.pk)
+                                    nilai_mitra = models.MasterPenilaianPetugas.objects.filter(penilai = dt_kegiatan['id'], petugas = dt__.pk)
                                     if nilai_mitra.exists():
                                         jml_mitra_dinilai += 1 
 

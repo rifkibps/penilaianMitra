@@ -4,6 +4,7 @@ from django.contrib import admin
 from . import models
 
 admin.site.register(models.KegiatanPenilaianModel)
+admin.site.register(models.MasterPenilaianPetugas)
 admin.site.register(models.MasterNilaiPetugas)
 admin.site.register(models.IndikatorPenilaian)
 admin.site.register(models.IndikatorKegiatanPenilaian)

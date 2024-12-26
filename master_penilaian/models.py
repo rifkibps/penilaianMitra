@@ -41,16 +41,28 @@ class IndikatorKegiatanPenilaian(models.Model):
    n_max = models.IntegerField(null=False, blank=False, default=5, verbose_name='Batas Maksimal')
    
    def __str__(self):
-      return f"{self.kegiatan_penilaian.kegiatan_survey.nama_kegiatan} [{self.indikator_penilaian}]"
+      return f"{self.kegiatan_penilaian.kegiatan_survey.nama_kegiatan} [{self.indikator_penilaian.indikator_penilaian}]"
 
-class MasterNilaiPetugas(models.Model):
+class MasterPenilaianPetugas(models.Model):
 
+   state_choices = (
+       ('0', 'Blacklist'),
+       ('1', 'Tidak Direkomendasikan'),
+       ('2', 'Direkomendasikan'),
+   )
    penilai = models.ForeignKey(AlokasiPetugas, on_delete=models.CASCADE,  related_name='penilai')
    petugas = models.ForeignKey(AlokasiPetugas, on_delete=models.CASCADE,  related_name='nilai_petugas')
-   penilaian = models.ForeignKey(IndikatorKegiatanPenilaian, on_delete=models.RESTRICT, related_name='indikator_kegiatan_penilaian')
+   state = models.CharField(max_length=1, choices=state_choices, default=2, null=False, blank=False, verbose_name='Status Mitra')
+
+   def __str__(self):
+      return f"{self.pk}. [Penilai: {self.penilai.pegawai.name}] [Dinilai: {self.petugas.petugas.nama_petugas}]"
+      
+class MasterNilaiPetugas(models.Model):
+   penilaian = models.ForeignKey(MasterPenilaianPetugas, on_delete=models.CASCADE, related_name='detail_nilai')
+   indikator_penilaian = models.ForeignKey(IndikatorKegiatanPenilaian, on_delete=models.RESTRICT, related_name='indikator_kegiatan_penilaian')
    nilai = models.SmallIntegerField(null=True, blank=True, verbose_name='Nilai Kegiatan Petugas')
    catatan = models.TextField(null=True, blank=True, verbose_name='Catatan Personal')
 
    def __str__(self):
-      return f"{self.petugas.petugas.nama_petugas} [{self.penilaian.kegiatan_penilaian}]"
-      
+      return f"{self.pk}. [Penilai: {self.penilaian.penilai.pegawai.name}] [A/N: {self.penilaian.petugas.petugas.nama_petugas}] - {self.indikator_penilaian.indikator_penilaian.nama_indikator}: {self.nilai}"
+   

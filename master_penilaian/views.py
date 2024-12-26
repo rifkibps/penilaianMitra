@@ -1225,53 +1225,60 @@ class EntryPenilaianClassView(LoginRequiredMixin, View):
 
         return render(request, 'master_penilaian/entry_nilai.html', context)
     
-
     def post(self, request):
 
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-
         if is_ajax:
             form = forms.PenilaianMitraForm(request.POST)
-
-            if form.is_valid():            
-                model = models.MasterNilaiPetugas
-
+            if form.is_valid():
+                modelPenilaian = models.MasterPenilaianPetugas
+                modelNilai = models.MasterNilaiPetugas
                 df = form.cleaned_data
 
-                objs_create = []
-                objs_update = []
+                objs_create, objs_update = [], []
 
                 for dt in df:
                     petugas = AlokasiPetugas.objects.get(pk = dt['petugas'])
                     penilai = AlokasiPetugas.objects.get(pk = dt['penilai'])
-                    penilaian = models.IndikatorKegiatanPenilaian.objects.get(pk = dt['penilaian'])
+                    indikator_penilaian = models.IndikatorKegiatanPenilaian.objects.get(pk = dt['penilaian'])
 
-                    role_permitted = list(penilaian.kegiatan_penilaian.role_permitted.values_list('id', flat=True))
-                    role_permitted_penilai = list(penilaian.kegiatan_penilaian.role_penilai_permitted.values_list('id', flat=True))
+                    role_permitted = list(indikator_penilaian.kegiatan_penilaian.role_permitted.values_list('id', flat=True))
+                    role_permitted_penilai = list(indikator_penilaian.kegiatan_penilaian.role_penilai_permitted.values_list('id', flat=True))
 
                     if petugas.role.id not in role_permitted:
-                        return JsonResponse({"status": "failed", "messages":  f'Data alokasi petugas dengan role {petugas.role.jabatan} tidak diizinkan untuk mengikuti kegiatan penilaian "<i>{penilaian.kegiatan_penilaian.nama_kegiatan}</i>"'})
+                        return JsonResponse({"status": "failed", "messages":  f'Data alokasi petugas dengan role {petugas.role.jabatan} tidak diizinkan untuk mengikuti kegiatan penilaian "<i>{indikator_penilaian.kegiatan_penilaian.nama_kegiatan}</i>"'})
                     
                     if penilai.role.id not in role_permitted_penilai:
-                        return JsonResponse({"status": "failed", "messages":  f'Data alokasi pegawai dengan role {penilai.role.jabatan} tidak diizinkan untuk mengikuti kegiatan penilaian "<i>{penilaian.kegiatan_penilaian.nama_kegiatan}</i>"'})
+                        return JsonResponse({"status": "failed", "messages":  f'Data alokasi pegawai dengan role {penilai.role.jabatan} tidak diizinkan untuk mengikuti kegiatan penilaian "<i>{indikator_penilaian.kegiatan_penilaian.nama_kegiatan}</i>"'})
             
                     nilai = dt['nilai']
                     catatan = dt['catatan']
 
-                    db_check = model.objects.filter(petugas = petugas, penilai = penilai, penilaian = penilaian)
+                    db_check = modelPenilaian.objects.filter(petugas = petugas, penilai = penilai)
+                    # db_check = model.objects.filter(petugas = petugas, penilai = penilai, penilaian = indikator_penilaian)
 
                     if db_check.exists():
-                        nilai_mitra_update = db_check.first()
-                        nilai_mitra_update.nilai = nilai
-                        nilai_mitra_update.catatan = catatan
-                        objs_update.append(nilai_mitra_update)
-
+                        db_check2 = models.MasterNilaiPetugas.objects.filter(penilaian = db_check.first().pk, indikator_penilaian = indikator_penilaian)
+                        if db_check.exists():
+                            nilai_mitra_update = db_check2.first()
+                            nilai_mitra_update.nilai = nilai
+                            nilai_mitra_update.catatan = catatan
+                            objs_update.append(nilai_mitra_update)
+                        else:
+                            objs_create.append(
+                            modelNilai(
+                                penilaian = db_check.first().pk,
+                                indikator_penilaian = indikator_penilaian,
+                                nilai = nilai,
+                                catatan = catatan,
+                            )
+                        )
                     else:
+                        row_affected = modelPenilaian.objects.create(petugas = petugas, penilai = penilai, state = '2')
                         objs_create.append(
-                            model(
-                                petugas = petugas,
-                                penilai = penilai,
-                                penilaian = penilaian,
+                            modelNilai(
+                                penilaian = row_affected.id,
+                                indikator_penilaian = indikator_penilaian,
                                 nilai = nilai,
                                 catatan = catatan,
                             )
@@ -1280,11 +1287,11 @@ class EntryPenilaianClassView(LoginRequiredMixin, View):
                 msg = ''
                
                 if len(objs_create) > 0:
-                    model.objects.bulk_create(objs_create)
+                    modelNilai.objects.bulk_create(objs_create)
                     msg += f"Data <strong>berhasil</strong> ditambahkan.<br>"
 
                 if len(objs_update) > 0:
-                    model.objects.bulk_update(objs_update, ['nilai', 'catatan'])
+                    modelNilai.objects.bulk_update(objs_update, ['nilai', 'catatan'])
                     msg += f"Data <strong>berhasil</strong> diperbarui.<br>"
 
                 return JsonResponse({"status": "success", "messages":  msg})
@@ -1322,7 +1329,6 @@ class KegiatanPenilaianJsonResponseClassView(LoginRequiredMixin, View):
         data_pegawai= model_pegawai.MasterPegawaiModel.objects.filter(user=request.user.id)
 
         if data_pegawai.exists():
-
             data = data.exclude(Q(kegiatan_survey=None)|Q(tgl_penilaian=None)|Q(status=None)|Q(role_permitted=None)|Q(role_penilai_permitted=None))
             records_total = data.count()
             records_filtered = records_total
@@ -1354,13 +1360,10 @@ class KegiatanPenilaianJsonResponseClassView(LoginRequiredMixin, View):
             
             data = []
             for obj in object_list:
-
                 aloc = model_petugas.AlokasiPetugas.objects.filter(pegawai = data_pegawai.first().pk, sub_kegiatan = obj.kegiatan_survey)
-
                 if aloc.exists():
-                    check_penilaian = models.MasterNilaiPetugas.objects.filter(penilai = aloc.first().pegawai.pk , penilaian__kegiatan_penilaian = obj.pk)
-
-                    if check_penilaian:
+                    check_penilaian = models.MasterPenilaianPetugas.objects.filter(penilai = aloc.first().pk, detail_nilai__indikator_penilaian__kegiatan_penilaian = obj.pk)
+                    if check_penilaian.exists():
                         state_penilaian = f'<span class="badge bg-success p-1"> Anda Sudah Menilai </span>'
                     else:
                         state_penilaian = f'<span class="badge bg-warning p-1"> Anda Belum Menilai </span>'
@@ -1427,7 +1430,6 @@ class MasterNilaiPetugasClassView(LoginRequiredMixin, View):
         data_pegawai= model_pegawai.MasterPegawaiModel.objects.filter(user=request.user.id)
 
         if data_pegawai.exists():
-
             dataKegiatan = models.KegiatanPenilaianModel.objects.filter(status='1')
             
             if datatables.get('kegiatan_penilaian'):
@@ -1451,7 +1453,6 @@ class MasterNilaiPetugasClassView(LoginRequiredMixin, View):
 
                 for dt in aloc:
                     role_permitted = list(dt_kegiatan.role_permitted.values_list('id', flat=True))
-
                     if dt.role.pk not in role_permitted:
                         continue
 
@@ -1464,13 +1465,14 @@ class MasterNilaiPetugasClassView(LoginRequiredMixin, View):
                         'role' : dt.role.jabatan,
                     }
 
-                    qry = models.MasterNilaiPetugas.objects.filter(penilaian__kegiatan_penilaian = dt_kegiatan.pk, penilai=data_pegawai.first().pk, petugas = dt.pk)
+                    # Salah
+                    qry = models.MasterPenilaianPetugas.objects.filter(detail_nilai__indikator_penilaian__kegiatan_penilaian = dt_kegiatan.pk, penilai__pegawai = data_pegawai.first().pk, petugas = dt.pk)
 
                     if qry.exists():
                         qry = (qry
-                            .values('penilaian__kegiatan_penilaian__kegiatan_survey__nama_kegiatan', 'petugas__petugas__adm_id__region', 'petugas__petugas__nama_petugas', 'petugas__role__jabatan')
+                            .values('detail_nilai__indikator_penilaian__kegiatan_penilaian__kegiatan_survey__nama_kegiatan', 'petugas__petugas__adm_id__region', 'petugas__petugas__nama_petugas', 'petugas__role__jabatan')
                             .order_by('petugas__petugas__nama_petugas')
-                            .annotate(avg = Avg('nilai'))
+                            .annotate(avg = Avg('detail_nilai__nilai'))
                             .first()
                         )
                         dataset.append({ **nilai_mitra, **{
@@ -1556,11 +1558,11 @@ class IndikatorPenilaianPetugasClassView(LoginRequiredMixin, View):
 
                 opt = ''
                 for idx, dt in enumerate(list_indicators):
-                    nilai_petugas = models.MasterNilaiPetugas.objects.filter(penilai = role_penilai.pk, petugas = data_petugas.pk, penilaian = dt.pk )
+                    nilai_petugas = models.MasterPenilaianPetugas.objects.filter(penilai = role_penilai.pk, petugas = data_petugas.pk, detail_nilai__indikator_penilaian = dt.pk ).values('detail_nilai__nilai', 'detail_nilai__catatan')
                     nilai, catatan = '', ''
                     if nilai_petugas.exists():
-                        nilai = nilai_petugas.first().nilai
-                        catatan = nilai_petugas.first().catatan
+                        nilai = nilai_petugas.first()['detail_nilai__nilai']
+                        catatan = nilai_petugas.first()['detail_nilai__catatan']
 
                     opt +=  f"""<tr>
                                 <td>{idx+1}</td>
@@ -1603,9 +1605,9 @@ class MasterGlobalRankPetugasClassView(LoginRequiredMixin, View):
         if (order_dir == "desc"):
             order_col_name =  str('-' + order_col_name)
 
-        data = (models.MasterNilaiPetugas.objects
+        data = (models.MasterPenilaianPetugas.objects
             .values('petugas__petugas__adm_id__code', 'petugas__petugas__nama_petugas')
-            .annotate(avg = Avg('nilai'))
+            .annotate(avg = Avg('detail_nilai__nilai'))
             .order_by('-avg')
         )
 
