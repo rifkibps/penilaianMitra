@@ -26,9 +26,7 @@
 <div class="row">
     <div class="col-12">
         <div class="alert alert-danger d-none" id="msgs-upload" role="alert">   
-           
             <div id="messages-content">
-             
             </div>
         </div>
     </div>
@@ -46,17 +44,17 @@
                 <ul class="nav nav-tabs nav-bordered mb-3">
                       <li class="nav-item">
                           <a href="#alokasi-preview" data-bs-toggle="tab" class="nav-link active">
-                              Preview
+                              Data Alokasi Penugasan
                           </a>
                       </li>
                       <li class="nav-item">
                           <a href="#input-tab" data-bs-toggle="tab" class="nav-link" id="input-mitra" onclick="input_mitra_tab()">
-                              Alokasi Mitra
+                              Penugasan Mitra
                           </a>
                       </li>
                       <li class="nav-item">
                         <a href="#input-tab" data-bs-toggle="tab" class="nav-link" id="input-pegawai" onclick="input_pegawai_tab()">
-                            Alokasi Organik
+                            Penugasan Organik
                         </a>
                       </li>
                       <li class="nav-item d-none" id="nav-item-import">
@@ -70,13 +68,13 @@
                       <div class="tab-pane show active" id="alokasi-preview">
                             <div class="row mb-2">
                                 <div class="col-sm-6">
-                                    <a href="#offcanvasFilter"  data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasFilter" class="btn btn-danger mb-2"><i class="mdi mdi-filter-menu me-2"></i> Filter Data</a>
+                                    <a href="#offcanvasFilter"  data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasFilter" class="btn btn-primary mb-2"><i class="mdi mdi-filter-menu me-2"></i> Filter Data</a>
+                                    <button type="button" class="btn btn-primary mb-2 me-1" id="redraw-table"><i class="mdi mdi-refresh"></i> Refresh</button>
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="text-sm-end">
-                                        <button type="button" class="btn btn-success mb-2 me-1" id="redraw-table"><i class="mdi mdi-refresh"></i></button>
-                                        <button type="button" class="btn btn-light mb-2 me-1" data-bs-toggle="modal" data-bs-target="#import-modal">Import</button>
-                                        <a href="{% url 'master_petugas:export-alokasi' %}" class="btn btn-light mb-2">Export</a>
+                                        <button type="button" class="btn btn-primary mb-2 me-1" data-bs-toggle="modal" data-bs-target="#import-modal"><i class="mdi mdi-file-move"></i> Import</button>
+                                        <a href="{% url 'master_petugas:export-alokasi' %}" class="btn btn-primary mb-2"><i class="mdi mdi-download"></i> Export</a>
                                     </div>
                                 </div><!-- end col-->
                             </div>
@@ -84,12 +82,13 @@
                                 <table id="basic-datatable" class="table table-centered table-striped w-100 dt-responsive nowrap">
                                     <thead>
                                         <tr>
+                                            <th width="5%">No</th>
                                             <th>Kode Petugas</th>
                                             <th>Nama Petugas</th>
                                             <th>Kegiatan Survei</th>
                                             <th>Jabatan</th>
                                             <th>Status</th>
-                                            <th></th>
+                                            <th>Aksi</th>
                                         </tr>
                                     </thead>
                                 
@@ -101,12 +100,12 @@
                       </div> <!-- end preview-->
                 
                       <div class="tab-pane" id="input-tab">
-                          <p>Silahkan isikan data Peserta.</p>
+                          <p>Silahkan isikan data penugasan petugas.</p>
                           <form action="{% url 'master_petugas:alokasi' %}" method="POST" id="formAlokPetugas" class="needs-validation" novalidate>
                             {% csrf_token %}
                             <input type="hidden" name="id" id="id_id">
                             <div class="row mt-3">
-                                <div class="col-lg-6">
+                                <div class="col-lg-4">
                                     <h5 class="mb-3">{{ form.petugas.label }}</h5>
                                     <div class="form-floating errors" id="form_{{form.petugas.id_for_label}}">
                                         <select name="petugas" id="{{ form.petugas.id_for_label }}" class="form-select">
@@ -131,7 +130,7 @@
                                         </div>
                                     </div>
                                     
-                                    <h5 class="mb-3 mt-4">{{ form.role.label }}</h5>
+                                    <h5 class="mb-3 mt-3">{{ form.role.label }}</h5>
                                     <div class="form-floating errors" id="form_{{form.role.id_for_label}}">
                                         {{form.role}}
                                         <label for="{{form.role.id_for_label}}">{{ form.role.label }}</label>
@@ -141,12 +140,12 @@
 
                                 </div>
                             
-                                <div class="col-lg-6">
-                                    <h5 class="mb-3">{{ form.survey.label }}</h5>
-                                    <div class="form-floating errors" id="form_{{form.survey.id_for_label}}">
-                                        {{form.survey}}
-                                        <label for="{{form.survey.id_for_label}}">{{ form.survey.label }}</label>
-                                        <div class="invalid-feedback" id="msg-{{form.survey.id_for_label}}">
+                                <div class="col-lg-4">
+                                    <h5 class="mb-3">{{ form.sub_kegiatan.label }}</h5>
+                                    <div class="form-floating errors" id="form_{{form.sub_kegiatan.id_for_label}}">
+                                        {{form.sub_kegiatan}}
+                                        <label for="{{form.sub_kegiatan.id_for_label}}">{{ form.sub_kegiatan.label }}</label>
+                                        <div class="invalid-feedback" id="msg-{{form.sub_kegiatan.id_for_label}}">
                                         </div>
                                     </div>
 
@@ -199,7 +198,6 @@
                         </div>
                         
                     </div> <!-- end preview-->
-                    
                 </div> <!-- end tab-content-->
   
             </div> <!-- end card body-->
@@ -248,7 +246,6 @@
         </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
-    
 
 <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasFilter">
     <div class="offcanvas-header">
@@ -288,8 +285,6 @@
     </div>
 </div>
 
-
-
 {% endblock table-content %}
 
 {% block tables-script-extend %}
@@ -327,16 +322,25 @@
         },
         lengthMenu: [5, 25, 50, 100,'All'],
         columns :[
+            {"data": 'petugas__nama_petugas'},
             {"data": 'petugas__kode_petugas'},
             {"data": 'petugas__nama_petugas'},
-            {"data": 'sub_kegiatan__survey__nama'},
+            {"data": 'sub_kegiatan__nama_kegiatan'},
             {"data" : 'role__jabatan'},
             {"data" : 'pegawai'},
             {"data" : 'aksi'},
         ],
         columnDefs: [ {
-            'targets': [5], /* column index */
+            'targets': [6], /* column index */
             'orderable': false, /* true or false */
+        },
+        {
+            "targets": 0,
+            "data": null,
+            "defaultContent": "",
+            "render": function (data, type, row, meta) {
+                return meta.row + 1;
+            }
         }],
         keys: !0,
         language: {
@@ -344,6 +348,8 @@
             previous: "<i class='mdi mdi-chevron-left'>",
             next: "<i class='mdi mdi-chevron-right'>",
             },
+            lengthMenu : "Menampilkan _MENU_",
+            search: "Cari Penugasan",
         },
         drawCallback: function () {
             $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
@@ -400,7 +406,6 @@
     }
 
     function deleteAlokasi(e){
-
         swalWithBootstrapButtons.fire({
             title: 'Are you sure?',
             text: "Apakah anda yakin ingin menghapus data mitra?",
@@ -461,7 +466,7 @@
                 if (i==1){
                     var throws = '<tr>'
                         
-                    for (var key of row.slice(0, 4)){
+                    for (var key of row.slice(0, 5)){
                         throws += '<th>' + key + '</th>'
                     }
 
@@ -472,14 +477,14 @@
                 if (i>1){
                     var tdrows = '<tr>'
                     var isnull = 0
-                    for (var key of row.slice(0, 4)){
+                    for (var key of row.slice(0, 5)){
                         if ( key == null ){
                             isnull += 1
                         }
                         tdrows += '<td>' + key + '</td>'
                     }
                     tdrows += '</tr>'
-                    if (isnull < 4) {
+                    if (isnull < 5) {
                         $('#'+table_id+' tbody').append(tdrows) 
                     }
                 }
@@ -589,9 +594,8 @@
     })
 
     $('#get-templates-upload').on('click', () => {
-
         var numrows = $('#number_rows').val()
-        return window.location.replace("http://127.0.0.1:8000/alokasi-petugas/template/" + numrows);
+        return window.location.replace("{% url 'master_petugas:template-alokasi' %}?rows=" + numrows);
     })
 
     $('#{{form_upload.import_file.id_for_label}}').on('change', () => {

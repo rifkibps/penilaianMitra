@@ -16,8 +16,9 @@ from . import models, forms, utils
 import itertools
 
 from .resources import MasterPetugasResource, MasterAlokasiResource, MasterRoleResource
-from master_survey.models import SurveyModel
+from master_survey.models import SurveyModel, SubKegiatanSurvei
 from master_penilaian.models import MasterPenilaianPetugas, MasterNilaiPetugas, KegiatanPenilaianModel
+from master_pegawai.models import MasterPegawaiModel
 
 import numpy as np
 from openpyxl import Workbook
@@ -186,16 +187,9 @@ class MasterPetugasDeleteView(LoginRequiredMixin, View):
 
         if is_ajax:
             if request.method == 'POST':
-                
                 id = request.POST.get('id')
-
                 data_petugas = models.MasterPetugas.objects.filter(pk = id)
                 if data_petugas.exists():
-
-                    # check_nilai_mitra = MasterNilaiPetugas.objects.filter(petugas__petugas = id)
-                    # if check_nilai_mitra.exists():
-                    #     return JsonResponse({'status' : 'failed', 'message': 'Data alokasi petugas telah digunakan pada master data penilaian'}, status=200)
-
                     data_petugas.delete()
                     return JsonResponse({'status' : 'success', 'message': 'Data berhasil dihapus'}, status=200)
                 else:
@@ -628,7 +622,6 @@ class AlokasiPetugasClassView(LoginRequiredMixin, View):
 
         if is_ajax and request.method == 'POST':
             form = forms.AlokasiForm(request.POST)
-
             if form.is_valid():
                 if request.POST.get('petugas') or request.POST.get('pegawai'):
                     if request.POST.get('petugas') :
@@ -636,10 +629,10 @@ class AlokasiPetugasClassView(LoginRequiredMixin, View):
                         if data.status == '1' or data.status == '3':
                             return JsonResponse({"status":"failed", 'message': f'Mitra dengan status {data.get_status_display()} tidak dapat dialokasikan.'}, status=200)
 
-                        check_exist_data = models.AlokasiPetugas.objects.filter(petugas = form.data['petugas'], survey = form.data['survey'])
+                        check_exist_data = models.AlokasiPetugas.objects.filter(petugas = form.data['petugas'], sub_kegiatan = form.data['sub_kegiatan'])
                     else:
                         data = get_object_or_404(models.MasterPegawaiModel, pk=form.data['pegawai'])
-                        check_exist_data = models.AlokasiPetugas.objects.filter(pegawai = form.data['pegawai'], survey = form.data['survey'])
+                        check_exist_data = models.AlokasiPetugas.objects.filter(pegawai = form.data['pegawai'], sub_kegiatan = form.data['sub_kegiatan'])
                         
                     if check_exist_data.exists():
                         return JsonResponse({"status":"failed", 'message': 'Data alokasi telah tersedia pada database'}, status=200)
@@ -662,21 +655,17 @@ class AlokasiPetugasDeleteView(LoginRequiredMixin, View):
 
         if is_ajax:
             if request.method == 'POST':
-                
                 id = request.POST.get('id')
-
                 data_petugas = models.AlokasiPetugas.objects.filter(pk = id)
                 if data_petugas.exists():
-
-                    check_nilai_mitra = MasterNilaiPetugas.objects.filter(petugas = id)
-
-                    if check_nilai_mitra.exists() == False:
+                    check_nilai_mitra = MasterPenilaianPetugas.objects.filter(Q(petugas = id) | Q(penilai = id))
+                    if check_nilai_mitra.exists() is False:
                         data_petugas.delete()
                         return JsonResponse({'status' : 'success', 'message': 'Data berhasil dihapus'}, status=200)
-                    
-                    # return JsonResponse({'status' : 'failed', 'message': 'Data alokasi petugas telah digunakan pada master data penilaian.'}, status=200)
+
+                    return JsonResponse({'status' : 'failed', 'message': 'Data penugasan telah digunakan pada master data penilaian.'}, status=200)
                 else:
-                    return JsonResponse({'status': 'failed', 'message': 'Data tidak tersedia'}, status=200)
+                    return JsonResponse({'status': 'failed', 'message': 'Data petugas tidak tersedia'}, status=200)
                 
         return JsonResponse({'status': 'Invalid request'}, status=400)
 
@@ -713,10 +702,9 @@ class MasterAlokasiUpdateView(LoginRequiredMixin, View):
             if request.POST.get('petugas') or request.POST.get('pegawai'):
                 
                 data = get_object_or_404(models.AlokasiPetugas, pk=request.POST.get('id'))
-                    
-                # check_nilai_mitra = MasterNilaiPetugas.objects.filter(petugas = request.POST.get('id'))
-                # if check_nilai_mitra.exists():
-                #     return JsonResponse({'status' : 'failed', 'message': 'Data alokasi petugas telah digunakan pada master data penilaian'}, status=200)
+                safe_check = MasterPenilaianPetugas.objects.filter(Q(petugas = request.POST.get('id')) | Q(penilai = request.POST.get('id')))
+                if safe_check.exists():
+                    return JsonResponse({'status' : 'failed', 'message': 'Data penugasan yang telah terdaftar pada master data penilaian tidak dapat diupdate.'}, status=200)
 
                 form = forms.AlokasiForm(request.POST, instance=data)
 
@@ -724,17 +712,16 @@ class MasterAlokasiUpdateView(LoginRequiredMixin, View):
                     if request.POST.get('petugas') :
                         if data.petugas.status == '1' or data.petugas.status == '3':
                             return JsonResponse({"status":"failed", 'message': f'Mitra dengan status {data.petugas.get_status_display()} tidak dapat dialokasikan.'}, status=200)
-                        check_exist_data = models.AlokasiPetugas.objects.filter(~Q(pk=form.data['id']) & Q(petugas = form.data['petugas']) & Q(survey = form.data['survey']))
+                        check_exist_data = models.AlokasiPetugas.objects.filter(~Q(pk=form.data['id']) & Q(petugas = form.data['petugas']) & Q(sub_kegiatan = form.data['sub_kegiatan']))
                     else:
-                        check_exist_data = models.AlokasiPetugas.objects.filter(~Q(pk=form.data['id']) & Q(pegawai = form.data['pegawai']) & Q(survey = form.data['survey']))
+                        check_exist_data = models.AlokasiPetugas.objects.filter(~Q(pk=form.data['id']) & Q(pegawai = form.data['pegawai']) & Q(sub_kegiatan = form.data['sub_kegiatan']))
 
                     if check_exist_data.exists():
-                        return JsonResponse({"status":"failed", 'message': 'Data alokasi telah tersedia pada database'}, status=200)
+                        return JsonResponse({"status":"failed", 'message': 'Data penugasan telah tersedia pada database'}, status=200)
 
                     instance = form.save()
                     ser_instance = serializers.serialize('json', [ instance, ])
                     
-                    # send to client side.
                     return JsonResponse({"status":"success", "instance": ser_instance, "message": "Data berhasil diubah"}, status=200)
                 else:
                     return JsonResponse({"status": "failed", "error": form.errors, "message": "Terjadi kesalahan"}, status=400)
@@ -779,9 +766,13 @@ class MasterAlokasiJsonResponseClassView(LoginRequiredMixin, View):
         
         if search:
             data = models.AlokasiPetugas.objects.filter(
+                Q(pegawai__name__icontains=search)|
+                Q(pegawai__nip__icontains=search)|
+                Q(pegawai__nip_bps__icontains=search)|
                 Q(petugas__kode_petugas__icontains=search)|
                 Q(petugas__nama_petugas__icontains=search)|
                 Q(sub_kegiatan__survey__nama__icontains=search)|
+                Q(sub_kegiatan__nama_kegiatan__icontains=search)|
                 Q(role__jabatan__icontains=search)
             )
 
@@ -809,10 +800,10 @@ class MasterAlokasiJsonResponseClassView(LoginRequiredMixin, View):
             data.append({
                 'petugas__kode_petugas': code ,
                 'petugas__nama_petugas': f'<a href="javascript:void(0)" class="text-body">{name}</a>' if obj.pegawai else f'<a href="{reverse_lazy("master_petugas:mitra-view-detail", kwargs={"mitra_id": obj.id})}" class="text-body" target="_blank">{name}</a>',
-                'sub_kegiatan__survey__nama': obj.sub_kegiatan.survey.nama,
+                'sub_kegiatan__nama_kegiatan': obj.sub_kegiatan.nama_kegiatan,
                 'role__jabatan': obj.role.jabatan,
-                'pegawai': 'Organik' if obj.pegawai else 'Mitra',
-                'aksi': f'<a href="javascript:void(0);" onclick="editAlokPetugas({obj.id}, {state_mitra})" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a> <a href="javascript:void(0);" onclick="deleteAlokasi({obj.id});" class="action-icon"> <i class="mdi mdi-delete"></i></a>'
+                'pegawai': '<span class="badge bg-primary p-1">Organik</span>' if obj.pegawai else '<span class="badge bg-info p-1">Mitra</span>',
+                'aksi': f'<a href="javascript:void(0);" onclick="editAlokPetugas({obj.id}, {state_mitra})" class="action-icon"><i class="mdi mdi-square-edit-outline font-15"></i></a> <a href="javascript:void(0);" onclick="deleteAlokasi({obj.id});" class="action-icon"> <i class="mdi mdi-delete font-15"></i></a>'
             })
 
         return {
@@ -835,18 +826,18 @@ class MasterAlokasiExportClassView(LoginRequiredMixin, View):
 
 class MasterAlokasiTemplateClassView(LoginRequiredMixin, View):
 
-    def get(self, request, *args, **kwargs): 
-
-        def_rows = self.kwargs['rows']
+    def get(self, request):
+        if request.GET.get('rows') is None:
+            return redirect(reverse('master_petugas:alokasi'))
+        
+        def_rows = int(request.GET.get('rows'))
         wb = Workbook()
-
         ws = wb.active
 
         # Ini untuk header columns
         ws.title = 'Upload Alokasi Petugas'
 
         header = utils.get_verbose_fields(models.AlokasiPetugas, exclude_pk=True)
-        header.remove('Jumlah Honor Perolehan')
         header = ['No'] + header
 
         head_row = 2
@@ -885,17 +876,22 @@ class MasterAlokasiTemplateClassView(LoginRequiredMixin, View):
 
         # Sheet 2 for Metadata
         ws1 = wb.create_sheet('Metadata Formulir Pengisian')
-        ws1.merge_cells('A1:C1')
+        ws1.merge_cells('A1:D1')
         ws1['A1'] = 'Metadata'
         ws1['A1'].alignment = Alignment(horizontal='center', vertical='center')
         ws1['A1'].font = Font(name='Cambria',bold=True, size=12)
 
+        pegawai_lists = list(MasterPegawaiModel.objects.values_list('nip', 'name'))
+        pegawai_choices = []
+        for dt in pegawai_lists:
+            pegawai_choices.append((dt[0], f'[{dt[0]}] {dt[1]}'))
+            
         mitra_lists = list(models.MasterPetugas.objects.filter(~Q(status=1), ~Q(status=3)).values_list('kode_petugas', 'nama_petugas'))
         mitra_choices = []
         for dt in mitra_lists:
             mitra_choices.append((dt[0], f'[{dt[0]}] {dt[1]}'))
 
-        survey_lists = list(SurveyModel.objects.values_list('id','nama'))
+        survey_lists = list(SubKegiatanSurvei.objects.values_list('id','nama_kegiatan'))
         survey_choices = []
         for dt in survey_lists:
             survey_choices.append((dt[0], dt[1]))
@@ -905,13 +901,15 @@ class MasterAlokasiTemplateClassView(LoginRequiredMixin, View):
         for dt in role_lists:
             role_choices.append((dt[0], dt[1]))
 
-        utils.generate_meta_templates(ws1, 'A', 2, 'Data Mitra', mitra_choices)
-        utils.generate_meta_templates(ws1, 'B', 2, 'Data Survei/Sensus', survey_choices)
+        utils.generate_meta_templates(ws1, 'A', 2, 'Data Pegawai', pegawai_choices)
+        utils.generate_meta_templates(ws1, 'B', 2, 'Data Mitra', mitra_choices)
         utils.generate_meta_templates(ws1, 'C', 2, 'Jabatan Mitra', role_choices)
+        utils.generate_meta_templates(ws1, 'D', 2, 'Data Kegiatan Survei/Sensus', survey_choices)
 
-        utils.generate_field_Validation(ws, ws1, 'A', 3, len(mitra_choices), 'B', 3, def_rows=def_rows)
-        utils.generate_field_Validation(ws, ws1, 'B', 3, len(survey_choices), 'C', 3, def_rows=def_rows)
+        utils.generate_field_Validation(ws, ws1, 'A', 3, len(pegawai_choices), 'B', 3, def_rows=def_rows)
+        utils.generate_field_Validation(ws, ws1, 'B', 3, len(mitra_choices), 'C', 3, def_rows=def_rows)
         utils.generate_field_Validation(ws, ws1, 'C', 3, len(role_choices), 'D', 3, def_rows=def_rows)
+        utils.generate_field_Validation(ws, ws1, 'D', 3, len(survey_choices), 'E', 3, def_rows=def_rows)
 
         ws1.protection.password = "Bqlbz110"
         ws1.protection.sheet = True
@@ -950,10 +948,9 @@ class MasterAlokasiUploadClassView(LoginRequiredMixin, View):
                         )
                     )
 
-                model.objects.bulk_create(objs)
+                # model.objects.bulk_create(objs)
                 return JsonResponse({"status": "success", "messages": f"<strong></strong> Data berhasil diupload."})
             else:
-                
                 error_messages = list(itertools.chain.from_iterable(form.errors['import_file'].as_data()))
                 return JsonResponse({"status": "error", "messages": error_messages})
 

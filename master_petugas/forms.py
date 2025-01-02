@@ -6,8 +6,8 @@ import pandas as pd
 from io import BytesIO
 from django.db.models import Q
 
-from master_survey.models import SurveyModel
-
+from master_survey.models import SurveyModel, SubKegiatanSurvei
+from master_pegawai.models import MasterPegawaiModel
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from pprint import pprint
@@ -401,7 +401,6 @@ class AlokasiPetugasFormUpload(forms.Form):
                               attrs={'class': "form-control"}))
     
     def clean(self):
-
         def check_db(dataframe, col, data_list, base_errors):
             for idx, row in dataframe[col].items():
                 id = [dt[1] for dt in data_list if dt[0] == row]
@@ -414,14 +413,13 @@ class AlokasiPetugasFormUpload(forms.Form):
 
         try:
             data = self.cleaned_data.get('import_file').read()
-            df = pd.read_excel(BytesIO(data), skiprows=1, usecols='A:D', dtype='str')
+            df = pd.read_excel(BytesIO(data), skiprows=1, usecols='A:E', dtype='str')
             df.dropna(axis=0, how='all', inplace=True)
         except:
             self._errors['import_file'] = self.error_class(['Format template tidak sesuai. Silahkan gunakan template yang telah disediakan.'])
             return self._errors['import_file']
 
         headers = utils.get_verbose_fields(models.AlokasiPetugas, exclude_pk=True)
-        headers.remove('Jumlah Honor Perolehan')
         headers = ['No'] + headers
 
         if [str(x).lower() for x in df.columns] != [str(x).lower() for x in headers]:
@@ -438,18 +436,24 @@ class AlokasiPetugasFormUpload(forms.Form):
             null_cols = ', '.join(str(e).capitalize() for e in i[i.isna()].index)
             base_errors.append(f'Nilai kosong pada <b>Baris {idx+1}</b> ditemukan. Periksa kolom <b>({null_cols})</b>')
 
-        for idx, row in df['Kode Petugas'].items():
+        for idx, row in df['Petugas (Mitra)'].items():
             if len(row.split(']')) == 2:
                 code = row.split(']')[0].replace('[', '')
-                df.loc[idx, 'Kode Petugas'] = code
+                df.loc[idx, 'Petugas (Mitra)'] = code
+
+        for idx, row in df['Pegawai (Organik)'].items():
+            if len(row.split(']')) == 2:
+                code = row.split(']')[0].replace('[', '')
+                df.loc[idx, 'Pegawai (Organik)'] = code
 
         # Validasi untuk non numerik value
         # Get option choices
+        data_pegawai = list(MasterPegawaiModel.objects.values_list('nip', 'id'))
         data_mitra = list(models.MasterPetugas.objects.filter(~Q(status = 1), ~Q(status = 3)).values_list('kode_petugas', 'id'))
-        data_survei = list(SurveyModel.objects.values_list('nama', 'id'))
+        data_survei = list(SubKegiatanSurvei.objects.values_list('nama', 'id'))
         data_role = list(models.RoleMitra.objects.values_list('jabatan', 'id'))
 
-        check_db(df, 'Kode Petugas', data_mitra, base_errors)
+        check_db(df, 'Petugas (Mitra)', data_mitra, base_errors)
         check_db(df, 'Survei/Sensus', data_survei, base_errors)  
         check_db(df, 'Jabatan Petugas', data_role, base_errors)  
         
@@ -464,14 +468,14 @@ class AlokasiPetugasFormUpload(forms.Form):
         # Cek duplikasi Data pada master file    
         duplicated_petugas = df[df.duplicated()].petugas
         for idx, row in duplicated_petugas.items():
-            base_errors.append(f'Duplikasi Kode Petugas: <b>{row}</b> dengan beban tugas yang sama ditemukan. Harap periksa baris <b>{idx+1}</b>')
+            base_errors.append(f'Duplikasi Petugas (Mitra): <b>{row}</b> dengan beban tugas yang sama ditemukan. Harap periksa baris <b>{idx+1}</b>')
 
         # Cek duplikasi Data pada database   
         for idx, row in df.iterrows():
             check_exist_data = models.AlokasiPetugas.objects.filter(petugas = row['petugas'], survey = row['survey'])
             if check_exist_data.exists():
                 exist_data = check_exist_data.first()
-                base_errors.append(f'Data Kode Petugas: <b>[{exist_data.petugas.kode_petugas}] {exist_data.petugas.nama_petugas} | {exist_data.survey.nama} *{exist_data.role.jabatan}</b> dengan beban tugas yang sama telah tersedia pada database. Harap periksa baris <b>{idx+1}</b>')
+                base_errors.append(f'Data Petugas (Mitra): <b>[{exist_data.petugas.kode_petugas}] {exist_data.petugas.nama_petugas} | {exist_data.survey.nama} *{exist_data.role.jabatan}</b> dengan beban tugas yang sama telah tersedia pada database. Harap periksa baris <b>{idx+1}</b>')
 
         if len(base_errors) > 0:
             self._errors['import_file'] = self.error_class(base_errors)

@@ -23,7 +23,7 @@ from openpyxl.styles import Font, PatternFill
 from master_petugas import utils
 from master_petugas.models import AlokasiPetugas
 from master_penilaian.models import MasterNilaiPetugas, KegiatanPenilaianModel, MasterPenilaianPetugas
-
+from pprint import pprint
 
 from munapps.helpers import currency_formatting as cf
 # Create your views here.
@@ -54,7 +54,9 @@ class SurveyJsonResponseClassView(LoginRequiredMixin, View):
             order_col_name =  str('-' + order_col_name)
 
         data_survey = models.SurveyModel.objects
-        
+        if datatables.get('state_filter'):
+            data_survey = data_survey.filter(state = datatables.get('state_filter'))
+
         if search:
             data_survey = data_survey.filter(
                 Q(nama__icontains=search)|Q(deskripsi__icontains=search)|Q(tgl_mulai__icontains=search)|Q(tgl_selesai__icontains=search)|Q(salary=search)
@@ -79,7 +81,6 @@ class SurveyJsonResponseClassView(LoginRequiredMixin, View):
         data = []
 
         for obj in object_list:
-
             if obj.state == '0':
                 bg_class = 'bg-danger'
             elif obj.state == '1':
@@ -93,7 +94,7 @@ class SurveyJsonResponseClassView(LoginRequiredMixin, View):
                 'tgl_mulai': obj.tgl_mulai.strftime('%d %B %Y') + ' s.d. ' + obj.tgl_selesai.strftime('%d %B %Y'),
                 'deskripsi': obj.deskripsi,
                 'state': f'<span class="badge {bg_class} p-1">{obj.get_state_display()}</span>',
-                'aksi': f'<a href="javascript:void(0);" onclick="editSurvei({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a> <a href="javascript:void(0);" onclick="deleteSurvei({obj.id});" class="action-icon"> <i class="mdi mdi-delete"></i></a>'
+                'aksi': f'<a href="javascript:void(0);" onclick="editSurvei({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline font-15"></i></a> <a href="javascript:void(0);" onclick="deleteSurvei({obj.id});" class="action-icon"> <i class="mdi mdi-delete font-15"></i></a>'
             })
 
         return {
@@ -173,19 +174,18 @@ class MasterSurveyDeleteView(LoginRequiredMixin, View):
         if is_ajax:
             if request.method == 'POST':
                 pk = request.POST.get('id')
-                data_petugas = models.SurveyModel.objects.filter(pk = pk)
+                data_survei = models.SurveyModel.objects.filter(pk = pk)
                 
-                if data_petugas.exists():
+                if data_survei.exists():
                     check_alokasi_mitra = AlokasiPetugas.objects.filter(sub_kegiatan__survey = pk)
                     if check_alokasi_mitra.exists():
                         return JsonResponse({'status' : 'failed', 'message': 'Data survei telah digunakan pada alokasi petugas.'}, status=200)
                     
-                    check_nilai_mitra = MasterPenilaianPetugas.objects.filter(petugas = pk)
                     check_kegiatan_penilaian = KegiatanPenilaianModel.objects.filter(kegiatan_survey__survey = pk)
-                    if check_nilai_mitra.exists() or check_kegiatan_penilaian.exists():
+                    if check_kegiatan_penilaian.exists():
                         return JsonResponse({'status' : 'failed', 'message': 'Data survei telah digunakan pada master data penilaian.'}, status=200)
                 
-                    data_petugas.delete()
+                    data_survei.delete()
                     return JsonResponse({'status' : 'success', 'message': 'Data berhasil dihapus'}, status=200)
                 else:
                     return JsonResponse({'status': 'failed', 'message': 'Data tidak tersedia'}, status=200)
@@ -311,10 +311,80 @@ class MasterKegiatanSurveiClassView(LoginRequiredMixin, View):
     def get(self, request):
         context = {
             'title' : 'Kegiatan Survei',
-            'form_kegiatan': forms.SubKegiatanSurveiForm()
+            'form': forms.SubKegiatanSurveiForm()
         }
         
         return render(request, 'master_survey/kegiatan-survei.html', context)
+    
+    def post(self, request):
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        if is_ajax:
+            pprint('Hello World Masuk')
+            form = forms.SubKegiatanSurveiForm(request.POST)
+            if form.is_valid():
+                instance = form.save()
+                ser_instance = serializers.serialize('json', [ instance, ])
+                return JsonResponse({"instance": ser_instance, 'message': 'Data berhasil ditambahkan'}, status=200)
+            else:
+                return JsonResponse({"error": form.errors}, status=400)
+        return JsonResponse({"error": ""}, status=400)
+    
+class MasterKegiatanSurveiDetailClassView(LoginRequiredMixin, View):
+
+    def post(self, request):
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+        if is_ajax:
+            if request.method == 'POST':
+                id = request.POST.get('id')
+                data_petugas = models.SubKegiatanSurvei.objects.filter(pk=id)
+                
+                if data_petugas.exists():
+                    return JsonResponse({'status' : 'success', 'instance': list(data_petugas.values())[0]}, status=200)
+                else:
+                    return JsonResponse({'status': 'failed', 'message': 'Data tidak tersedia'}, status=200)
+                
+        return JsonResponse({'status': 'Invalid request'}, status=400) 
+
+class MasterKegiatanSurveiUpdateClassView(LoginRequiredMixin, View):
+    def post(self, request):
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        if is_ajax:
+            data = get_object_or_404(models.SubKegiatanSurvei, pk=request.POST.get('id'))
+            form = forms.SubKegiatanSurveiForm(request.POST, instance=data)
+            if form.is_valid():
+                instance = form.save()
+                ser_instance = serializers.serialize('json', [ instance, ])
+                return JsonResponse({"instance": ser_instance, 'message': 'Data berhasil diubah'}, status=200)
+            else:
+                return JsonResponse({"error": form.errors}, status=400)
+        return JsonResponse({"error": ""}, status=400)
+
+
+class MasterKegiatanSurveiDeleteClassView(LoginRequiredMixin, View):
+
+    def post(self, request):
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        if is_ajax:
+            if request.method == 'POST':
+                pk = request.POST.get('id')
+                data_kegiatan = models.SubKegiatanSurvei.objects.filter(pk = pk)
+                if data_kegiatan.exists():
+                    check_alokasi_mitra = AlokasiPetugas.objects.filter(sub_kegiatan = pk)
+                    if check_alokasi_mitra.exists():
+                        return JsonResponse({'status' : 'failed', 'message': 'Data survei telah digunakan pada alokasi petugas.'}, status=200)
+                    
+                    check_kegiatan_penilaian = KegiatanPenilaianModel.objects.filter(kegiatan_survey = pk)
+                    if check_kegiatan_penilaian.exists():
+                        return JsonResponse({'status' : 'failed', 'message': 'Data survei telah digunakan pada master data penilaian.'}, status=200)
+                
+                    data_kegiatan.delete()
+                    return JsonResponse({'status' : 'success', 'message': 'Data berhasil dihapus'}, status=200)
+                else:
+                    return JsonResponse({'status': 'failed', 'message': 'Data tidak tersedia'}, status=200)
+                
+        return JsonResponse({'status': 'Invalid request'}, status=400)
+
 
 class MasterKegiatanSurveiJsonClassView(LoginRequiredMixin, View):
 
@@ -330,26 +400,30 @@ class MasterKegiatanSurveiJsonClassView(LoginRequiredMixin, View):
         page_number = int(start / length + 1)
         search = datatables.get('search[value]')
 
-        order_idx = int(datatables.get('order[0][column]')) # Default 1st index for
-        order_dir = datatables.get('order[0][dir]') # Descending or Ascending
+        order_idx = int(datatables.get('order[0][column]'))
+        order_dir = datatables.get('order[0][dir]')
         order_col = 'columns[' + str(order_idx) + '][data]'
         order_col_name = datatables.get(order_col)
 
         if (order_dir == "desc"):
             order_col_name =  str('-' + order_col_name)
 
-        data_survey = models.SubKegiatanSurvei.objects
+        data_kegiatan = models.SubKegiatanSurvei.objects
+
+        if datatables.get('state_filter'):
+            data_kegiatan = data_kegiatan.filter(status = datatables.get('state_filter'))
+
         if search:
-            data_survey = data_survey.filter(
+            data_kegiatan = data_kegiatan.filter(
                 Q(nama_kegiatan__icontains=search)|Q(survey__nama__icontains=search)|Q(survey__tgl_mulai__icontains=search)
             )
 
-        data_survey = data_survey.exclude(Q(nama_kegiatan=None)|Q(survey=None)|Q(status=None))
-        records_total = data_survey.count()
+        data_kegiatan = data_kegiatan.exclude(Q(nama_kegiatan=None)|Q(survey=None)|Q(status=None))
+        records_total = data_kegiatan.count()
         records_filtered = records_total
         
-        data_survey = data_survey.order_by(order_col_name)
-        paginator = Paginator(data_survey, length)
+        data_kegiatan = data_kegiatan.order_by(order_col_name)
+        paginator = Paginator(data_kegiatan, length)
 
         try:
             object_list = paginator.page(page_number).object_list
@@ -361,7 +435,6 @@ class MasterKegiatanSurveiJsonClassView(LoginRequiredMixin, View):
         data = []
 
         for obj in object_list:
-
             if obj.status == '0':
                 bg_class = 'bg-warning'
             elif obj.status == '1':
@@ -375,7 +448,7 @@ class MasterKegiatanSurveiJsonClassView(LoginRequiredMixin, View):
                 'survey__nama': obj.survey.nama,
                 'survey__tgl_mulai': obj.survey.tgl_mulai.strftime('%Y'),
                 'status': f'<span class="badge {bg_class} p-1">{obj.get_status_display()}</span>',
-                'aksi': f'<a href="javascript:void(0);" onclick="editSubKegiatan({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a> <a href="javascript:void(0);" onclick="deleteSubKegiatan({obj.id});" class="action-icon"> <i class="mdi mdi-delete"></i></a>'
+                'aksi': f'<a href="javascript:void(0);" onclick="editSubKegiatan({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline font-15"></i></a> <a href="javascript:void(0);" onclick="deleteSubKegiatan({obj.id});" class="action-icon"> <i class="mdi mdi-delete font-15"></i></a>'
             })
 
         return {

@@ -45,8 +45,8 @@
 
               <ul class="nav nav-tabs nav-bordered mb-3">
                     <li class="nav-item">
-                        <a href="#survey-preview" data-bs-toggle="tab" aria-expanded="false" class="nav-link active">
-                            Preview
+                        <a href="#subkegiatan-preview" data-bs-toggle="tab" aria-expanded="false" class="nav-link active">
+                            Data Kegiatan Survei
                         </a>
                     </li>
                     <li class="nav-item">
@@ -54,32 +54,25 @@
                             Input
                         </a>
                     </li>
-
-                    <li class="nav-item d-none" id="nav-item-import">
-                        <a href="#import-tab" data-bs-toggle="tab" aria-expanded="true" class="nav-link">
-                            Import
-                        </a>
-                      </li>
-
               </ul> <!-- end nav-->
               <div class="tab-content">
-                    <div class="tab-pane show active" id="survey-preview">
+                    <div class="tab-pane show active" id="subkegiatan-preview">
                         <div class="row mb-2">
                             <div class="col-sm-6">
-                                <a href="#offcanvasFilter"  data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasFilter" class="btn btn-danger mb-2"><i class="mdi mdi-filter-menu me-2"></i> Filter Data</a>
+                                <a href="#offcanvasFilter"  data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasFilter" class="btn btn-primary mb-2"><i class="mdi mdi-filter-menu me-2"></i> Filter Data</a>
+                                <button type="button" class="btn btn-primary mb-2 me-1" id="redraw-table"><i class="mdi mdi-refresh"></i> Refresh</button>
                             </div>
                             <div class="col-sm-6">
                                 <div class="text-sm-end">
-                                    <button type="button" class="btn btn-success mb-2 me-1" id="redraw-table"><i class="mdi mdi-refresh"></i></button>
-                                    <button type="button" class="btn btn-light mb-2 me-1" data-bs-toggle="modal" data-bs-target="#import-modal">Import</button>
-                                    <a href="{% url 'master_survei:export-survey' %}" class="btn btn-light mb-2">Export</a>
+                                    <a href="{% url 'master_survei:export-survey' %}" class="btn btn-primary mb-2"><i class="mdi mdi-download"></i> Export</a>
                                 </div>
-                            </div><!-- end col-->
+                            </div>
                         </div>
                         <div class="table-responsive">
                             <table id="basic-datatable" class="table table-centered table-striped w-100 dt-responsive nowrap">
                                 <thead>
                                     <tr>
+                                        <th width="5%">No</th>
                                         <th>Nama Kegiatan</th>
                                         <th>Survei</th>
                                         <th>Tahun</th>
@@ -96,13 +89,12 @@
                     </div> <!-- end preview-->
               
                     <div class="tab-pane" id="input-tab">
-                        <p>Silahkan isikan data survei.</p>
-                        
-                        <form action="{% url 'master_survei:index' %}" method="POST" id="formMasterSurvei" class="needs-validation" novalidate>
+                        <p>Silahkan isikan data kegiatan survei.</p>
+                        <form action="{% url 'master_survei:kegiatan-survey' %}" method="POST" id="formSubKegiatan" class="needs-validation" novalidate>
                             {% csrf_token %}
                             <input type="hidden" name="id" id="id_id">
                             <div class="row mt-3">
-                                <div class="col-lg-6">
+                                <div class="col-lg-5">
                                     <h5 class="mb-3">{{ form.nama_kegiatan.label }}</h5>
                                     <div class="form-floating errors" id="form_{{form.nama_kegiatan.id_for_label}}">
                                         {{form.nama_kegiatan}}
@@ -110,38 +102,27 @@
                                         <div class="invalid-feedback" id="msg-{{form.nama_kegiatan.id_for_label}}">
                                         </div>
                                     </div>
-                                    
-                                    <h5 class="mb-3 mt-4">{{ form.status.label }}</h5>
+                                </div>
+                                
+                                <div class="col-lg-4">
+                                    <h5 class="mb-3">{{ form.survey.label }}</h5>
+                                    <div class="form-floating errors" id="form_{{form.survey.id_for_label}}">
+                                        {{form.survey}}
+                                        <label for="{{form.survey.id_for_label}}">{{ form.survey.label }}</label>
+                                        <div class="invalid-feedback" id="msg-{{form.survey.id_for_label}}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-lg-3">
+                                    <h5 class="mb-3">{{ form.status.label }}</h5>
                                     <div class="form-floating errors" id="form_{{form.status.id_for_label}}">
                                         {{form.status}}
                                         <label for="{{form.status.id_for_label}}">{{ form.status.label }}</label>
                                         <div class="invalid-feedback" id="msg-{{form.status.id_for_label}}">
                                         </div>
                                     </div>
-                    
-                                </div>
-                            
-                                <div class="col-lg-6">
-                                    <h5 class="mb-3">{{ form.tgl_mulai.label }} dan {{ form.tgl_selesai.label }}</h5>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-floating errors" id="form_{{form.tgl_mulai.id_for_label}}">
-                                                {{form.tgl_mulai}}
-                                                <label for="{{form.tgl_mulai.id_for_label}}">{{ form.tgl_mulai.label }}</label>
-                                                <div class="invalid-feedback" id="msg-{{form.tgl_mulai.id_for_label}}">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-floating errors" id="form_{{form.tgl_selesai.id_for_label}}">
-                                                {{form.tgl_selesai}}
-                                                <label for="{{form.tgl_selesai.id_for_label}}">{{ form.tgl_selesai.label }}</label>
-                                                <div class="invalid-feedback" id="msg-{{form.tgl_selesai.id_for_label}}">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                     
                                 </div>
                             </div>
                             <br>
@@ -206,7 +187,7 @@
                 <div class="d-flex align-items-center">
                      <select class="form-select" id="status-select-filter">
                         <option value="">----</option>
-                       {% for value, text in form.state.field.choices %}
+                       {% for value, text in form.status.field.choices %}
                             <option value="{{ value }}">{{ text }}</option>
                         {% endfor %}
                     </select>
@@ -214,69 +195,9 @@
             </div>
         </div>
 
-        <button class="btn btn-danger mt-3" id="reset-filter">Clear Filter</button>
+        <button class="btn btn-primary mt-3" id="reset-filter">Clear Filter</button>
     </div>
 </div>
-
-
-<div id="import-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="compose-header-modalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header modal-colored-header bg-primary">
-                <h4 class="modal-title" id="compose-header-modalLabel">Import Data Survei</h4>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="p-1">
-                <div class="modal-body px-3 pt-3 pb-0">
-                    <h5>Upload Data Survei</h5>
-                    <div class="mb-3">
-                        <ol>
-                            <li>Unduh template: <br>
-                                
-                                <div class="mt-1">
-                                    <input type="number" class="form-control  form-control-sm d-inline" style="width:150px;" placeholder="Jumlah baris data" alt="Masukan jumlah data" id="number_rows">   
-                                    <button class="btn btn-primary btn-sm d-inline" id="get-templates-upload">Unduh</button>
-                                </div>
-                            </li>
-                            <br>
-                            <li>Upload file pada form berikut:</li>
-                        </ol>
-                    </div>
-
-                    <form action="" enctype="multipart/form-data" class="needs-validation" novalidate>
-                        {% csrf_token %}
-                        <label for="{{form_upload.import_file.id_for_label}}" class="form-label"><h5>{{ form_upload.import_file.label }}</h5></label>
-                        <div class="mb-3">
-                            {{form_upload.import_file}}
-                        </div>
-                    </form> 
-
-                </div>
-                <div class="px-3 pb-3">
-                    <button type="button" class="btn btn-primary" id="btn-submit-file"><i class="mdi mdi-send me-1"></i> Upload file</button>
-                </div>
-            </div>
-        </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
-    
-
-<!-- Success Alert Modal -->
-<div id="success-alert-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-sm">
-        <div class="modal-content modal-filled bg-success">
-            <div class="modal-body p-4">
-                <div class="text-center">
-                    <i class="dripicons-checkmark h1"></i>
-                    <h4 class="mt-2">Well Done!</h4>
-                    <p class="mt-3 message-feedback"></p>
-                    <button type="button" class="btn btn-light my-2" data-bs-dismiss="modal">Continue</button>
-                </div>
-            </div>
-        </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
-
 
 {% endblock table-content %}
 
@@ -301,8 +222,14 @@
                 "X-CSRFToken": '{{csrf_token}}',
             },
             "type": "POST",
+            "data": function (d){
+                return $.extend({}, d, {
+                    "state_filter": $('#status-select-filter').val(),
+                })
+            },
         },
         columns :[
+            {"data": 'nama_kegiatan'},
             {"data": 'nama_kegiatan'},
             {"data" : 'survey__nama'},
             {"data":  'survey__tgl_mulai'},
@@ -311,8 +238,15 @@
         ],
         lengthMenu: [5, 25, 50, 100,'All'],
         columnDefs: [ {
-            'targets': [4], /* column index */
+            'targets': [5], /* column index */
             'orderable': false, /* true or false */
+        }, {
+            "targets": 0,
+            "data": null,
+            "defaultContent": "",
+            "render": function (data, type, row, meta) {
+                return meta.row + 1;
+            }
         }],
         keys: !0,
         language: {
@@ -320,58 +254,20 @@
             previous: "<i class='mdi mdi-chevron-left'>",
             next: "<i class='mdi mdi-chevron-right'>",
             },
+            lengthMenu : "Menampilkan _MENU_",
+            search: "Cari Kegiatan Survei",
         },
         drawCallback: function () {
             $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
         },
     });
 
-    function preview_excel(table_id, field_file_id){
-        var input = $('#'+field_file_id).get(0).files[0]
-        readXlsxFile(input).then(function(data){
-           
-            var i = 0
-            $('#'+table_id+' tbody').html('') 
-            data.map((row, index) =>{
-                if (i==1){
-                    var throws = '<tr>'
-                        
-                    for (var key of row.slice(0, 6)){
-                        throws += '<th>' + key + '</th>'
-                    }
-
-                    throws += '</tr>'
-                    $('#'+table_id+' thead').html(throws) 
-                }
-    
-                if (i>1){
-                    var tdrows = '<tr>'
-                    var isnull = 0
-                    for (var key of row.slice(0, 6)){
-                        if ( key == null ){
-                            isnull += 1
-                        }
-                        tdrows += '<td>' + key + '</td>'
-                    }
-                    tdrows += '</tr>'
-                    if (isnull < 6) {
-                        $('#'+table_id+' tbody').append(tdrows) 
-                    }
-                }
-                i++
-            })
-            return true
-    
-        })
-    }
-
-    function editSurvei(e){
-        $('#formMasterSurvei').attr('action', "{% url 'master_survei:update-survey' %}")
+    function editSubKegiatan(e){
+        $('#formSubKegiatan').attr('action', "{% url 'master_survei:update-kegiatan' %}")
         $('#submitFormSurvei').html('Update Data')
-        
     
         $.ajax({
-            url: '{% url 'master_survei:detail-survey' %}',
+            url: '{% url 'master_survei:detail-kegiatan' %}',
             type: "POST",
             dataType: "json",
             data : {
@@ -382,10 +278,8 @@
                 "X-CSRFToken": '{{csrf_token}}',
             },
             success: (data) => {
-              
                 for (const [key, value] of Object.entries(data.instance)) {
                     $('#id_'+key).val(value)
-                    console.log(key)
                 }
                 $('.nav-tabs a[href="#input-tab"]').tab('show');
             },
@@ -396,7 +290,7 @@
         
     }
 
-    function deleteSurvei(e){
+    function deleteSubKegiatan(e){
 
         swalWithBootstrapButtons.fire({
             title: 'Are you sure?',
@@ -410,7 +304,7 @@
             if (result.isConfirmed) {
 
                 $.ajax({
-                    url: '{% url 'master_survei:delete-survey' %}',
+                    url: '{% url 'master_survei:delete-kegiatan' %}',
                     type: "POST",
                     dataType: "json",
                     data : {
@@ -453,10 +347,10 @@
     }
 
     function resetForm(){
-        $('#formMasterSurvei')[0].reset();
+        $('#formSubKegiatan')[0].reset();
         $('.was-validated').removeClass('was-validated')
         $('#submitFormPetugas').html('Kirim Data')
-        $('#formMasterSurvei').attr('action', "{% url 'master_survei:index' %}")
+        $('#formSubKegiatan').attr('action', "{% url 'master_survei:kegiatan-survey' %}")
     }
 
     openTabInput()
@@ -469,7 +363,7 @@
         resetForm()
     })
 
-    $("#formMasterSurvei").on("submit", function (e){
+    $("#formSubKegiatan").on("submit", function (e){
         e.preventDefault()
         var serializedData = $(this).serialize();
         $('.invalid-feedback').html('')
@@ -489,7 +383,7 @@
                 $('#msgs-upload').addClass('alert-success')
                 $('#msgs-upload').removeClass('d-none')
                 table.ajax.reload();
-                $('.nav-tabs a[href="#survey-preview"]').tab('show');
+                $('.nav-tabs a[href="#subkegiatan-preview"]').tab('show');
                 resetForm()
             },
             error: function (response) {
@@ -513,97 +407,7 @@
     $('#redraw-table').on('click', function (){
         table.draw();
     })
-
-    $('#get-templates-upload').on('click', function(){
-
-        var numrows = $('#number_rows').val()
-        return window.location.replace("http://127.0.0.1:8000/master-survei/template/" + numrows);
-    })
-    
-    $('#{{form_upload.import_file.id_for_label}}').on('change', function(){
-        preview_excel('preview-data-upload', '{{form_upload.import_file.id_for_label}}')
-    })
-
-    $('#btn-submit-file').on('click', function(){
-        $('#nav-item-import').removeClass('d-none')
-        $('#import-modal').modal('toggle')
-        $('.nav-tabs a[href="#import-tab"]').tab('show');
-    })
    
-    $('#confirm-submit-file').on('click', function(){
-
-        const swalWithBootstrapButtons = Swal.mixin({
-            customClass: {
-              confirmButton: 'btn btn-primary'},
-            buttonsStyling: true
-          })
-          
-          swalWithBootstrapButtons.fire({
-            title: 'Are you sure?',
-            text: "Apakah anda yakin ingin mengupload data mitra?",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, upload it!',
-            cancelButtonText: 'No, cancel!',
-            reverseButtons: true
-          }).then((result) => {
-            if (result.isConfirmed) {
-
-                var data = new FormData();
-                data.append("import_file", $('#{{form_upload.import_file.id_for_label}}').get(0).files[0])
-             
-                $.ajax({
-                    type: 'POST',
-                    url: '{% url 'master_survei:upload-survey' %}',
-                    data: data,
-                    processData: false,
-                    contentType: false,
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest",
-                        "X-CSRFToken": '{{csrf_token}}',
-                    },
-                    success: function (response) {
-                        
-                        if (response.status == 'error'){
-
-                            var content_msgs = '<strong>Terjadi kesalahan</strong> saat import data: <ol class="px-3 font-12">'
-
-                            for (let i = 0; i < response.messages.length; i++) {
-                                content_msgs += '<li>'+ response.messages[i] +'</li>'
-                            }
-                            
-                            $('#messages-content').html(content_msgs)
-                            $('#msgs-upload').removeClass('alert-success')
-                            $('#msgs-upload').addClass('alert-danger')
-                            $('#msgs-upload').removeClass('d-none')
-                        }else{
-                            var content_msgs = response.messages
-                            
-                            $('#messages-content').html(content_msgs)
-                            $('#msgs-upload').removeClass('alert-danger')
-                            $('#msgs-upload').addClass('alert-success')
-                            $('#msgs-upload').removeClass('d-none')
-                            table.ajax.reload();
-    
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        return console.log(xhr.responseText['messages'])
-                    }
-                })
-            } else if (
-             
-              result.dismiss === Swal.DismissReason.cancel
-            ) {
-              swalWithBootstrapButtons.fire(
-                'Cancelled',
-                'Data successfully cancelled',
-                'error'
-              )
-            }
-        }) 
-    })
-
     $('#reset-filter').on('click', function (){
         $('#status-select-filter').prop('selectedIndex',0);
         table.draw();

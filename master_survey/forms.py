@@ -53,7 +53,6 @@ class SurveiForm(forms.ModelForm):
         }
 
 class SubKegiatanSurveiForm(forms.ModelForm):
-
     class Meta:
         model = models.SubKegiatanSurvei
 
@@ -80,7 +79,7 @@ class SubKegiatanSurveiForm(forms.ModelForm):
                 attrs = attrs_input
             ),
             'survey': forms.Select(
-                attrs = attrs_input | {'class': 'form-select'}
+                attrs = attrs_input | {'class': 'form-select', 'id': 'id_survey_id'}
             ),
             'status': forms.Select(
                 attrs = attrs_input | {'class': 'form-select'}

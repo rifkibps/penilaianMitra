@@ -22,7 +22,7 @@ urlpatterns = [
     path('alokasi-petugas/update', views.MasterAlokasiUpdateView.as_view(), name='update-alokasi'),
     path('alokasi-petugas/export', views.MasterAlokasiExportClassView.as_view(), name='export-alokasi'),
     path('alokasi-petugas/upload', views.MasterAlokasiUploadClassView.as_view(), name="upload-alokasi"),
-    path('alokasi-petugas/template/<int:rows>', views.MasterAlokasiTemplateClassView.as_view(), name="template-alokasi"),
+    path('alokasi-petugas/template', views.MasterAlokasiTemplateClassView.as_view(), name="template-alokasi"),
     path('alokasi-penugasan', views.AlokasiPenugasanClassView.as_view(), name='penugasan'),
     
     path('role-petugas', views.RolePetugasClassView.as_view(), name='role'),

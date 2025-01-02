@@ -14,6 +14,9 @@ urlpatterns = [
     path('survei/template', views.MasterSurveyTemplateClassView.as_view(), name='template-survey'),
 
     path('kegiatan-survei', views.MasterKegiatanSurveiClassView.as_view(), name='kegiatan-survey'),
+    path('kegiatan-survei/detail', views.MasterKegiatanSurveiDetailClassView.as_view(), name='detail-kegiatan'),
+    path('kegiatan-survei/update', views.MasterKegiatanSurveiUpdateClassView.as_view(), name='update-kegiatan'),
+    path('kegiatan-survei/delete', views.MasterKegiatanSurveiDeleteClassView.as_view(), name='delete-kegiatan'),
     path('kegiatan-survei/json-response', views.MasterKegiatanSurveiJsonClassView.as_view(), name='kegiatan-survey-json'),
 
 ]

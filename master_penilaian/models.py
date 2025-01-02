@@ -41,7 +41,7 @@ class IndikatorKegiatanPenilaian(models.Model):
    n_max = models.IntegerField(null=False, blank=False, default=5, verbose_name='Batas Maksimal')
    
    def __str__(self):
-      return f"{self.kegiatan_penilaian.kegiatan_survey.nama_kegiatan} [{self.indikator_penilaian.indikator_penilaian}]"
+      return f"{self.kegiatan_penilaian.kegiatan_survey.nama_kegiatan} [{self.indikator_penilaian.nama_indikator}]"
 
 class MasterPenilaianPetugas(models.Model):
 

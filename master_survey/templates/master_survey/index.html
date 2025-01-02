@@ -73,7 +73,6 @@
                                 <div class="text-sm-end">
                                     <button type="button" class="btn btn-primary mb-2 me-1" data-bs-toggle="modal" data-bs-target="#import-modal"><i class="mdi mdi-file-move"></i> Import</button>
                                     <a href="{% url 'master_survei:export-survey' %}" class="btn btn-primary mb-2"><i class="mdi mdi-download"></i> Export</a>
-                                
                                 </div>
                             </div><!-- end col-->
                         </div>
@@ -81,12 +80,12 @@
                             <table id="basic-datatable" class="table table-centered table-striped w-100 dt-responsive nowrap">
                                 <thead>
                                     <tr>
-                                        <th>No</th>
+                                        <th width="5%">No</th>
                                         <th>Nama Survei</th>
                                         <th>Periode Survei</th>
                                         <th>Deskripsi</th>
                                         <th>Status</th>
-                                        <th></th>
+                                        <th>Aksi</th>
                                     </tr>
                                 </thead>
                             
@@ -226,7 +225,7 @@
             </div>
         </div>
 
-        <button class="btn btn-danger mt-3" id="reset-filter">Clear Filter</button>
+        <button class="btn btn-primary mt-3" id="reset-filter">Clear Filter</button>
     </div>
 </div>
 
@@ -294,6 +293,11 @@
                 "X-CSRFToken": '{{csrf_token}}',
             },
             "type": "POST",
+            "data": function (d){
+                return $.extend({}, d, {
+                    "state_filter": $('#status-select-filter').val(),
+                })
+            },
         },
         columns :[
             {"data": 'nama'},
@@ -322,7 +326,7 @@
             previous: "<i class='mdi mdi-chevron-left'>",
             next: "<i class='mdi mdi-chevron-right'>",
             },
-            lengthMenu : "Menampilkan_MENU_",
+            lengthMenu : "Menampilkan _MENU_",
             search: "Cari Survei",
         },
         drawCallback: function () {

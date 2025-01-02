@@ -78,8 +78,8 @@ class RoleMitra(models.Model):
 
 
 class AlokasiPetugas(models.Model):
-   pegawai = models.ForeignKey(MasterPegawaiModel, null=True, blank=True, on_delete=models.CASCADE, related_name='master_alokasi_pegawai', verbose_name='Pegawai')
-   petugas = models.ForeignKey(MasterPetugas, null=True, blank=True, on_delete=models.CASCADE, related_name='master_alokasi_petugas', verbose_name='Kode Petugas')
+   pegawai = models.ForeignKey(MasterPegawaiModel, null=True, blank=True, on_delete=models.CASCADE, related_name='master_alokasi_pegawai', verbose_name='Pegawai (Organik)')
+   petugas = models.ForeignKey(MasterPetugas, null=True, blank=True, on_delete=models.CASCADE, related_name='master_alokasi_petugas', verbose_name='Petugas (Mitra)')
    role = models.ForeignKey(RoleMitra, on_delete=models.RESTRICT, related_name='master_alokasi_role', verbose_name='Jabatan Petugas')
    sub_kegiatan = models.ForeignKey(SubKegiatanSurvei, null=False, blank=False, on_delete=models.RESTRICT, related_name='subkegiatan_survei', verbose_name='Kegiatan Survei')
 
