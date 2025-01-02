@@ -927,28 +927,34 @@ class MasterAlokasiUploadClassView(LoginRequiredMixin, View):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
         if is_ajax:
-           
             form = forms.AlokasiPetugasFormUpload(request.POST, request.FILES)
             model = models.AlokasiPetugas
+            model_pegawai = MasterPegawaiModel
             model_mitra = models.MasterPetugas
-            model_survey = SurveyModel
+            model_kegiatan = SubKegiatanSurvei
             model_role = models.RoleMitra
 
             if form.is_valid():
-                
                 df = form.cleaned_data
                 objs = []
                 for idx in range(len(df['id'])):
-
-                    objs.append(
-                        model(
-                            petugas = model_mitra.objects.get(pk = df['petugas'][idx]),
-                            survey=  model_survey.objects.get(pk = df['survey'][idx]),
-                            role = model_role.objects.get(pk = df['role'][idx])
+                    if np.isnan(df['pegawai'][idx]):
+                        objs.append(
+                            model(
+                                petugas = model_mitra.objects.get(pk = df['petugas'][idx]),
+                                sub_kegiatan=  model_kegiatan.objects.get(pk = df['sub_kegiatan'][idx]),
+                                role = model_role.objects.get(pk = df['role'][idx])
+                            )
                         )
-                    )
-
-                # model.objects.bulk_create(objs)
+                    else:
+                        objs.append(
+                            model(
+                                pegawai = model_pegawai.objects.get(pk = df['pegawai'][idx]),
+                                sub_kegiatan=  model_kegiatan.objects.get(pk = df['sub_kegiatan'][idx]),
+                                role = model_role.objects.get(pk = df['role'][idx])
+                            )
+                        )
+                model.objects.bulk_create(objs)
                 return JsonResponse({"status": "success", "messages": f"<strong></strong> Data berhasil diupload."})
             else:
                 error_messages = list(itertools.chain.from_iterable(form.errors['import_file'].as_data()))

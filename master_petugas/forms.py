@@ -403,14 +403,15 @@ class AlokasiPetugasFormUpload(forms.Form):
     def clean(self):
         def check_db(dataframe, col, data_list, base_errors):
             for idx, row in dataframe[col].items():
-                id = [dt[1] for dt in data_list if dt[0] == row]
-                if len(id) > 0 :
-                    dataframe.loc[idx, col] = id[0]
-                else:
-                    base_errors.append(f'<b>{col} [{row}]</b> tidak tersedia pada database mitra yang aktif. Harap periksa baris <b>{idx+1}</b>')
+                if pd.isna(row) is False:
+                    id = [dt[1] for dt in data_list if dt[0] == row]
+                    if len(id) > 0 :
+                        dataframe.loc[idx, col] = id[0]
+                    else:
+                        base_errors.append(f'<b>{col} [{row}]</b> tidak tersedia pada database. Harap periksa baris <b>{idx+1}</b>')
 
             return dataframe
-
+        
         try:
             data = self.cleaned_data.get('import_file').read()
             df = pd.read_excel(BytesIO(data), skiprows=1, usecols='A:E', dtype='str')
@@ -432,50 +433,73 @@ class AlokasiPetugasFormUpload(forms.Form):
         df.drop(columns=df.columns[0], axis=1, inplace=True)
 
         df_null = df[df.isna().any(axis=1)]
-        for idx, i in df_null.iterrows():
-            null_cols = ', '.join(str(e).capitalize() for e in i[i.isna()].index)
-            base_errors.append(f'Nilai kosong pada <b>Baris {idx+1}</b> ditemukan. Periksa kolom <b>({null_cols})</b>')
+        for idx, rows in df_null.iterrows():
+            null_cols = [e for e in rows[rows.isna()].index]
+            if 'Pegawai (Organik)' in null_cols and 'Petugas (Mitra)' in null_cols:
+                base_errors.append(f'Kolom "Pegawai (Organik)" atau "Petugas (Mitra)" salah satunya tidak boleh kosong. Harap periksa <b>Baris {idx+1}</b>.')
+            else:
+                for col in ['Pegawai (Organik)', 'Petugas (Mitra)']:
+                    if col in null_cols:
+                        null_cols.remove(col)
 
+                if len(null_cols) > 0:
+                    str_cols = ', '.join(null_cols)
+                    base_errors.append(f'Nilai kosong pada <b>Baris {idx+1}</b> ditemukan. Periksa kolom <b>({str_cols})</b>')
+        
         for idx, row in df['Petugas (Mitra)'].items():
-            if len(row.split(']')) == 2:
-                code = row.split(']')[0].replace('[', '')
-                df.loc[idx, 'Petugas (Mitra)'] = code
+            if pd.isna(row) is False:
+                if len(row.split(']')) == 2:
+                    code = row.split(']')[0].replace('[', '')
+                    df.loc[idx, 'Petugas (Mitra)'] = code
 
         for idx, row in df['Pegawai (Organik)'].items():
-            if len(row.split(']')) == 2:
-                code = row.split(']')[0].replace('[', '')
-                df.loc[idx, 'Pegawai (Organik)'] = code
+            if pd.isna(row) is False:
+                if len(row.split(']')) == 2:
+                    code = row.split(']')[0].replace('[', '')
+                    df.loc[idx, 'Pegawai (Organik)'] = code
 
         # Validasi untuk non numerik value
         # Get option choices
         data_pegawai = list(MasterPegawaiModel.objects.values_list('nip', 'id'))
         data_mitra = list(models.MasterPetugas.objects.filter(~Q(status = 1), ~Q(status = 3)).values_list('kode_petugas', 'id'))
-        data_survei = list(SubKegiatanSurvei.objects.values_list('nama', 'id'))
+        data_survei = list(SubKegiatanSurvei.objects.values_list('nama_kegiatan', 'id'))
         data_role = list(models.RoleMitra.objects.values_list('jabatan', 'id'))
 
+        check_db(df, 'Pegawai (Organik)', data_pegawai, base_errors)
         check_db(df, 'Petugas (Mitra)', data_mitra, base_errors)
-        check_db(df, 'Survei/Sensus', data_survei, base_errors)  
-        check_db(df, 'Jabatan Petugas', data_role, base_errors)  
+        check_db(df, 'Kegiatan Survei', data_survei, base_errors)  
+        check_db(df, 'Jabatan Petugas', data_role, base_errors)
         
         # Insert coloumn id to dataframe
         df.insert(loc=0, column='id', value='')
 
         # Convert verbose name as header of table to field_name
         field_names = utils.get_name_fields(models.AlokasiPetugas, exclude_pk = False)
-        field_names.remove('honorPerolehan')
         df.columns = field_names
 
         # Cek duplikasi Data pada master file    
         duplicated_petugas = df[df.duplicated()].petugas
         for idx, row in duplicated_petugas.items():
-            base_errors.append(f'Duplikasi Petugas (Mitra): <b>{row}</b> dengan beban tugas yang sama ditemukan. Harap periksa baris <b>{idx+1}</b>')
+            if pd.isna(row) is False:
+                base_errors.append(f'Duplikasi Petugas (Mitra): <b>{row}</b> dengan beban tugas yang sama ditemukan. Harap periksa baris <b>{idx+1}</b>')
+        
+        duplicated_pegawai = df[df.duplicated()].pegawai
+        for idx, row in duplicated_pegawai.items():
+            if pd.isna(row) is False:
+                base_errors.append(f'Duplikasi pegawai (organik): <b>{row}</b> dengan beban tugas yang sama ditemukan. Harap periksa baris <b>{idx+1}</b>')
 
-        # Cek duplikasi Data pada database   
+        if len(base_errors) > 0:
+            self._errors['import_file'] = self.error_class(base_errors)
+            return self._errors['import_file'] 
+        
+        # Cek duplikasi Data pada database
         for idx, row in df.iterrows():
-            check_exist_data = models.AlokasiPetugas.objects.filter(petugas = row['petugas'], survey = row['survey'])
+            check_exist_data = models.AlokasiPetugas.objects.filter(sub_kegiatan = row['sub_kegiatan'])
+            check_exist_data = check_exist_data.filter(pegawai = row['pegawai']) if pd.isna(row['petugas']) else check_exist_data.filter(petugas = row['petugas'])
             if check_exist_data.exists():
                 exist_data = check_exist_data.first()
-                base_errors.append(f'Data Petugas (Mitra): <b>[{exist_data.petugas.kode_petugas}] {exist_data.petugas.nama_petugas} | {exist_data.survey.nama} *{exist_data.role.jabatan}</b> dengan beban tugas yang sama telah tersedia pada database. Harap periksa baris <b>{idx+1}</b>')
+                duplicate_str = f'Data Petugas (Mitra): <b>[{exist_data.petugas.kode_petugas}] {exist_data.petugas.nama_petugas}' if pd.isna(row['pegawai']) else f'Data Pegawi (Organik): <b>[{exist_data.pegawai.nip}] {exist_data.pegawai.name}'
+                base_errors.append(f'{duplicate_str} | {exist_data.sub_kegiatan.nama_kegiatan} sebagai {exist_data.role.jabatan}</b> dengan beban tugas yang sama telah tersedia pada database. Harap periksa baris <b>{idx+1}</b>')
 
         if len(base_errors) > 0:
             self._errors['import_file'] = self.error_class(base_errors)

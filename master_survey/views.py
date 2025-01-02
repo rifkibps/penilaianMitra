@@ -165,7 +165,6 @@ class MasterSurveyDetailView(LoginRequiredMixin, View):
                 
         return JsonResponse({'status': 'Invalid request'}, status=400) 
 
-
 class MasterSurveyDeleteView(LoginRequiredMixin, View):
 
     def post(self, request):
