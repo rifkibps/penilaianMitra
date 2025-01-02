@@ -220,18 +220,20 @@ class RoleForm(forms.ModelForm):
         }
 
 class MasterPetugasFormUpload(forms.Form):
-    import_file = forms.FileField(allow_empty_file=False,validators=[FileExtensionValidator(allowed_extensions=['xlsx'])], label="Import File Mitra", widget=forms.FileInput(
+    import_file = forms.FileField(allow_empty_file=False, validators=[FileExtensionValidator(allowed_extensions=['xlsx'])], label="Import File Mitra", widget=forms.FileInput(
                     attrs={'class': "form-control"}))
     
     def clean(self):
-
-        data = self.cleaned_data.get('import_file').read()
-        df = pd.read_excel(BytesIO(data), skiprows=1, usecols='A:R', dtype='str')
+        try:
+            data = self.cleaned_data.get('import_file').read()
+            df = pd.read_excel(BytesIO(data), skiprows=1, usecols='A:R', dtype='str')
+            headers = utils.get_verbose_fields(models.MasterPetugas, exclude_pk=True)
+            headers = ['No'] + headers
+        except:
+            self._errors['import_file'] = self.error_class(['Format template tidak sesuai. Silahkan gunakan template yang telah disediakan.'])
+            return self._errors['import_file']
 
         df.dropna(axis=0, how='all', inplace=True)
-
-        headers = utils.get_verbose_fields(models.MasterPetugas, exclude_pk=True)
-        headers = ['No'] + headers
 
         if [str(x).lower() for x in df.columns] != [str(x).lower() for x in headers]:
             self._errors['import_file'] = self.error_class(['Format template tidak sesuai. Silahkan gunakan template yang telah disediakan.'])
@@ -284,11 +286,16 @@ class MasterPetugasFormUpload(forms.Form):
         df['Agama'] = df['Agama'].replace(list(choices_agama.values()), list(choices_agama.keys()))
         
         choices_bank = dict(models.MasterPetugas._meta.get_field('bank').choices)
+        choices_bank_err = False
         for idx, row in df['Jenis Bank'].items():
             if pd.isna(row) is False:
                 if row not in choices_bank.values():
-                    base_errors.append(f'<b>Agama</b> hanya dapat diisi {", ".join(choices_bank.values())}. Harap periksa baris <b>{idx+1}</b>')
-        df['Jenis Bank'] = df['Jenis Bank'].replace(list(choices_bank.values()), list(choices_bank.keys()))
+                    base_errors.append(f'<b>Jenis Bank</b> hanya dapat diisi {", ".join(choices_bank.values())}. Harap periksa baris <b>{idx+1}</b>')
+                    choices_bank_err = True
+                    
+        if choices_bank_err is False:
+            df['Jenis Bank'] = df['Jenis Bank'].replace(list(choices_bank.values()), list(choices_bank.keys()))
+
         df['Tanggal Lahir'] = pd.to_datetime(df['Tanggal Lahir'], format='%d/%m/%Y')
 
         # Insert coloumn id to dataframe
@@ -298,7 +305,7 @@ class MasterPetugasFormUpload(forms.Form):
         field_names = utils.get_name_fields(models.MasterPetugas, exclude_pk = False)
         df.columns = field_names
 
-        # Cek duplikasi Data pada master file    
+        # Cek duplikasi Data pada master file
         duplicated_petugas = df[df.duplicated('kode_petugas')].kode_petugas
         for idx, row in duplicated_petugas.items():
             base_errors.append(f'Duplikasi Kode Petugas: <b>{row}</b> ditemukan. Harap periksa baris <b>{idx+1}</b>')
@@ -315,21 +322,26 @@ class MasterPetugasFormUpload(forms.Form):
         for idx, row in duplicated_email.items():
             base_errors.append(f'Duplikasi Email: <b>{row}</b> ditemukan. Harap periksa baris <b>{idx+1}</b>')
         
-        # Cek duplikasi Data pada Database
-        db_petugas = models.MasterPetugas.objects.values_list('kode_petugas', 'nik', 'npwp', 'email')
+        duplicated_rekening = df[df.duplicated('rekening')].rekening
+        for idx, row in duplicated_rekening.items():
+            base_errors.append(f'Duplikasi Rekening: <b>{row}</b> ditemukan. Harap periksa baris <b>{idx+1}</b>')
 
+        # Cek duplikasi Data pada Database
         dt_petugas_sort = {
             'kode_petugas' : [],
             'nik' : [],
             'npwp' : [],
             'email' : [],
+            'rekening' : [],
         }
 
+        db_petugas = models.MasterPetugas.objects.values_list('kode_petugas', 'nik', 'npwp', 'email', 'rekening')
         for dt in list(db_petugas):
             dt_petugas_sort['kode_petugas'].append(dt[0])
             dt_petugas_sort['nik'].append(dt[1])
             dt_petugas_sort['npwp'].append(dt[2])
             dt_petugas_sort['email'].append(dt[3])
+            dt_petugas_sort['rekening'].append(dt[4])
 
         for idx, row in df['kode_petugas'].items():
             if row in dt_petugas_sort['kode_petugas']:
@@ -347,13 +359,19 @@ class MasterPetugasFormUpload(forms.Form):
             if row in dt_petugas_sort['email']:
                 base_errors.append(f'<b>Email petugas: [{row}]</b> telah tersedia pada database. Harap periksa baris <b>{idx+1}</b>')
       
+        for idx, row in df['rekening'].items():
+            if row in dt_petugas_sort['rekening']:
+                base_errors.append(f'<b>Rekening petugas: [{row}]</b> telah tersedia pada database. Harap periksa baris <b>{idx+1}</b>')
+
         if len(base_errors) > 0:
             self._errors['import_file'] = self.error_class(base_errors)
             return self._errors['import_file'] 
 
-        for column in df.columns:
+        for col in ['npwp', 'bank', 'rekening', 'pemilik_rek']:
+            df[col] = df[col].fillna('')
 
-            if column in ['jk', 'pendidikan', 'agama', 'status', models.MasterPetugas._meta.pk.name]:
+        for column in df.columns:
+            if column in ['jk', 'pendidikan', 'agama', 'status', 'bank', models.MasterPetugas._meta.pk.name]:
                 continue
             
             obj_field = models.MasterPetugas._meta.get_field(column)
@@ -394,9 +412,13 @@ class AlokasiPetugasFormUpload(forms.Form):
 
             return dataframe
 
-        data = self.cleaned_data.get('import_file').read()
-        df = pd.read_excel(BytesIO(data), skiprows=1, usecols='A:D', dtype='str')
-        df.dropna(axis=0, how='all', inplace=True)
+        try:
+            data = self.cleaned_data.get('import_file').read()
+            df = pd.read_excel(BytesIO(data), skiprows=1, usecols='A:D', dtype='str')
+            df.dropna(axis=0, how='all', inplace=True)
+        except:
+            self._errors['import_file'] = self.error_class(['Format template tidak sesuai. Silahkan gunakan template yang telah disediakan.'])
+            return self._errors['import_file']
 
         headers = utils.get_verbose_fields(models.AlokasiPetugas, exclude_pk=True)
         headers.remove('Jumlah Honor Perolehan')

@@ -44,7 +44,7 @@
               <ul class="nav nav-tabs nav-bordered mb-3">
                 <li class="nav-item">
                     <a href="#position-preview" data-bs-toggle="tab" aria-expanded="false" class="nav-link active" onclick="resetForm()">
-                        Preview
+                        Data Pangkat & Golongan
                     </a>
                 </li>
                 <li class="nav-item">
@@ -57,26 +57,16 @@
               <div class="tab-content">
                     <div class="tab-pane show active" id="position-preview">
                         <div class="row mb-3">
-                            <div class="col-sm-6">
+                            <div class="col-auto d-flex justify-content-start">
                                 <button type="button" class="btn btn-primary mb-2 me-1" id="redraw-table"><i class="mdi mdi-refresh"></i> Refresh</button>
+                                <a href="{% url 'master_petugas:mitra-export' %}" class="btn btn-primary mb-2"><i class="mdi mdi-download"></i> Export</a>
                             </div>
-                            <div class="col-sm-6">
-                                <div class="text-sm-end">
-                                    <div class="btn-group">
-                                        <button type="button" class="btn btn-primary dropdown-toggle mb-2 me-1" data-bs-toggle="dropdown"><i class="mdi mdi-account-switch"></i> Akses <span class="caret"></span> </button>
-                                        <div class="dropdown-menu">
-                                            <a class="dropdown-item" href="{% url 'master_petugas:role' %}">Role / Jabatan</a>
-                                        </div>
-                                    </div>
-                                    <a href="{% url 'master_petugas:mitra-export' %}" class="btn btn-primary mb-2"><i class="mdi mdi-download"></i> Export</a>
-                                
-                                </div>
-                            </div><!-- end col-->
                         </div>
                         <div class="table-responsive">
                             <table id="basic-datatable" class="table table-centered w-100 dt-responsive nowrap">
                                 <thead>
                                     <tr>
+                                        <th width="10%">No</th>
                                         <th>Pangkat</th>
                                         <th>Golongan</th>
                                         <th>Aksi</th>
@@ -112,7 +102,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                
                             </div>
 
                             <div class="row mt-4 mb-2">
@@ -151,7 +140,6 @@
     var table = $("#basic-datatable").DataTable({
         processing: true,
         serverSide: true,
-        bInfo : false,
         ajax: {
             "url": "{% url 'master_pegawai:pangkat-datatable-json' %}",
             "headers": {
@@ -162,13 +150,23 @@
         },
         columns :[
             {"data": 'golongan'},
+            {"data": 'golongan'},
             {"data": 'pangkat'},
             {"data" : 'aksi'},
         ],
         lengthMenu: [5, 10, 25, 50, 100],
-        columnDefs: [ {
-            'targets': [2], /* column index */
+        columnDefs: [{
+            'targets': [3], /* column index */
             'orderable': false, /* true or false */
+            'className' : 'text-center'
+        },
+        {
+            "targets": 0,
+            "data": null,
+            "defaultContent": "",
+            "render": function (data, type, row, meta) {
+                return meta.row + 1;
+            }
         }],
         keys: !0,
         language: {
@@ -177,7 +175,7 @@
             next: "<i class='mdi mdi-chevron-right'>",
             },
             lengthMenu : "Menampilkan _MENU_",
-            search: "Cari Jabatan",
+            search: "Cari Pangkat/Gol.",
         },
         drawCallback: function () {
             $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
@@ -287,7 +285,7 @@
 
     function resetForm(){
         $('#formMasterPangkat')[0].reset();
-        $('#formMasterPangkat').attr('action', "{% url 'master_petugas:index' %}")
+        $('#formMasterPangkat').attr('action', "{% url 'master_pegawai:pangkat' %}")
         $('#submitFormPegawai').html('Kirim Data')
         clearFormValidation('#formMasterPangkat')
     }

@@ -1329,13 +1329,7 @@ class KegiatanPenilaianJsonResponseClassView(LoginRequiredMixin, View):
         data_pegawai= model_pegawai.MasterPegawaiModel.objects.filter(user=request.user.id)
 
         if data_pegawai.exists():
-            data = data.exclude(Q(kegiatan_survey=None)|Q(tgl_penilaian=None)|Q(status=None)|Q(role_permitted=None)|Q(role_penilai_permitted=None))
-            records_total = data.count()
-            records_filtered = records_total
-            
             if search:
-                data = models.KegiatanPenilaianModel.objects.filter(status='1')
-
                 data = data.filter(
                     Q(kegiatan_survey__nama_kegiatan__icontains=search)|
                     Q(kegiatan_survey__survey__nama__icontains=search)|
@@ -1343,10 +1337,10 @@ class KegiatanPenilaianJsonResponseClassView(LoginRequiredMixin, View):
                     Q(status__icontains=search)|
                     Q(role_permitted__jabatan__icontains=search)|
                     Q(role_penilai_permitted__jabatan__icontains=search)
-                ).exclude(Q(kegiatan_survey=None)|Q(tgl_penilaian=None)|Q(status=None)|Q(role_permitted=None)|Q(role_penilai_permitted=None))
-
-                records_total = data.count()
-                records_filtered = records_total
+                )
+            data = data.exclude(Q(kegiatan_survey=None)|Q(tgl_penilaian=None)|Q(status=None)|Q(role_permitted=None)|Q(role_penilai_permitted=None))
+            records_total = data.count()
+            records_filtered = records_total
             
             data = data.order_by(order_col_name)
             paginator = Paginator(data, length)

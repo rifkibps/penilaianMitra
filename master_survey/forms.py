@@ -116,7 +116,7 @@ class SurveiFormUpload(forms.Form):
             null_cols = ', '.join(str(e).capitalize() for e in i[i.isna()].index)
             base_errors.append(f'Nilai kosong pada <b>Baris {idx+1}</b> ditemukan. Periksa kolom <b>({null_cols})</b>')
 
-        choices_status = dict(models.SurveyModel._meta.get_field('status').choices)
+        choices_status = dict(models.SurveyModel._meta.get_field('state').choices)
         for idx, row in df['Status Survei'].items():
             if row not in choices_status.values():
                 base_errors.append(f'<b>Status Survei</b> hanya dapat diisi {", ".join(choices_status.values())}. Harap periksa baris <b>{idx+1}</b>')

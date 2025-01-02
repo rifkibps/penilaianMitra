@@ -44,7 +44,7 @@
               <ul class="nav nav-tabs nav-bordered mb-3">
                 <li class="nav-item">
                     <a href="#pegawai-preview" data-bs-toggle="tab" aria-expanded="false" class="nav-link active" onclick="resetForm()">
-                        Preview
+                        Data Pegawai
                     </a>
                 </li>
                 <li class="nav-item">
@@ -66,7 +66,8 @@
                                     <div class="btn-group">
                                         <button type="button" class="btn btn-primary dropdown-toggle mb-2 me-1" data-bs-toggle="dropdown"><i class="mdi mdi-account-switch"></i> Akses <span class="caret"></span> </button>
                                         <div class="dropdown-menu">
-                                            <a class="dropdown-item" href="{% url 'master_petugas:role' %}">Role / Jabatan</a>
+                                            <a class="dropdown-item" href="{% url 'master_pegawai:jabatan' %}">Jabatan</a>
+                                            <a class="dropdown-item" href="{% url 'master_pegawai:pangkat' %}">Pangkat/Golongan</a>
                                         </div>
                                     </div>
                                     <a href="{% url 'master_petugas:mitra-export' %}" class="btn btn-primary mb-2"><i class="mdi mdi-download"></i> Export</a>
@@ -78,12 +79,12 @@
                             <table id="basic-datatable" class="table table-centered w-100 dt-responsive nowrap">
                                 <thead>
                                     <tr>
+                                        <th>No</th>
                                         <th>NIP</th>
                                         <th>NIP BPS</th>
                                         <th>Nama</th>
                                         <th>Pangkat/Golongan</th>
                                         <th>Jabatan</th>
-                                        <th>Pendidikan</th>
                                         <th>User Account</th>
                                         <th></th>
                                     </tr>
@@ -174,6 +175,46 @@
 </div>
 <!-- end row-->
 
+<div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasFilter">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasFilterLabel">Filter Pegawai</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <h5>Jabatan/Pangkat</h5>
+        <div class="row mb-1 mt-3">
+            <div class="col-sm-3">
+                Jabatan:
+            </div>
+            <div class="col-8">
+                <div class="d-flex align-items-center">
+                     <select class="form-select font-13" id="jabatan-filter">
+                        <option value="">-- Pilih Jabatan --</option>
+                       {% for dt in jabatan %}
+                            <option value="{{ dt.id }}">{{forloop.counter}}. {{ dt.jabatan }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-1">
+            <div class="col-sm-3">
+                Pangkat/Gol.
+            </div>
+            <div class="col-8">
+                <div class="d-flex align-items-center">
+                     <select class="form-select font-13" id="pangkat-filter">
+                        <option value="">-- Pilih Pangkat/Gol --</option>
+                       {% for dt in pangkat %}
+                            <option value="{{ dt.id }}">{{forloop.counter}}. {{ dt.pangkat }}/{{ dt.golongan }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+        <button class="btn btn-primary mt-3" id="reset-filter">Clear Filter</button>
+    </div>
+</div>
 
 {% endblock table-content %}
 
@@ -181,9 +222,6 @@
 
 <script>
     'use strict'
-
-    let region_code = ''
-
     var swalWithBootstrapButtons = Swal.mixin({
         customClass: {
           confirmButton: 'btn btn-primary'},
@@ -193,7 +231,6 @@
     var table = $("#basic-datatable").DataTable({
         processing: true,
         serverSide: true,
-        bInfo : false,
         ajax: {
             "url": "{% url 'master_pegawai:datatable-json' %}",
             "headers": {
@@ -201,14 +238,20 @@
                 "X-CSRFToken": '{{csrf_token}}',
             },
             "type": "POST",
+            "data": function (d){
+                return $.extend({}, d, {
+                    "pangkat_filter": $('#pangkat-filter').val(),
+                    "jabatan_filter": $('#jabatan-filter').val()
+                })
+            },
         },
         columns :[
+            {"data": 'nip'},
             {"data": 'nip'},
             {"data": 'nip_bps'},
             {"data": 'name'},
             {"data" : 'pangkat__golongan'},
             {"data" : 'jabatan__jabatan'},
-            {"data" : 'pendidikan'},
             {"data" : 'user'},
             {"data" : 'aksi'},
         ],
@@ -216,7 +259,16 @@
         columnDefs: [ {
             'targets': [6], /* column index */
             'orderable': false, /* true or false */
-        }],
+        },
+        {
+            "targets": 0,
+            "data": null,
+            "defaultContent": "",
+            "render": function (data, type, row, meta) {
+                return meta.row + 1;
+            }
+        }
+        ],
         keys: !0,
         language: {
             paginate: {
@@ -233,6 +285,10 @@
 
     openTabInput()
     table.draw()
+
+    $('#jabatan-filter, #pangkat-filter').bind("change", () => {
+        table.draw()
+    })
 
     function editPegawai(e){
         $('#formMasterPegawai')[0].reset();
@@ -334,7 +390,7 @@
 
     function resetForm(){
         $('#formMasterPegawai')[0].reset();
-        $('#formMasterPegawai').attr('action', "{% url 'master_petugas:index' %}")
+        $('#formMasterPegawai').attr('action', "{% url 'master_pegawai:index' %}")
         $('#submitFormPegawai').html('Kirim Data')
         clearFormValidation('#formMasterPegawai')
     }
@@ -344,8 +400,7 @@
     })
 
     $('#reset-filter').on('click', () => {
-        region_code = ''
-        $('.region-adm, #jk-select-filter, #agama-select-filter, #pendidikan-select-filter, #bank-select-filter, #status-select-filter').prop('selectedIndex',0);
+        $('#jabatan-filter, #pangkat-filter').prop('selectedIndex',0);
         table.draw();
     })
 

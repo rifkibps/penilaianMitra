@@ -4,12 +4,12 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
-from django.shortcuts import render
 from django.views import View
 from django.core import serializers
 from django.http import JsonResponse, HttpResponse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse_lazy, reverse
 
 from .resources import MasterSurveiResource
 from . import models
@@ -22,7 +22,7 @@ from openpyxl.styles import Alignment
 from openpyxl.styles import Font, PatternFill
 from master_petugas import utils
 from master_petugas.models import AlokasiPetugas
-from master_penilaian.models import MasterNilaiPetugas, KegiatanPenilaianModel
+from master_penilaian.models import MasterNilaiPetugas, KegiatanPenilaianModel, MasterPenilaianPetugas
 
 
 from munapps.helpers import currency_formatting as cf
@@ -54,20 +54,15 @@ class SurveyJsonResponseClassView(LoginRequiredMixin, View):
             order_col_name =  str('-' + order_col_name)
 
         data_survey = models.SurveyModel.objects
-        data_survey = data_survey.exclude(Q(nama=None)|Q(deskripsi=None)|Q(tgl_mulai=None)|Q(tgl_selesai=None))
-
-        records_total = data_survey.count()
-        records_filtered = records_total
         
         if search:
-            data_survey = models.SurveyModel.objects
-
             data_survey = data_survey.filter(
                 Q(nama__icontains=search)|Q(deskripsi__icontains=search)|Q(tgl_mulai__icontains=search)|Q(tgl_selesai__icontains=search)|Q(salary=search)
-            ).exclude(Q(nama=None)|Q(deskripsi=None)|Q(tgl_mulai=None)|Q(tgl_selesai=None))
-
-            records_total = data_survey.count()
-            records_filtered = records_total
+            )
+        
+        data_survey = data_survey.exclude(Q(nama=None)|Q(deskripsi=None)|Q(tgl_mulai=None)|Q(tgl_selesai=None))
+        records_total = data_survey.count()
+        records_filtered = records_total
         
         data_survey = data_survey.order_by(order_col_name)
         # Conf Paginator
@@ -86,9 +81,9 @@ class SurveyJsonResponseClassView(LoginRequiredMixin, View):
         for obj in object_list:
 
             if obj.state == '0':
-                bg_class = 'bg-warning'
+                bg_class = 'bg-danger'
             elif obj.state == '1':
-                bg_class = 'bg-primary'
+                bg_class = 'bg-info'
             else:
                 bg_class = 'bg-success'
 
@@ -108,37 +103,29 @@ class SurveyJsonResponseClassView(LoginRequiredMixin, View):
             'data': data,
         }
 
-
 class MasterSurveiClassView(LoginRequiredMixin, View):
+
+    def get(self, request):
+        form = forms.SurveiForm()
+        context = {
+            'title' : 'Master Survei',
+            'form': form,
+            'form_upload': forms.SurveiFormUpload(),
+        }
+        return render(request, 'master_survey/index.html', context)
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         if is_ajax:
             form = forms.SurveiForm(request.POST)
-
             if form.is_valid():
                 instance = form.save()
                 ser_instance = serializers.serialize('json', [ instance, ])
-                
-                # send to client side.
                 return JsonResponse({"instance": ser_instance, 'message': 'Data berhasil ditambahkan'}, status=200)
             else:
                 return JsonResponse({"error": form.errors}, status=400)
         return JsonResponse({"error": ""}, status=400)
-
-
-    def get(self, request):
-
-        form = forms.SurveiForm()
-        context = {
-            'title' : 'Master Survei',
-            'form': form,
-            'form_upload': forms.SurveiFormUpload()
-        }
-        
-        return render(request, 'master_survey/index.html', context)
-
-
+    
 class MasterSurveyUpdateView(LoginRequiredMixin, View):
 
     def post(self, request):
@@ -185,23 +172,18 @@ class MasterSurveyDeleteView(LoginRequiredMixin, View):
 
         if is_ajax:
             if request.method == 'POST':
+                pk = request.POST.get('id')
+                data_petugas = models.SurveyModel.objects.filter(pk = pk)
                 
-                id = request.POST.get('id')
-
-                data_petugas = models.SurveyModel.objects.filter(pk = id)
                 if data_petugas.exists():
-
-                    check_nilai_mitra = MasterNilaiPetugas.objects.filter(petugas = id)
-                    if check_nilai_mitra.exists():
-                        return JsonResponse({'status' : 'failed', 'message': 'Data survei telah digunakan pada master data penilaian.'}, status=200)
-        
-                    check_kegiatan_penilaian = KegiatanPenilaianModel.objects.filter(survey = id)
-                    if check_kegiatan_penilaian.exists():
-                        return JsonResponse({'status' : 'failed', 'message': 'Data survei telah digunakan pada master data penilaian.'}, status=200)
-        
-                    check_alokasi_mitra = AlokasiPetugas.objects.filter(survey = id)
+                    check_alokasi_mitra = AlokasiPetugas.objects.filter(sub_kegiatan__survey = pk)
                     if check_alokasi_mitra.exists():
                         return JsonResponse({'status' : 'failed', 'message': 'Data survei telah digunakan pada alokasi petugas.'}, status=200)
+                    
+                    check_nilai_mitra = MasterPenilaianPetugas.objects.filter(petugas = pk)
+                    check_kegiatan_penilaian = KegiatanPenilaianModel.objects.filter(kegiatan_survey__survey = pk)
+                    if check_nilai_mitra.exists() or check_kegiatan_penilaian.exists():
+                        return JsonResponse({'status' : 'failed', 'message': 'Data survei telah digunakan pada master data penilaian.'}, status=200)
                 
                     data_petugas.delete()
                     return JsonResponse({'status' : 'success', 'message': 'Data berhasil dihapus'}, status=200)
@@ -212,11 +194,10 @@ class MasterSurveyDeleteView(LoginRequiredMixin, View):
 
 
 class MasterSurveyExportView(LoginRequiredMixin, View):
+
     def get(self, request):
-    
         resource = MasterSurveiResource()
         dataset = resource.export()
-    
         response = HttpResponse(dataset.xls, content_type='application/vnd.ms-excel')
         response['Content-Disposition'] = 'attachment; filename="Master Survei.xls"'
         return response 
@@ -225,13 +206,12 @@ class MasterSurveyExportView(LoginRequiredMixin, View):
 class MasterSurveyTemplateClassView(LoginRequiredMixin, View):
 
     def get(self, request,  *args, **kwargs): 
-
-        def_rows = self.kwargs['rows']
-
+        if request.GET.get('rows') is None:
+            return redirect(reverse('master_survei:index'))
+        
+        def_rows = int(request.GET.get('rows'))
         wb = Workbook()
-
         ws = wb.active
-
         # Ini untuk header columns
         ws.title = 'Upload Data Survei'
 
@@ -280,7 +260,7 @@ class MasterSurveyTemplateClassView(LoginRequiredMixin, View):
         ws1['A1'].alignment = Alignment(horizontal='center', vertical='center')
         ws1['A1'].font = Font(name='Cambria',bold=True, size=12)
 
-        state_choices = list(models.SurveyModel._meta.get_field('status').choices)
+        state_choices = list(models.SurveyModel._meta.get_field('state').choices)
 
         utils.generate_meta_templates(ws1, 'A', 2, 'Status Survei', state_choices)
         utils.generate_field_Validation(ws, ws1, 'A', 3, len(state_choices), 'F', 3, def_rows=def_rows)
@@ -301,30 +281,25 @@ class MasterSurveyUploadClassView(LoginRequiredMixin, View):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
         if is_ajax:
-           
             form = forms.SurveiFormUpload(request.POST, request.FILES)
             model = models.SurveyModel
             
             if form.is_valid():
-                
                 df = form.cleaned_data
                 objs = []
                 for idx in range(len(df['id'])):
-
                     objs.append(
                         model(
                             nama = df['nama'][idx],
                             deskripsi= df['deskripsi'][idx],
                             tgl_mulai= df['tgl_mulai'][idx],
                             tgl_selesai= df['tgl_selesai'][idx],
-                            status= df['status'][idx],
+                            state = df['state'][idx],
                         )
                     )
-
                 model.objects.bulk_create(objs)
                 return JsonResponse({"status": "success", "messages": f"<strong>{len(df['id'])}</strong> Data berhasil diupload."})
             else:
-                
                 error_messages = list(itertools.chain.from_iterable(form.errors['import_file'].as_data()))
                 return JsonResponse({"status": "error", "messages": error_messages})
 
@@ -344,19 +319,15 @@ class MasterKegiatanSurveiClassView(LoginRequiredMixin, View):
 class MasterKegiatanSurveiJsonClassView(LoginRequiredMixin, View):
 
     def post(self, request):
-        
         data_wilayah = self._datatables(request)
         return HttpResponse(json.dumps(data_wilayah, cls=DjangoJSONEncoder), content_type='application/json')
 		
     def _datatables(self, request):
         datatables = request.POST
-        
-        # Get Draw
         draw = int(datatables.get('draw'))
         start = int(datatables.get('start'))
         length = int(datatables.get('length'))
         page_number = int(start / length + 1)
-
         search = datatables.get('search[value]')
 
         order_idx = int(datatables.get('order[0][column]')) # Default 1st index for
@@ -368,23 +339,16 @@ class MasterKegiatanSurveiJsonClassView(LoginRequiredMixin, View):
             order_col_name =  str('-' + order_col_name)
 
         data_survey = models.SubKegiatanSurvei.objects
-        data_survey = data_survey.exclude(Q(nama_kegiatan=None)|Q(survey=None)|Q(status=None))
+        if search:
+            data_survey = data_survey.filter(
+                Q(nama_kegiatan__icontains=search)|Q(survey__nama__icontains=search)|Q(survey__tgl_mulai__icontains=search)
+            )
 
+        data_survey = data_survey.exclude(Q(nama_kegiatan=None)|Q(survey=None)|Q(status=None))
         records_total = data_survey.count()
         records_filtered = records_total
         
-        if search:
-            data_survey = models.SubKegiatanSurvei.objects
-
-            data_survey = data_survey.filter(
-                Q(nama_kegiatan__icontains=search)|Q(survey__nama__icontains=search)|Q(survey__tgl_mulai__icontains=search)
-            ).exclude(Q(nama_kegiatan=None)|Q(survey=None)|Q(status=None))
-
-            records_total = data_survey.count()
-            records_filtered = records_total
-        
         data_survey = data_survey.order_by(order_col_name)
-        # Conf Paginator
         paginator = Paginator(data_survey, length)
 
         try:

@@ -24,9 +24,7 @@
 <div class="row">
     <div class="col-12">
         <div class="alert alert-danger d-none" id="msgs-upload" role="alert">   
-           
             <div id="messages-content">
-             
             </div>
         </div>
     </div>
@@ -45,7 +43,7 @@
                 <ul class="nav nav-tabs nav-bordered mb-3">
                       <li class="nav-item">
                           <a href="#rolepetugas-preview" data-bs-toggle="tab" aria-expanded="false" class="nav-link active">
-                              Preview
+                              Data Jabatan Petugas
                           </a>
                       </li>
                       <li class="nav-item">
@@ -58,9 +56,9 @@
                       <div class="tab-pane show active" id="rolepetugas-preview">
                             <div class="row mb-2">
                                 <div class="col-md">
-                                    <div class="text-sm-start">
-                                        <button type="button" class="btn btn-success mb-2 me-1" id="redraw-table"><i class="mdi mdi-refresh"></i> Refresh</button>
-                                        <a href="{% url 'master_petugas:export-role' %}" class="btn btn-light mb-2">Export</a>
+                                    <div class="d-flex justify-content-start">
+                                        <button type="button" class="btn btn-primary mb-2 me-1" id="redraw-table"><i class="mdi mdi-refresh"></i> Refresh</button>
+                                        <a href="{% url 'master_petugas:export-role' %}" class="btn btn-primary mb-2"><i class="mdi mdi-download"></i> Export</a>
                                     </div>
                                 </div><!-- end col-->
                             </div>
@@ -69,15 +67,14 @@
                                 <table id="basic-datatable" class="table table-centered table-hover w-100 dt-responsive nowrap">
                                     <thead>
                                         <tr>
+                                            <th width="10%">No</th>
                                             <th>Jabatan/Role</th>
                                             <th class="text-center">Aksi</th>
                                         </tr>
                                     </thead>
-                                
                                     <tbody>
-    
                                     </tbody>
-                                </table>                                            
+                                </table>
                             </div>
                       </div> <!-- end preview-->
                 
@@ -95,7 +92,6 @@
                                         <div class="invalid-feedback" id="msg-{{form.jabatan.id_for_label}}">
                                         </div>
                                     </div>
-                            
                                 </div>
                             </div>
                             <br>
@@ -116,29 +112,9 @@
   </div>
   <!-- end row-->
   
-
-
-<!-- Success Alert Modal -->
-<div id="success-alert-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-sm">
-        <div class="modal-content modal-filled bg-success">
-            <div class="modal-body p-4">
-                <div class="text-center">
-                    <i class="dripicons-checkmark h1"></i>
-                    <h4 class="mt-2">Well Done!</h4>
-                    <p class="mt-3 message-feedback"></p>
-                    <button type="button" class="btn btn-light my-2" data-bs-dismiss="modal">Continue</button>
-                </div>
-            </div>
-        </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
-
-
 {% endblock table-content %}
 
 {% block tables-script-extend %}
-
 <script>
     var swalWithBootstrapButtons = Swal.mixin({
         customClass: {
@@ -157,23 +133,35 @@
             },
             "type": "POST"
         },
-        bInfo : false,
         lengthMenu: [5, 25, 50, 100,'All'],
         columns :[
             {"data": 'jabatan'},
+            {"data": 'jabatan'},
             {"data" : 'aksi'},
         ], 
-        columnDefs: [ {
-            'targets': [1], /* column index */
+        columnDefs: [
+            {
+            'targets': [2], /* column index */
             'orderable': false, /* true or false */
             'className': "text-center"
-        }],
+            },
+            {
+                "targets": 0,
+                "data": null,
+                "defaultContent": "",
+                "render": function (data, type, row, meta) {
+                    return meta.row + 1;
+                }
+            }
+        ],
         keys: !0,
         language: {
             paginate: {
-            previous: "<i class='mdi mdi-chevron-left'>",
-            next: "<i class='mdi mdi-chevron-right'>",
+                previous: "<i class='mdi mdi-chevron-left'>",
+                next: "<i class='mdi mdi-chevron-right'>",
             },
+            lengthMenu : "Menampilkan _MENU_",
+            search: "Cari Role",
         },
         drawCallback: function () {
             $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
@@ -185,15 +173,12 @@
         $('.was-validated').removeClass('was-validated')
         $('#submitformRolePetugas').html('Kirim Data')
         $('#formRolePetugas').attr('action', "{% url 'master_petugas:role' %}")
-        
     }
 
     function editRole(e){
-      
         $('#formRolePetugas').attr('action', "{% url 'master_petugas:update-role' %}")
         $('#submitformRolePetugas').html('Update Data')
         
-      
         $.ajax({
             url: '{% url 'master_petugas:detail-role' %}',
             type: "POST",

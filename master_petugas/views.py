@@ -94,9 +94,6 @@ class MasterPetugasJsonResponseClassView(LoginRequiredMixin, View):
 
         records_total = data.count()
         records_filtered = records_total
-        
-        data = data.all()
-        
 
         data = data.order_by(order_col_name)
         # Conf Paginator
@@ -369,7 +366,6 @@ class MasterPetugasUploadClassView(LoginRequiredMixin, View):
 
             if form.is_valid():
                 df = form.cleaned_data
-                pprint(df)
                 objs = []
                 for idx in range(len(df['id'])):
                     objs.append(
@@ -388,6 +384,9 @@ class MasterPetugasUploadClassView(LoginRequiredMixin, View):
                             no_telp= df['no_telp'][idx],
                             alamat= df['alamat'][idx],
                             status = df['status'][idx],
+                            bank = df['bank'][idx],
+                            rekening = df['rekening'][idx],
+                            pemilik_rek = df['pemilik_rek'][idx],
                         )
                     )
 
@@ -777,10 +776,6 @@ class MasterAlokasiJsonResponseClassView(LoginRequiredMixin, View):
 
         if datatables.get('jabatan_filter'):
             data = data.filter(role = datatables.get('jabatan_filter'))
-
-        data = data.all().exclude((Q(petugas=None) & Q(pegawai=None))|Q(role=None)|Q(sub_kegiatan=None))
-        records_total = data.count()
-        records_filtered = records_total
         
         if search:
             data = models.AlokasiPetugas.objects.filter(
@@ -788,10 +783,11 @@ class MasterAlokasiJsonResponseClassView(LoginRequiredMixin, View):
                 Q(petugas__nama_petugas__icontains=search)|
                 Q(sub_kegiatan__survey__nama__icontains=search)|
                 Q(role__jabatan__icontains=search)
-            ).exclude(Q(petugas=None)|Q(role=None)|Q(sub_kegiatan=None))
+            )
 
-            records_total = data.count()
-            records_filtered = records_total
+        data = data.exclude((Q(petugas=None) & Q(pegawai=None))|Q(role=None)|Q(sub_kegiatan=None))
+        records_total = data.count()
+        records_filtered = records_total
         
         data = data.order_by(order_col_name)
         # Conf Paginator
@@ -972,7 +968,7 @@ class RolePetugasClassView(LoginRequiredMixin, View):
         context = {
             'title' : 'Role Petugas',
             'form' : forms.RoleForm()
-            }
+        }
 
         return render(request, 'master_petugas/role.html', context)
 
@@ -1017,20 +1013,16 @@ class MasterRoleJsonResponseClassView(LoginRequiredMixin, View):
         if (order_dir == "desc"):
             order_col_name =  str('-' + order_col_name)
 
-        data = models.RoleMitra.objects.all().exclude(Q(jabatan=None))
-        records_total = data.count()
-        records_filtered = records_total
-        
+        data = models.RoleMitra.objects
         if search:
             data = models.RoleMitra.objects.filter(
                 Q(jabatan__icontains=search)
-            ).exclude(Q(jabatan=None))
+            )
 
-            records_total = data.count()
-            records_filtered = records_total
+        records_total = data.count()
+        records_filtered = records_total
         
         data = data.order_by(order_col_name)
-        # Conf Paginator
         paginator = Paginator(data, length)
 
         try:
@@ -1043,7 +1035,7 @@ class MasterRoleJsonResponseClassView(LoginRequiredMixin, View):
         data = [
             {
                 'jabatan': obj.jabatan,
-                'aksi':f'<a href="javascript:void(0);" onclick="editRole({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline font-15"></i></a> <a href="javascript:void(0);" onclick="hapusJabatan({obj.id});" class="action-icon"> <i class="mdi mdi-delete font-15"></i></a>',
+                'aksi':f'<a href="javascript:void(0);" onclick="editRole({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline font-15"></i></a> <a href="javascript:void(0);" onclick="deleteRole({obj.id});" class="action-icon"> <i class="mdi mdi-delete font-15"></i></a>',
             } for obj in object_list
         ]
         
@@ -1056,23 +1048,19 @@ class MasterRoleJsonResponseClassView(LoginRequiredMixin, View):
 
 
 class RolePetugasDeleteView(LoginRequiredMixin, View):
-
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-
         if is_ajax:
             if request.method == 'POST':
-                
                 id = request.POST.get('id')
-
+                
                 data_petugas = models.RoleMitra.objects.filter(pk = id)
                 if data_petugas.exists():
-                    
                     check_kegiatan_penilaian = KegiatanPenilaianModel.objects.filter(role_permitted = id)
                     if check_kegiatan_penilaian.exists():
                         return JsonResponse({'status' : 'failed', 'message': 'Data role petugas telah digunakan pada master data penilaian'}, status=200)
                 
-                    check_nilai_mitra = MasterNilaiPetugas.objects.filter(petugas__role = id)
+                    check_nilai_mitra = MasterPenilaianPetugas.objects.filter(Q(petugas__role = id) | Q(penilai__role = id))
                     if check_nilai_mitra.exists():
                         return JsonResponse({'status' : 'failed', 'message': 'Data role petugas telah digunakan pada master data penilaian'}, status=200)
 
@@ -1093,14 +1081,6 @@ class MasterRoleDetailView(LoginRequiredMixin, View):
                 role = models.RoleMitra.objects.filter(pk=id)
 
                 if role.exists():
-                    check_kegiatan_penilaian = KegiatanPenilaianModel.objects.filter(role_permitted = id)
-                    if check_kegiatan_penilaian.exists():
-                        return JsonResponse({'status' : 'failed', 'message': 'Data role petugas telah digunakan pada master data penilaian'}, status=200)
-                    
-                    check_nilai_mitra = MasterNilaiPetugas.objects.filter(petugas__role = id)
-                    if check_nilai_mitra.exists():
-                        return JsonResponse({'status' : 'failed', 'message': 'Data role petugas telah digunakan pada master data penilaian'}, status=200)
-
                     return JsonResponse({'status' : 'success', 'instance': list(role.values())[0]}, status=200)
                 else:
                     return JsonResponse({'status': 'failed', 'message': 'Data tidak tersedia'}, status=200)

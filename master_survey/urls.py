@@ -11,7 +11,7 @@ urlpatterns = [
     path('survei/update', views.MasterSurveyUpdateView.as_view(), name='update-survey'),
     path('survei/export', views.MasterSurveyExportView.as_view(), name='export-survey'),
     path('survei/upload', views.MasterSurveyUploadClassView.as_view(), name='upload-survey'),
-    path('survei/template/<int:rows>', views.MasterSurveyTemplateClassView.as_view(), name='template-survey'),
+    path('survei/template', views.MasterSurveyTemplateClassView.as_view(), name='template-survey'),
 
     path('kegiatan-survei', views.MasterKegiatanSurveiClassView.as_view(), name='kegiatan-survey'),
     path('kegiatan-survei/json-response', views.MasterKegiatanSurveiJsonClassView.as_view(), name='kegiatan-survey-json'),

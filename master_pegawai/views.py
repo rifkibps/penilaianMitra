@@ -4,17 +4,14 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.views import View
 from django.core import serializers
 from django.http import JsonResponse, HttpResponse
-from django.shortcuts import get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-from . import models
-from . import forms
-
-import itertools
+from . import models, forms
+from master_petugas.models import AlokasiPetugas
 import numpy as np
 from openpyxl import Workbook
 from django.contrib.auth.models import User
@@ -49,14 +46,12 @@ class MasterPegawaiJsonResponseClassView(LoginRequiredMixin, View):
 
         data = models.MasterPegawaiModel.objects
 
-        data = data.all().exclude(Q(nip=None)|Q(nip_bps=None)|Q(jabatan=None)|Q(pangkat=None)|Q(pendidikan=None))
-        records_total = data.count()
-        records_filtered = records_total
+        if datatables.get('jabatan_filter'):
+            data = data.filter(jabatan = datatables.get('jabatan_filter'))
+        if datatables.get('pangkat_filter'):
+            data = data.filter(pangkat = datatables.get('pangkat_filter'))
         
         if search:
-
-            data = models.MasterPegawaiModel.objects
-
             data = data.filter(
                 Q(user__first_name__icontains=search)|
                 Q(user__last_name__icontains=search)|
@@ -66,13 +61,13 @@ class MasterPegawaiJsonResponseClassView(LoginRequiredMixin, View):
                 Q(pangkat__golongan__icontains=search)|
                 Q(pangkat__pangkat__icontains=search)|
                 Q(pendidikan__icontains=search)
-            ).exclude(Q(nip=None)|Q(nip_bps=None)|Q(jabatan=None)|Q(pangkat=None)|Q(pendidikan=None))
+            )
 
-            records_total = data.count()
-            records_filtered = records_total
+        data = data.exclude(Q(nip=None)|Q(nip_bps=None)|Q(jabatan=None)|Q(pangkat=None)|Q(pendidikan=None))
+        records_total = data.count()
+        records_filtered = records_total
         
         data = data.order_by(order_col_name)
-        # Conf Paginator
         paginator = Paginator(data, length)
 
         try:
@@ -109,6 +104,8 @@ class MasterPegawaiClassView(LoginRequiredMixin, View):
     def get(self, request):
         context = {
             'title' : 'Master Pegawai',
+            'jabatan' : models.JabatanPegawaiModel.objects.values(),
+            'pangkat' : models.PangkatPegawaiModel.objects.values(),
             'form' : forms.MasterPegawaiForm
         }
         return render(request, 'master_pegawai/index.html', context)
@@ -173,7 +170,11 @@ class MasterPegawaiDeleteClassView(LoginRequiredMixin, View):
             if request.method == 'POST':
                 data = models.MasterPegawaiModel.objects.filter(pk = request.POST.get('id'))
                 if data.exists():
-                    data.delete()
+                    safe_check = AlokasiPetugas.objects.filter(pegawai = data.first().pk)
+                    if safe_check.exists():
+                        return JsonResponse({'status': 'failed', 'message': 'Data pegawai saat ini telah terdaftar pada alokasi kegiatan'}, status=200)
+
+                    # data.delete()
                     return JsonResponse({'status' : 'success', 'message': 'Data berhasil dihapus'}, status=200)
                 else:
                     return JsonResponse({'status': 'failed', 'message': 'Data tidak tersedia'}, status=200)
@@ -195,13 +196,12 @@ class PositionsClassView(LoginRequiredMixin, View):
         if is_ajax:
             form = forms.PosisitionForm(request.POST)
             if form.is_valid():
-                instance = form.save()
+                form.save()
                 return JsonResponse({'message': 'Data berhasil ditambahkan'}, status=200)
             else:
                 pprint(form.errors)
                 return JsonResponse({"error": form.errors}, status=400)
         return JsonResponse({"error": ""}, status=400)
-
 
 class MasterPositionJsonResponseClassView(LoginRequiredMixin, View):
 
@@ -229,21 +229,14 @@ class MasterPositionJsonResponseClassView(LoginRequiredMixin, View):
             order_col_name =  str('-' + order_col_name)
 
         data = models.JabatanPegawaiModel.objects
-
-        data = data.all().exclude(Q(jabatan=None))
-        records_total = data.count()
-        records_filtered = records_total
-        
         if search:
-
-            data = models.MasterPegawaiModel.objects
-
             data = data.filter(
                 Q(jabatan__icontains=search)
-            ).exclude(Q(jabatan=None))
+            )
 
-            records_total = data.count()
-            records_filtered = records_total
+        data = data.exclude(Q(jabatan=None))
+        records_total = data.count()
+        records_filtered = records_total
         
         data = data.order_by(order_col_name)
         # Conf Paginator
@@ -263,7 +256,6 @@ class MasterPositionJsonResponseClassView(LoginRequiredMixin, View):
                         'jabatan': f'{obj.jabatan}',
                         'aksi': f'<a href="javascript:void(0);" onclick="editJabatan({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline font-15"></i></a> <a href="javascript:void(0);" onclick="hapusJabatan({obj.id});" class="action-icon"> <i class="mdi mdi-delete font-15"></i></a>'
                 })
-            
         return {
             'draw': draw,
             'recordsTotal': records_total,
@@ -293,11 +285,14 @@ class MasterPositionDeleteClassView(LoginRequiredMixin, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-
         if is_ajax:
             if request.method == 'POST':
                 data = models.JabatanPegawaiModel.objects.filter(pk = request.POST.get('id'))
                 if data.exists():
+                    safe_check = models.MasterPegawaiModel.objects.filter(jabatan=data.first().pk)
+                    if safe_check.exists():
+                        return JsonResponse({'status': 'failed', 'message': f'Data Jabatan "{data.first().jabatan}" telah digunakan pada master data pegawai.'}, status=200)
+
                     data.delete()
                     return JsonResponse({'status' : 'success', 'message': 'Data berhasil dihapus'}, status=200)
                 else:
@@ -344,7 +339,6 @@ class PangkatClassView(LoginRequiredMixin, View):
                 instance = form.save()
                 return JsonResponse({'message': 'Data berhasil ditambahkan'}, status=200)
             else:
-                pprint(form.errors)
                 return JsonResponse({"error": form.errors}, status=400)
         return JsonResponse({"error": ""}, status=400)
 
@@ -375,22 +369,16 @@ class MasterPangkatJsonResponseClassView(LoginRequiredMixin, View):
             order_col_name =  str('-' + order_col_name)
 
         data = models.PangkatPegawaiModel.objects
-
-        data = data.all().exclude(Q(pangkat=None) | Q(golongan=None))
-        records_total = data.count()
-        records_filtered = records_total
         
         if search:
-
-            data = models.PangkatPegawaiModel.objects
-
             data = data.filter(
                 Q(pangkat__icontains=search)|
                 Q(golongan__icontains=search)
-            ).exclude(Q(pangkat=None) | Q(golongan=None))
+            )
 
-            records_total = data.count()
-            records_filtered = records_total
+        data = data.exclude(Q(pangkat=None) | Q(golongan=None))
+        records_total = data.count()
+        records_filtered = records_total
         
         data = data.order_by(order_col_name)
         # Conf Paginator
@@ -462,11 +450,13 @@ class MasterPangkatDeleteClassView(LoginRequiredMixin, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-
         if is_ajax:
             if request.method == 'POST':
                 data = models.PangkatPegawaiModel.objects.filter(pk = request.POST.get('id'))
                 if data.exists():
+                    safe_check = models.MasterPegawaiModel.objects.filter(pangkat=data.first().pk)
+                    if safe_check.exists():
+                        return JsonResponse({'status': 'failed', 'message': f'Data Pangkat/Gol. "{data.first().pangkat}/{data.first().golongan}" telah digunakan pada master data pegawai.'}, status=200)
                     data.delete()
                     return JsonResponse({'status' : 'success', 'message': 'Data berhasil dihapus'}, status=200)
                 else:

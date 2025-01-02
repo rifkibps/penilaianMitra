@@ -76,7 +76,6 @@
                                     </div>
                                     <button type="button" class="btn btn-primary mb-2 me-1" data-bs-toggle="modal" data-bs-target="#import-modal"><i class="mdi mdi-file-move"></i> Import</button>
                                     <a href="{% url 'master_petugas:mitra-export' %}" class="btn btn-primary mb-2"><i class="mdi mdi-download"></i> Export</a>
-                                
                                 </div>
                             </div><!-- end col-->
                         </div>
@@ -84,6 +83,7 @@
                             <table id="basic-datatable" class="table table-centered w-100 dt-responsive nowrap">
                                 <thead>
                                     <tr>
+                                        <th>No</th>
                                         <th>Kode Petugas</th>
                                         <th>Nama Petugas</th>
                                         <th>NIK</th>
@@ -557,7 +557,6 @@
     var table = $("#basic-datatable").DataTable({
         processing: true,
         serverSide: true,
-        bInfo : false,
         ajax: {
             "url": "{% url 'master_petugas:datatable-json' %}",
             "headers": {
@@ -578,6 +577,7 @@
         },
         columns :[
             {"data": 'kode_petugas'},
+            {"data": 'kode_petugas'},
             {"data": 'nama_petugas'},
             {"data": 'nik'},
             {"data" : 'email'},
@@ -586,10 +586,20 @@
             {"data" : 'aksi'},
         ],
         lengthMenu: [10, 25, 50, 100],
-        columnDefs: [ {
+        columnDefs: [
+            {
             'targets': [6], /* column index */
             'orderable': false, /* true or false */
-        }],
+            },
+            {
+                "targets": 0,
+                "data": null,
+                "defaultContent": "",
+                "render": function (data, type, row, meta) {
+                    return meta.row + 1;
+                }
+            }
+        ],
         keys: !0,
         language: {
             paginate: {
@@ -617,7 +627,7 @@
                 if (i==1){
                     var throws = '<tr>'
                         
-                    for (var key of row.slice(0, 17)){
+                    for (var key of row.slice(0, 18)){
                         throws += '<th>' + key + '</th>'
                     }
 
@@ -628,14 +638,14 @@
                 if (i>1){
                     var tdrows = '<tr>'
                     var isnull = 0
-                    for (var key of row.slice(0, 17)){
+                    for (var key of row.slice(0, 18)){
                         if ( key == null ){
                             isnull += 1
                         }
                         tdrows += '<td>' + key + '</td>'
                     }
                     tdrows += '</tr>'
-                    if (isnull < 17) {
+                    if (isnull < 18) {
                         $('#'+table_id+' tbody').append(tdrows) 
                     }
                 }

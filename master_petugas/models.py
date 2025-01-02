@@ -64,7 +64,6 @@ class MasterPetugas(models.Model):
    no_telp = models.CharField(max_length=13, null=False, blank=False, validators=[int_validators], verbose_name='No. Telp (Ex: 62..)')
    alamat = models.CharField(max_length=256, null=False, blank=False, verbose_name='Alamat Domisili')
    status = models.CharField(max_length=1, choices=status_choices, blank=False, verbose_name='Status Mitra')
-   
    bank = models.CharField(max_length=1, choices=bank, null=True, blank=True, verbose_name='Jenis Bank')
    rekening = models.CharField(max_length=16, null=True, blank=True, verbose_name='Nomor Rekening')
    pemilik_rek = models.CharField(max_length=64, null=True, blank=True, verbose_name='Pemilik Rekening')

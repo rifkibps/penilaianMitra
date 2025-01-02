@@ -11,7 +11,7 @@
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
                     <li class="breadcrumb-item"><a href="javascript: void(0);">Manajemen Pegawai</a></li>
-                    <li class="breadcrumb-item active">Jabatan</li>
+                    <li class="breadcrumb-item active">Jabatan Pegawai</li>
                 </ol>
             </div>
             <h4 class="page-title">{{title}}</h4>
@@ -44,7 +44,7 @@
               <ul class="nav nav-tabs nav-bordered mb-3">
                 <li class="nav-item">
                     <a href="#position-preview" data-bs-toggle="tab" aria-expanded="false" class="nav-link active" onclick="resetForm()">
-                        Preview
+                        Data Jabatan Pegawai
                     </a>
                 </li>
                 <li class="nav-item">
@@ -57,35 +57,23 @@
               <div class="tab-content">
                     <div class="tab-pane show active" id="position-preview">
                         <div class="row mb-3">
-                            <div class="col-sm-6">
+                            <div class="col-12 d-flex justify-content-start">
                                 <button type="button" class="btn btn-primary mb-2 me-1" id="redraw-table"><i class="mdi mdi-refresh"></i> Refresh</button>
+                                <a href="{% url 'master_petugas:mitra-export' %}" class="btn btn-primary mb-2"><i class="mdi mdi-download"></i> Export</a>
                             </div>
-                            <div class="col-sm-6">
-                                <div class="text-sm-end">
-                                    <div class="btn-group">
-                                        <button type="button" class="btn btn-primary dropdown-toggle mb-2 me-1" data-bs-toggle="dropdown"><i class="mdi mdi-account-switch"></i> Akses <span class="caret"></span> </button>
-                                        <div class="dropdown-menu">
-                                            <a class="dropdown-item" href="{% url 'master_petugas:role' %}">Role / Jabatan</a>
-                                        </div>
-                                    </div>
-                                    <a href="{% url 'master_petugas:mitra-export' %}" class="btn btn-primary mb-2"><i class="mdi mdi-download"></i> Export</a>
-                                
-                                </div>
-                            </div><!-- end col-->
                         </div>
                         <div class="table-responsive">
                             <table id="basic-datatable" class="table table-centered w-100 dt-responsive nowrap">
                                 <thead>
                                     <tr>
+                                        <th width="10%">No</th>
                                         <th>Jabatan Pegawai</th>
                                         <th>Aksi</th>
                                     </tr>
                                 </thead>
-                            
                                 <tbody>
-                        
                                 </tbody>
-                            </table>                                            
+                            </table>
                         </div>
                     </div> <!-- end preview-->
               
@@ -143,7 +131,6 @@
     var table = $("#basic-datatable").DataTable({
         processing: true,
         serverSide: true,
-        bInfo : false,
         ajax: {
             "url": "{% url 'master_pegawai:position-datatable-json' %}",
             "headers": {
@@ -154,13 +141,25 @@
         },
         columns :[
             {"data": 'jabatan'},
+            {"data": 'jabatan'},
             {"data" : 'aksi'},
         ],
         lengthMenu: [5, 10, 25, 50, 100],
-        columnDefs: [ {
-            'targets': [1], /* column index */
-            'orderable': false, /* true or false */
-        }],
+        columnDefs: [
+        {
+            'targets': [2], 
+            'orderable': false,
+            'className': "text-center"
+        },
+        {
+            "targets": 0,
+            "data": null,
+            "defaultContent": "",
+            "render": function (data, type, row, meta) {
+                return meta.row + 1;
+            }
+        }
+        ],
         keys: !0,
         language: {
             paginate: {

@@ -16,10 +16,10 @@ urlpatterns = [
     path('jabatan/update', views.MasterPositionUpdateClassView.as_view(), name='position-update'),
     path('jabatan/delete', views.MasterPositionDeleteClassView.as_view(), name='position-delete'),
 
-    path('pangkat-golongan', views.PangkatClassView.as_view(), name='pangkat'),
-    path('pangkat-golongan/json-response', views.MasterPangkatJsonResponseClassView.as_view(), name='pangkat-datatable-json'),
-    path('pangkat-golongan/detail', views.MasterPangkatDetailClassView.as_view(), name='pangkat-detail'),
-    path('pangkat-golongan/update', views.MasterPangkatUpdateClassView.as_view(), name='pangkat-update'),
-    path('pangkat-golongan/delete', views.MasterPangkatDeleteClassView.as_view(), name='pangkat-delete'),
+    path('pangkat', views.PangkatClassView.as_view(), name='pangkat'),
+    path('pangkat/json-response', views.MasterPangkatJsonResponseClassView.as_view(), name='pangkat-datatable-json'),
+    path('pangkat/detail', views.MasterPangkatDetailClassView.as_view(), name='pangkat-detail'),
+    path('pangkat/update', views.MasterPangkatUpdateClassView.as_view(), name='pangkat-update'),
+    path('pangkat/delete', views.MasterPangkatDeleteClassView.as_view(), name='pangkat-delete'),
 
 ]

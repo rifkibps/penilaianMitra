@@ -14,7 +14,6 @@ class PangkatPegawaiModel(models.Model):
     def __str__(self):
          return f"{self.pk} | {self.golongan}/{self.pangkat}"
 
-
 class MasterPegawaiModel(models.Model):
 
    user = models.OneToOneField(User, on_delete=models.RESTRICT, null=True, blank=True, related_name="user_pegawai", verbose_name='User Account')
