@@ -101,7 +101,7 @@
                 
                       <div class="tab-pane" id="input-tab">
                           <p>Silahkan isikan data penugasan petugas.</p>
-                          <form action="{% url 'master_petugas:alokasi' %}" method="POST" id="formAlokPetugas" class="needs-validation" novalidate>
+                          <form action="{% url 'master_petugas:alokasi' %}" method="POST" id="formAlokPetugas" novalidate>
                             {% csrf_token %}
                             <input type="hidden" name="id" id="id_id">
                             <div class="row mt-3">
@@ -230,7 +230,7 @@
                         </ol>
                     </div>
 
-                    <form action="" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    <form action="" enctype="multipart/form-data" novalidate>
                         {% csrf_token %}
                         <label for="{{form_upload.import_file.id_for_label}}" class="form-label"><h5>{{ form_upload.import_file.label }}</h5></label>
                         <div class="mb-3">
@@ -510,12 +510,12 @@
 
     function clearFormValidation(form){
         $(form + ' .form-control').each(function(i, obj) {
-            $(obj).removeClass('is_invalid')
+            $(obj).removeClass('is-invalid')
             $(obj).trigger('change')
         });
 
         $(form + ' .form-select').each(function(j, objs) {
-            $(objs).removeClass('is_invalid')
+            $(objs).removeClass('is-invalid')
             $(objs).trigger('change')
         });
         

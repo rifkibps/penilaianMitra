@@ -45,7 +45,7 @@
                 <ul class="nav nav-tabs nav-bordered mb-3">
                       <li class="nav-item">
                           <a href="#indikator-penilaian-preview" data-bs-toggle="tab" aria-expanded="false" class="nav-link active">
-                              Preview
+                              Data Indikator Penilaian Kegiatan
                           </a>
                       </li>
                       <li class="nav-item">
@@ -56,21 +56,20 @@
                 </ul> <!-- end nav-->
                 <div class="tab-content">
                       <div class="tab-pane show active" id="indikator-penilaian-preview">
-
                         <div class="row mb-2">
                             <div class="col-sm-6">
-                                <a href="#offcanvasFilter"  data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasFilter" class="btn btn-danger mb-2"><i class="mdi mdi-filter-menu me-2"></i> Filter Data</a>
+                                <a href="#offcanvasFilter"  data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasFilter" class="btn btn-primary mb-2"><i class="mdi mdi-filter-menu me-2"></i>Filter Data</a>
+                                <button type="button" class="btn btn-primary mb-2 me-1" id="redraw-table"><i class="mdi mdi-refresh"></i> Refresh</button>
                             </div>
                             <div class="col-sm-6">
                                 <div class="text-sm-end">
-                                    <button type="button" class="btn btn-success mb-2 me-1" id="redraw-table"><i class="mdi mdi-refresh"></i></button>
                                     <div class="btn-group">
-                                        <button type="button" class="btn btn-light dropdown-toggle mb-2 me-1" data-bs-toggle="dropdown" aria-expanded="false"> Tambah <span class="caret"></span> </button>
+                                        <button type="button" class="btn btn-primary dropdown-toggle mb-2 me-1" data-bs-toggle="dropdown" aria-expanded="false"><i class="mdi mdi-file-move"></i> Tambah <span class="caret"></span> </button>
                                         <div class="dropdown-menu">
                                             <a class="dropdown-item" href="{% url 'master_survei:index' %}#input-tab">Survei Baru</a>
                                         </div>
                                     </div>
-                                    <a href="{% url 'master_penilaian:export-indikator-kegiatan' %}" class="btn btn-light mb-2">Export</a>
+                                    <a href="{% url 'master_penilaian:export-indikator-kegiatan' %}" class="btn btn-primary mb-2"><i class="mdi mdi-download"></i> Export</a>
                                 </div>
                             </div><!-- end col-->
                         </div>
@@ -79,8 +78,10 @@
                             <table id="basic-datatable" class="table dt-responsive nowrap w-100">
                                 <thead>
                                     <tr>
+                                        <th width="4%">No</th>
                                         <th>Kegiatan Penilaian</th>
                                         <th>Indikator Penilaian</th>
+                                        <th>Skala Penilaian</th>
                                         <th>Aksi</th> 
                                     </tr>
                                 </thead>
@@ -93,7 +94,7 @@
                 
                       <div class="tab-pane" id="input-tab">
                           <p>Silahkan isikan data Penilaian Peserta.</p>
-                          <form action="{% url 'master_penilaian:indikator-kegiatan' %}" method="POST" id="formKegiatanIndikatorPenilaianPetugas" class="needs-validation" novalidate>
+                          <form action="{% url 'master_penilaian:indikator-kegiatan' %}" method="POST" id="formKegiatanIndikatorPenilaianPetugas" novalidate>
                             {% csrf_token %}
                             <input type="hidden" name="id" id="id_id">
                             <div class="row mt-3">
@@ -174,9 +175,8 @@
             <div class="col-11">
                 <div class="d-flex align-items-center">
                      <select class="form-select" id="kegiatan-select-filter">
-                        <option selected="" value="">Pilih Kegiatan Penilaian</option>
-                        {% for dt in data_kegiatan %}
-                            <option value="{{dt.id}}">{{dt.nama_kegiatan}}</option>
+                        {% for value, text in form.kegiatan_penilaian.field.choices %}
+                            <option value="{{ value }}">{{ text }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -188,9 +188,8 @@
             <div class="col-11">
                 <div class="d-flex align-items-center">
                      <select class="form-select" id="indikator-select-filter">
-                        <option selected="" value="">Pilih Indikator Penilaian</option>
-                        {% for dt in data_indikator %}
-                        <option value="{{dt.id}}">{{dt.nama_indikator}}</option>
+                        {% for value, text in form.indikator_penilaian.field.choices %}
+                            <option value="{{ value }}">{{ text }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -200,23 +199,6 @@
         <button class="btn btn-danger mt-3" id="reset-filter">Clear Filter</button>
     </div>
 </div>
-
-<!-- Success Alert Modal -->
-<div id="success-alert-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-sm">
-        <div class="modal-content modal-filled bg-success">
-            <div class="modal-body p-4">
-                <div class="text-center">
-                    <i class="dripicons-checkmark h1"></i>
-                    <h4 class="mt-2">Well Done!</h4>
-                    <p class="mt-3 message-feedback"></p>
-                    <button type="button" class="btn btn-light my-2" data-bs-dismiss="modal">Continue</button>
-                </div>
-            </div>
-        </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
-
 
 {% endblock table-content %}
 
@@ -249,14 +231,24 @@
         },
         columns :[
             {"data": 'kegiatan_penilaian__kegiatan_survey__nama_kegiatan'},
+            {"data": 'kegiatan_penilaian__kegiatan_survey__nama_kegiatan'},
             {"data": 'indikator_penilaian__nama_indikator'},
+            {"data": 'scale'},
             {"data" : 'aksi'},
         ],
         lengthMenu: [5, 25, 50, 100,'All'],
         columnDefs: [ {
-            'targets': [2], /* column index */
+            'targets': [4], /* column index */
             'orderable': false, /* true or false */
             'className': "text-center"
+        },
+        {
+            "targets": 0,
+            "data": null,
+            "defaultContent": "",
+            "render": function (data, type, row, meta) {
+                return meta.row + 1;
+            }
         }],
         keys: !0,
         language: {
@@ -264,6 +256,8 @@
             previous: "<i class='mdi mdi-chevron-left'>",
             next: "<i class='mdi mdi-chevron-right'>",
             },
+            lengthMenu : "Menampilkan _MENU_",
+            search: "Cari Indikator Penilaian ",
         },
         drawCallback: function () {
             $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
@@ -289,10 +283,8 @@
     })
 
     function editIndikatorKegiatan(e){
-
         $('#formKegiatanIndikatorPenilaianPetugas').attr('action', "{% url 'master_penilaian:update-indikator-kegiatan' %}")
         $('#submitformIndikatorKegiatanPenilaianPetugas').html('Update Data')
-    
         $.ajax({
             url: '{% url 'master_penilaian:detail-indikator-kegiatan' %}',
             type: "POST",
@@ -305,7 +297,6 @@
                 "X-CSRFToken": '{{csrf_token}}',
             },
             success: (data) => {
-
                 if (data.status == 'failed'){
                     Swal.fire(
                         'Terjadi Kesalahan!',
@@ -379,10 +370,26 @@
 
     }
 
-    $('#formKegiatanIndikatorPenilaianPetugas').on('submit', function(e){
+    function clearFormValidation(form){
+        $(form + ' .form-control').each(function(i, obj) {
+            $(obj).removeClass('is-invalid')
+            $(obj).trigger('change')
+        });
 
-        e.preventDefault()
+        $(form + ' .form-select').each(function(j, objs) {
+            $(objs).removeClass('is-invalid')
+            $(objs).trigger('change')
+        });
         
+        $('.invalid-feedback').each(function(i, obj) {
+            $(obj).html('')
+        });
+    }
+
+    $('#formKegiatanIndikatorPenilaianPetugas').on('submit', function(e){
+        e.preventDefault()
+        clearFormValidation('#formKegiatanIndikatorPenilaianPetugas')
+
         var serializedData = $(this).serialize();
         $('.invalid-feedback').html('')
         $('.is_invalid').removeClass('is_invalid')
@@ -391,7 +398,6 @@
             url: $(this).attr('action'),
             data: serializedData,
             success: function (response) {
-                console.log(response)
                 if (response.status == 'failed'){
                     Swal.fire(
                         'Terjadi Kesalahan!',
@@ -403,9 +409,10 @@
                     $('#msgs-upload').removeClass('alert-danger')
                     $('#msgs-upload').addClass('alert-success')
                     $('#msgs-upload').removeClass('d-none')
-
-                    $(this)[0].reset();
                     table.ajax.reload();
+                    $('.nav-tabs a[href="#indikator-penilaian-preview"]').tab('show');
+                    $('#formKegiatanIndikatorPenilaianPetugas')[0].reset();
+                    clearFormValidation('#formKegiatanIndikatorPenilaianPetugas')
                 }
             },
             error: function (response) {
@@ -413,10 +420,8 @@
                 for (const [key, value] of Object.entries(errors)) {
                     var msgs = '<ul>'
                     value.forEach(function (item, index) {
-                    
                         msgs += '<li>'+item+'</li>'
                         });
-                    
                     msgs += '</ul>'
                     $('#id_'+ key).addClass('is-invalid');
                     $('#msg-id_'+key).html(msgs)

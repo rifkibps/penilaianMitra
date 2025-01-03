@@ -1132,9 +1132,9 @@ class PetugasClassView(LoginRequiredMixin, View):
         for dt in master_mitra:
             alokasi_petugas = models.AlokasiPetugas.objects.filter(petugas = dt.pk)
             jml_kegiatan = 0
+            jml_penilai = 0
             if alokasi_petugas.exists():
                 jml_kegiatan = alokasi_petugas.count()
-                jml_penilai = 0
                 for dt_ in alokasi_petugas:
                     check_penilaian = MasterPenilaianPetugas.objects.filter(petugas = dt_.id, detail_nilai__indikator_penilaian__kegiatan_penilaian__kegiatan_survey = dt_.sub_kegiatan).values('penilai_id').distinct()
                     if check_penilaian.exists():

@@ -50,15 +50,17 @@ class PenilaianPetugasClassView(LoginRequiredMixin, View):
 
 
     def post(self, request):
-
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         if is_ajax:
             form = forms.KegiatanPenilaianForm(request.POST)
             if form.is_valid():
+                safe_check = models.KegiatanPenilaianModel.objects.filter(kegiatan_survey = form.data['kegiatan_survey'])
+                if safe_check.exists():
+                    return JsonResponse({'status': 'failed', 'message': 'Anda tidak dapat menambahkan penilaian untuk kegiatan survei yang sama.'}, status=200)
+                
                 instance = form.save()
                 user_instance = serializers.serialize('json', [ instance, ])
-                # send to client side.
-                return JsonResponse({"instance": user_instance, 'message': 'Data berhasil ditambahkan'}, status=200)
+                return JsonResponse({'status': 'success', 'instance': user_instance, 'message': 'Data berhasil ditambahkan'}, status=200)
             else:
                 return JsonResponse({"error": form.errors}, status=400)
         return JsonResponse({"error": ""}, status=400)
@@ -68,19 +70,15 @@ class MasterPenilaianDeleteView(LoginRequiredMixin, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-
         if is_ajax:
-                
             id = request.POST.get('id')
-
-            data_petugas = models.KegiatanPenilaianModel.objects.filter(pk = id)
-            if data_petugas.exists():
-
-                check_db = models.MasterNilaiPetugas.objects.filter(penilaian__kegiatan_penilaian = id)
+            penilaian = models.KegiatanPenilaianModel.objects.filter(pk = id)
+            if penilaian.exists():
+                check_db = models.MasterNilaiPetugas.objects.filter(indikator_penilaian__kegiatan_penilaian = id)
                 if check_db.exists():
-                    return JsonResponse({'status' : 'failed', 'message': 'Data kegiatan penilaian telah digunakan pada master data penilaian'}, status=200)
+                    return JsonResponse({'status' : 'failed', 'message': 'Data sedang digunakan pada master data penilaian'}, status=200)
         
-                data_petugas.delete()
+                penilaian.delete()
                 return JsonResponse({'status' : 'success', 'message': 'Data berhasil dihapus'}, status=200)
             else:
                 return JsonResponse({'status': 'failed', 'message': 'Data tidak tersedia'}, status=200)
@@ -92,19 +90,17 @@ class MasterPenilaianDetailView(LoginRequiredMixin, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-
         if is_ajax:
-                
             id = request.POST.get('id')
             kegiatan_penilaian = get_object_or_404(models.KegiatanPenilaianModel, pk=id)
-
-            context_data = {}
-            context_data['id']              = kegiatan_penilaian.id
-            context_data['nama_kegiatan']   = kegiatan_penilaian.nama_kegiatan
-            context_data['survey_id']       = str(kegiatan_penilaian.survey.id)
-            context_data['tgl_penilaian']   = kegiatan_penilaian.tgl_penilaian
-            context_data['status']          = kegiatan_penilaian.status
-            context_data['role_permitted']  = list(kegiatan_penilaian.role_permitted.values_list('id', flat=True))
+            context_data = {
+                'id' : kegiatan_penilaian.id,
+                'kegiatan_survey' : kegiatan_penilaian.kegiatan_survey.id,
+                'tgl_penilaian' : kegiatan_penilaian.tgl_penilaian,
+                'status' : kegiatan_penilaian.status,
+                'role_permitted' : list(kegiatan_penilaian.role_permitted.values_list('id', flat=True)),
+                'role_penilai_permitted' : list(kegiatan_penilaian.role_penilai_permitted.values_list('id', flat=True))
+            }
 
             return JsonResponse({'status' : 'success', 'instance': context_data}, status=200)
                 
@@ -116,16 +112,17 @@ class MasterPenilaianUpdateView(LoginRequiredMixin, View):
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         if is_ajax:
-
             data = get_object_or_404(models.KegiatanPenilaianModel, pk=request.POST.get('id'))
-
             form = forms.KegiatanPenilaianForm(request.POST, instance=data)
-
             if form.is_valid():
+                check_db = models.KegiatanPenilaianModel.objects.filter(~Q(id = request.POST.get('id')) & Q(kegiatan_survey = form.cleaned_data['kegiatan_survey']))
+                check_db2 = models.MasterNilaiPetugas.objects.filter(Q(indikator_penilaian__kegiatan_penilaian = request.POST.get('id')) | Q(indikator_penilaian__kegiatan_penilaian__kegiatan_survey = form.cleaned_data['kegiatan_survey']))
+                if check_db.exists() or check_db2.exists():
+                    if 'kegiatan_survey' in form.changed_data:
+                        return JsonResponse({'status' : 'failed', 'message': 'Data telah terdaftar atau sedang digunakan pada master data penilaian.'}, status=200)
+                
                 instance = form.save()
                 ser_instance = serializers.serialize('json', [ instance, ])
-                
-                # send to client side.
                 return JsonResponse({"instance": ser_instance, 'message': 'Data berhasil diubah'}, status=200)
             else:
                 return JsonResponse({"error": form.errors}, status=400)
@@ -198,7 +195,7 @@ class MasterPenilaianJsonResponseClassView(LoginRequiredMixin, View):
         data = models.KegiatanPenilaianModel.objects
 
         if datatables.get('survei_filter'):
-            data = data.filter(kegiatan_survey = datatables.get('survei_filter'))
+            data = data.filter(kegiatan_survey__survey = datatables.get('survei_filter'))
         
         if datatables.get('status_filter'):
             data = data.filter(status = datatables.get('status_filter'))
@@ -206,23 +203,7 @@ class MasterPenilaianJsonResponseClassView(LoginRequiredMixin, View):
         if datatables.get('role_filter'):
             data = data.filter(role_permitted = datatables.get('role_filter'))
 
-        data = data.all().exclude(Q(kegiatan_survey=None)|Q(tgl_penilaian=None)|Q(status=None)|Q(role_permitted=None)|Q(role_penilai_permitted=None)|Q(status=None))
-        records_total = data.count()
-        records_filtered = records_total
-        
         if search:
-            data = models.KegiatanPenilaianModel.objects
-
-            if datatables.get('survei_filter'):
-                data = data.filter(kegiatan_survey = datatables.get('survei_filter'))
-
-            
-            if datatables.get('status_filter'):
-                data = data.filter(status = datatables.get('status_filter'))
-
-            if datatables.get('role_filter'):
-                data = data.filter(role_permitted = datatables.get('role_filter'))
-
             data = data.filter(
                 Q(kegiatan_survey__nama_kegiatan__icontains=search)|
                 Q(kegiatan_survey__survey__nama__icontains=search)|
@@ -230,10 +211,11 @@ class MasterPenilaianJsonResponseClassView(LoginRequiredMixin, View):
                 Q(status__icontains=search)|
                 Q(role_permitted__jabatan__icontains=search)|
                 Q(role_penilai_permitted__jabatan__icontains=search)
-            ).exclude(Q(kegiatan_survey=None)|Q(tgl_penilaian=None)|Q(status=None)|Q(role_permitted=None)|Q(role_penilai_permitted=None)|Q(status=None))
+            )
 
-            records_total = data.count()
-            records_filtered = records_total
+        data = data.exclude(Q(kegiatan_survey=None)|Q(tgl_penilaian=None)|Q(status=None)|Q(role_permitted=None)|Q(role_penilai_permitted=None)|Q(status=None))
+        records_total = data.count()
+        records_filtered = records_total
         
         data = data.order_by(order_col_name)
         # Conf Paginator
@@ -253,7 +235,7 @@ class MasterPenilaianJsonResponseClassView(LoginRequiredMixin, View):
                 'tgl_penilaian': obj.tgl_penilaian.strftime('%d-%b-%Y'),
                 'role_permitted__jabatan' : ', '.join(obj.role_permitted.values_list('jabatan', flat=True)),
                 'role_penilai_permitted__jabatan' : ', '.join(obj.role_penilai_permitted.values_list('jabatan', flat=True)),
-                'status': f'<span class="badge badge-primary-lighten"> {obj.get_status_display()} </span>'  if obj.status == '0' else f'<span class="badge badge-primary-lighten"> {obj.get_status_display()} </span>',
+                'status': f'<span class="badge badge-primary-lighten p-1"> {obj.get_status_display()} </span>'  if obj.status == '0' else f'<span class="badge badge-primary-lighten p-1"> {obj.get_status_display()} </span>',
                 'aksi': f'<a href="javascript:void(0);" onclick="editKegiatanPenilaian({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline font-15"></i></a> <a href="javascript:void(0);" onclick="hapusKegiatanPenilaian({obj.id});" class="action-icon"> <i class="mdi mdi-delete font-15"></i></a>'
             } for obj in object_list
         ]
@@ -330,21 +312,18 @@ class IndiakatorPenilaianJsonResponseClassView(LoginRequiredMixin, View):
         if (order_dir == "desc"):
             order_col_name =  str('-' + order_col_name)
 
-        data = models.IndikatorPenilaian.objects.all().exclude(Q(nama_indikator=None)|Q(deskripsi_penilaian=None))
+        data = models.IndikatorPenilaian.objects
+        if search:
+            data = data.filter(
+                Q(nama_indikator__icontains=search)|
+                Q(deskripsi_penilaian__icontains=search)
+            )
+
+        data = data.exclude(Q(nama_indikator=None)|Q(deskripsi_penilaian=None))
         records_total = data.count()
         records_filtered = records_total
         
-        if search:
-            data = models.IndikatorPenilaian.objects.filter(
-                Q(nama_indikator__icontains=search)|
-                Q(deskripsi_penilaian__icontains=search)
-            ).exclude(Q(nama_indikator=None)|Q(deskripsi_penilaian=None))
-
-            records_total = data.count()
-            records_filtered = records_total
-        
         data = data.order_by(order_col_name)
-        # Conf Paginator
         paginator = Paginator(data, length)
 
         try:
@@ -376,21 +355,18 @@ class IndikatorPenilaianDeleteView(LoginRequiredMixin, View):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
         if is_ajax:
-                
             id = request.POST.get('id')
-            
-            data_petugas = models.IndikatorPenilaian.objects.filter(pk = id)
-            if data_petugas.exists():
-
+            indikator_penilaian = models.IndikatorPenilaian.objects.filter(pk = id)
+            if indikator_penilaian.exists():
                 check_kegiatan_penilaian = models.IndikatorKegiatanPenilaian.objects.filter(indikator_penilaian = id)
                 if check_kegiatan_penilaian.exists():
                     return JsonResponse({'status' : 'failed', 'message': 'Data Indikator Penilaian telah digunakan pada master data penilaian.'}, status=200)
 
-                check_db = models.MasterNilaiPetugas.objects.filter(penilaian__indikator_penilaian = id)
+                check_db = models.MasterNilaiPetugas.objects.filter(indikator_penilaian__indikator_penilaian = id)
                 if check_db.exists():
                     return JsonResponse({'status' : 'failed', 'message': 'Data Indikator Penilaian telah digunakan pada master data penilaian.'}, status=200)
             
-                data_petugas.delete()
+                indikator_penilaian.delete()
                 return JsonResponse({'status' : 'success', 'message': 'Data berhasil dihapus'}, status=200)
             else:
                 return JsonResponse({'status': 'failed', 'message': 'Data tidak tersedia'}, status=200)
@@ -458,33 +434,23 @@ class IndikatorKegiatanPenilaianClassView(LoginRequiredMixin, View):
 
 
     def post(self, request):
-
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         if is_ajax:
             form = forms.IndikatorKegiatanPenilaianForm(request.POST)
-           
             if form.is_valid():
-
                 check_db2 = models.IndikatorKegiatanPenilaian.objects.filter(kegiatan_penilaian = form.data['kegiatan_penilaian'], indikator_penilaian = form.data['indikator_penilaian'])
-                
-                print('asd', check_db2.exists())
-                if check_db2.exists():
-
-                    return JsonResponse({'status' : 'failed', 'message': 'Data survei telah tersedia pada database.'}, status=200)
+                check_db3 = models.MasterNilaiPetugas.objects.filter(indikator_penilaian__kegiatan_penilaian = form.data['kegiatan_penilaian'], indikator_penilaian__indikator_penilaian = form.data['indikator_penilaian'])
+                if check_db2.exists() or check_db3.exists():
+                    return JsonResponse({'status' : 'failed', 'message': f'Indikator Penilaian telah terdaftar untuk  pada database.'}, status=200)
                 else:
                     instance = form.save()
                     user_instance = serializers.serialize('json', [ instance, ])
-                    
-                    # send to client side.
                     return JsonResponse({'status' : 'success', "instance": user_instance, 'message': 'Data berhasil ditambahkan'}, status=200)
             else:
-                print('GAK LOLOS FORM')
                 return JsonResponse({'status' : 'failed', "error": form.errors}, status=400)
             
         return JsonResponse({'status' : 'failed', "error": ""}, status=400)
     
-
-
 class IndikatorKegiatanPenilaianJsonResponseClassView(LoginRequiredMixin, View):
 
     def post(self, request):    
@@ -517,35 +483,20 @@ class IndikatorKegiatanPenilaianJsonResponseClassView(LoginRequiredMixin, View):
         
         if datatables.get('indikator_filter'):
             data = data.filter(indikator_penilaian = datatables.get('indikator_filter'))
-
-        data = data.all().exclude(Q(kegiatan_penilaian=None)|Q(indikator_penilaian=None))
-
-        
-        records_total = data.count()
-        records_filtered = records_total
         
         if search:
-
-            data = models.IndikatorKegiatanPenilaian.objects
-
-            if datatables.get('kegiatan_filter'):
-                data = data.filter(kegiatan_penilaian = datatables.get('kegiatan_filter'))
-            
-            if datatables.get('indikator_filter'):
-                data = data.filter(indikator_penilaian = datatables.get('indikator_filter'))
-
             data = data.filter(
                 Q(kegiatan_penilaian__kegiatan_survey__survey__nama=search)|
                 Q(kegiatan_penilaian__kegiatan_survey__nama_kegiatan__icontains=search)|
                 Q(indikator_penilaian__nama_indikator__icontains=search)
-            ).exclude(Q(kegiatan_penilaian=None)|Q(indikator_penilaian=None))
+            )
 
-            records_total = data.count()
-            records_filtered = records_total
+        data = data.exclude(Q(kegiatan_penilaian=None)|Q(indikator_penilaian=None))
+        records_total = data.count()
+        records_filtered = records_total
         
         data = data.order_by(order_col_name)
         
-        # Conf Paginator
         paginator = Paginator(data, length)
 
         try:
@@ -559,6 +510,7 @@ class IndikatorKegiatanPenilaianJsonResponseClassView(LoginRequiredMixin, View):
             {
                 'kegiatan_penilaian__kegiatan_survey__nama_kegiatan': obj.kegiatan_penilaian.kegiatan_survey.nama_kegiatan,
                 'indikator_penilaian__nama_indikator': obj.indikator_penilaian.nama_indikator,
+                'scale': f'{obj.get_scale_display()} [Min: <b>{obj.n_min}</b>, Max: <b>{obj.n_max}</b>]',
                 'aksi': f'<a href="javascript:void(0);" onclick="editIndikatorKegiatan({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline font-15"></i></a> <a href="javascript:void(0);" onclick="deleteIndikatorKegiatan({obj.id});" class="action-icon"> <i class="mdi mdi-delete font-15"></i></a>'
             } for obj in object_list
         ]
@@ -570,24 +522,20 @@ class IndikatorKegiatanPenilaianJsonResponseClassView(LoginRequiredMixin, View):
             'data': data,
         }
 
-
 class IndikatorKegiatanPenilaianDeleteView(LoginRequiredMixin, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
         if is_ajax:
-                
             id = request.POST.get('id')
-            
-            data_petugas = models.IndikatorKegiatanPenilaian.objects.filter(pk = id)
-            if data_petugas.exists():
-
-                check_db = models.MasterNilaiPetugas.objects.filter(penilaian = id)
+            indikator_penilaian = models.IndikatorKegiatanPenilaian.objects.filter(pk = id)
+            if indikator_penilaian.exists():
+                check_db = models.MasterNilaiPetugas.objects.filter(indikator_penilaian = id)
                 if check_db.exists():
-                    return JsonResponse({'status' : 'failed', 'message': 'Data survei telah digunakan pada master data penilaian.'}, status=200)
+                    return JsonResponse({'status' : 'failed', 'message': 'Indikator Penilaian sedang digunakan pada master data penilaian.'}, status=200)
 
-                data_petugas.delete()
+                indikator_penilaian.delete()
                 return JsonResponse({'status' : 'success', 'message': 'Data berhasil dihapus'}, status=200)
             else:
                 return JsonResponse({'status': 'failed', 'message': 'Data tidak tersedia'}, status=200)
@@ -622,19 +570,16 @@ class IndikatorKegiatanPenilaianUpdateView(LoginRequiredMixin, View):
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         if is_ajax:
-
             data = get_object_or_404(models.IndikatorKegiatanPenilaian, pk=request.POST.get('id'))
-
             form = forms.IndikatorKegiatanPenilaianForm(request.POST, instance=data)
             if form.is_valid():
-                
-                check_db = models.MasterNilaiPetugas.objects.filter(penilaian = form.data['id'])
+                check_db = models.MasterNilaiPetugas.objects.filter(indikator_penilaian = form.data['id'])
                 if check_db.exists():
-                    return JsonResponse({'status' : 'failed', 'message': 'Data survei telah digunakan pada master data penilaian.'}, status=200)
+                    return JsonResponse({'status' : 'failed', 'message': 'Indikator penilaian sedang digunakan pada master data penilaian.'}, status=200)
                 
                 check_db2 = models.IndikatorKegiatanPenilaian.objects.filter(~Q(id = form.data['id'] ) & Q(kegiatan_penilaian = form.data['kegiatan_penilaian'] ) & Q(indikator_penilaian = form.data['indikator_penilaian']) )
                 if check_db2.exists():
-                    return JsonResponse({'status' : 'failed', 'message': 'Data survei telah tersedia pada database.'}, status=200)
+                    return JsonResponse({'status' : 'failed', 'message': 'Indikator penilaian telah terdaftar pada database.'}, status=200)
                 
                 instance = form.save()
                 ser_instance = serializers.serialize('json', [ instance, ])
@@ -677,23 +622,16 @@ class NilaiMitraClassView(LoginRequiredMixin, View):
 
 
     def post(self, request):
-
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-
         if is_ajax:
-
             form = forms.PenilaianMitraForm(request.POST)
-
             if form.is_valid():            
                 model = models.MasterNilaiPetugas
-
                 df = form.cleaned_data
-
                 objs_create = []
                 objs_update = []
 
                 for dt in df:
-                    
                     petugas = AlokasiPetugas.objects.get(pk = dt['petugas'])
                     penilaian = models.IndikatorKegiatanPenilaian.objects.get(pk = dt['penilaian'])
 
@@ -737,7 +675,6 @@ class NilaiMitraClassView(LoginRequiredMixin, View):
         else:
             return JsonResponse({"error": ""}, status=400)
 
-
 class NilaiMitraJsonResponseClassView(LoginRequiredMixin, View):
 
     def post(self, request):    
@@ -746,7 +683,6 @@ class NilaiMitraJsonResponseClassView(LoginRequiredMixin, View):
 		
     def _datatables(self, request):
         datatables = request.POST
-        
         # Get Draw
         draw = int(datatables.get('draw'))
         start = int(datatables.get('start'))
@@ -763,7 +699,7 @@ class NilaiMitraJsonResponseClassView(LoginRequiredMixin, View):
         if (order_dir == "desc"):
             order_col_name =  str('-' + order_col_name)
 
-        data = models.MasterNilaiPetugas.objects
+        data = models.MasterPenilaianPetugas.objects
 
         if datatables.get('mitra_filter'):
             data = data.filter(petugas__petugas = datatables.get('mitra_filter'))
@@ -772,46 +708,31 @@ class NilaiMitraJsonResponseClassView(LoginRequiredMixin, View):
             data = data.filter(petugas__role = datatables.get('role_filter'))
 
         if datatables.get('survei_filter'):
-            data = data.filter(penilaian__kegiatan_penilaian__survey = datatables.get('survei_filter'))
+            data = data.filter(detail_nilai__indikator_penilaian__kegiatan_penilaian__survey = datatables.get('survei_filter'))
 
         if datatables.get('kegiatan_filter'):
-            data = data.filter(penilaian__kegiatan_penilaian = datatables.get('kegiatan_filter'))
-
-        data = data.all().exclude(Q(petugas=None)|Q(penilaian=None)|Q(nilai=None)|Q(catatan=None))
-        records_total = data.count()
-        records_filtered = records_total
+            data = data.filter(detail_nilai__indikator_penilaian__kegiatan_penilaian = datatables.get('kegiatan_filter'))
     
         if search:
-
-            data = models.MasterNilaiPetugas.objects
-
-            if datatables.get('mitra_filter'):
-                data = data.filter(petugas__petugas = datatables.get('mitra_filter'))
-
-            if datatables.get('role_filter'):
-                data = data.filter(petugas__role = datatables.get('role_filter'))
-
-            if datatables.get('survei_filter'):
-                data = data.filter(penilaian__kegiatan_penilaian__survey = datatables.get('survei_filter'))
-
-            if datatables.get('kegiatan_filter'):
-                data = data.filter(penilaian__kegiatan_penilaian = datatables.get('kegiatan_filter'))
-
             data = data.filter(
+                Q(penilai__pegawai__name__icontains=search)|
+                Q(penilai__pegawai__nip__icontains=search)|
                 Q(petugas__petugas__kode_petugas__icontains=search)|
+                Q(petugas__petugas__adm_id__region__icontains=search)|
+                Q(petugas__petugas__adm_id__code__icontains=search)|
                 Q(petugas__petugas__nama_petugas__icontains=search)|
                 Q(petugas__role__jabatan__icontains=search)|
-                Q(penilaian__kegiatan_penilaian__nama_kegiatan__icontains=search)|
-                Q(penilaian__indikator_penilaian__nama_indikator=search)|
-                Q(nilai__icontains=search)|
-                Q(catatan__icontains=search)
-            ).exclude(Q(petugas=None)|Q(penilaian=None)|Q(nilai=None)|Q(catatan=None))
+                Q(penilai__role__jabatan__icontains=search)|
+                Q(detail_nilai__indikator_penilaian__kegiatan_penilaian__kegiatan_survey__nama_kegiatan__icontains=search)|
+                Q(detail_nilai__indikator_penilaian__indikator_penilaian__nama_indikator__icontains=search)|
+                Q(detail_nilai__nilai__icontains=search)|
+                Q(detail_nilai__catatan__icontains=search)
+            )
 
-            records_total = data.count()
-            records_filtered = records_total
-        
-        data = data.order_by(order_col_name)
-        # Conf Paginator
+        data = data.order_by(order_col_name).values('penilai__pegawai__name', 'penilai__pegawai__nip', 'petugas__petugas__id','petugas__petugas__adm_id__region', 'petugas__petugas__kode_petugas', 'petugas__petugas__nama_petugas', 'petugas__role__jabatan', 'penilai__role__jabatan','detail_nilai__indikator_penilaian__kegiatan_penilaian__kegiatan_survey__nama_kegiatan', 'detail_nilai__indikator_penilaian__indikator_penilaian__nama_indikator', 'detail_nilai__nilai', 'detail_nilai__catatan')
+        records_total = data.count()
+        records_filtered = records_total
+
         paginator = Paginator(data, length)
 
         try:
@@ -820,18 +741,21 @@ class NilaiMitraJsonResponseClassView(LoginRequiredMixin, View):
             object_list = paginator.page(1).object_list
         except EmptyPage:
             object_list = paginator.page(1).object_list
-
-        data = [
-            {
-                'petugas__petugas__kode_petugas': obj.petugas.petugas.kode_petugas,
-                'petugas__petugas__nama_petugas': f'<a href="{reverse_lazy("master_petugas:mitra-view-detail", kwargs={"mitra_id": obj.petugas.petugas.id})}" class="text-body" target="_blank">{obj.petugas.petugas.nama_petugas}</a>',
-                'petugas__role__jabatan': obj.petugas.role.jabatan,
-                'penilaian__kegiatan_penilaian__nama_kegiatan': obj.penilaian.kegiatan_penilaian.nama_kegiatan,
-                'penilaian__indikator_penilaian__nama_indikator': obj.penilaian.indikator_penilaian.nama_indikator,
-                'nilai': obj.nilai,
-                'catatan' :  obj.catatan,
-            } for obj in object_list
-        ]
+        
+        data = []
+        for obj in object_list:
+            # kec = AdministrativeModel.objects.filter(code = obj['petugas__petugas__adm_id__code'][:-3]).first()
+            data.append({
+                'petugas__petugas__adm_id__region': obj['petugas__petugas__adm_id__region'],
+                'petugas__petugas__kode_petugas': obj['petugas__petugas__kode_petugas'],
+                'petugas__petugas__nama_petugas': f'<a href="{reverse_lazy("master_petugas:mitra-view-detail", kwargs={"mitra_id": obj["petugas__petugas__id"]})}" class="text-body" target="_blank">{obj["petugas__petugas__nama_petugas"]}</a>',
+                'petugas__role__jabatan': obj["petugas__role__jabatan"],
+                'detail_nilai__indikator_penilaian__kegiatan_penilaian__kegiatan_survey__nama_kegiatan': obj["detail_nilai__indikator_penilaian__kegiatan_penilaian__kegiatan_survey__nama_kegiatan"],
+                'detail_nilai__indikator_penilaian__indikator_penilaian__nama_indikator': obj["detail_nilai__indikator_penilaian__indikator_penilaian__nama_indikator"],
+                'detail_nilai__nilai': obj["detail_nilai__nilai"],
+                'detail_nilai__catatan' :  obj["detail_nilai__catatan"],
+                'penilai__pegawai__name' :  f'{obj["penilai__pegawai__name"]} ({obj["penilai__role__jabatan"]})',
+            })
         
         return {
             'draw': draw,

@@ -80,7 +80,7 @@
                 
                       <div class="tab-pane" id="input-tab">
                           <p>Silahkan isikan Role Peserta.</p>
-                          <form action="{% url 'master_petugas:role' %}" method="POST" id="formRolePetugas" class="needs-validation" novalidate>
+                          <form action="{% url 'master_petugas:role' %}" method="POST" id="formRolePetugas" novalidate>
                             {% csrf_token %}
                             <input type="hidden" name="id" id="id_id">
                             <div class="row mt-3">

@@ -89,7 +89,7 @@
 
                     <div class="tab-pane show" id="input-batasan-honor">
                         <p>Silahkan isikan data batasan honor yang diterima mitra dalam satu bulan.</p>
-                        <form action="{% url 'master_honor:honor-settings' %}" method="POST" id="formMasterHonor" class="needs-validation" novalidate>
+                        <form action="{% url 'master_honor:honor-settings' %}" method="POST" id="formMasterHonor" novalidate>
                             {% csrf_token %}
                             <input type="hidden" name="id" id="id_id">
                             <div class="row mt-3">

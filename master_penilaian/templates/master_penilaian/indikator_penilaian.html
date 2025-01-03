@@ -45,7 +45,7 @@
                 <ul class="nav nav-tabs nav-bordered mb-3">
                       <li class="nav-item">
                           <a href="#indikator-penilaian-preview" data-bs-toggle="tab" aria-expanded="false" class="nav-link active">
-                              Preview
+                              Data Indikator Penilaian
                           </a>
                       </li>
                       <li class="nav-item">
@@ -60,6 +60,7 @@
                                 <table id="basic-datatable" class="table table-centered table-striped w-100 dt-responsive nowrap">
                                     <thead>
                                         <tr>
+                                            <th width="5%">No</th>
                                             <th>Indikator Penilaian</th>
                                             <th>Deskripsi Penilaian</th>
                                             <th>Aksi</th> 
@@ -74,7 +75,7 @@
                 
                       <div class="tab-pane" id="input-tab">
                           <p>Silahkan isikan data Penilaian Peserta.</p>
-                          <form action="{% url 'master_penilaian:indikator-penilaian' %}" method="POST" id="formKegiatanPenilaianPetugas" class="needs-validation" novalidate>
+                          <form action="{% url 'master_penilaian:indikator-penilaian' %}" method="POST" id="formKegiatanPenilaianPetugas" novalidate>
                             {% csrf_token %}
                             <input type="hidden" name="id" id="id_id">
                             <div class="row mt-3">
@@ -141,14 +142,23 @@
         },
         columns :[
             {"data": 'nama_indikator'},
+            {"data": 'nama_indikator'},
             {"data": 'deskripsi_penilaian'},
             {"data" : 'aksi'},
         ],
         lengthMenu: [5, 25, 50, 100,'All'],
         columnDefs: [ {
-            'targets': [2], /* column index */
+            'targets': [3], /* column index */
             'orderable': false, /* true or false */
             'className': "text-center"
+        },
+        {
+            "targets": 0,
+            "data": null,
+            "defaultContent": "",
+            "render": function (data, type, row, meta) {
+                return meta.row + 1;
+            }
         }],
         keys: !0,
         language: {
@@ -156,6 +166,8 @@
             previous: "<i class='mdi mdi-chevron-left'>",
             next: "<i class='mdi mdi-chevron-right'>",
             },
+            lengthMenu : "Menampilkan _MENU_",
+            search: "Cari Indikator Penilaian ",
         },
         drawCallback: function () {
             $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
@@ -259,14 +271,30 @@
         
     }
     
+    function clearFormValidation(form){
+        $(form + ' .form-control').each(function(i, obj) {
+            $(obj).removeClass('is-invalid')
+            $(obj).trigger('change')
+        });
+
+        $(form + ' .form-select').each(function(j, objs) {
+            $(objs).removeClass('is-invalid')
+            $(objs).trigger('change')
+        });
+        
+        $('.invalid-feedback').each(function(i, obj) {
+            $(obj).html('')
+        });
+    }
+
     $('#ResetformIndikatorPenilaianPetugas').on('click', function(e){
         resetForm()
     })
 
     $('#formKegiatanPenilaianPetugas').on('submit', function(e){
-
         e.preventDefault()
-        
+        clearFormValidation('#formKegiatanPenilaianPetugas')
+
         var serializedData = $(this).serialize();
         $('.invalid-feedback').html('')
         $('.is_invalid').removeClass('is_invalid')
@@ -275,25 +303,22 @@
             url: $(this).attr('action'),
             data: serializedData,
             success: function (response) {
-
                 $('#messages-content').html(response["message"])
                 $('#msgs-upload').removeClass('alert-danger')
                 $('#msgs-upload').addClass('alert-success')
                 $('#msgs-upload').removeClass('d-none')
-                $(this)[0].reset();
                 table.ajax.reload();
-
                 $('.nav-tabs a[href="#indikator-penilaian-preview"]').tab('show');
+                $('#formKegiatanPenilaianPetugas')[0].reset();
+                clearFormValidation('#formKegiatanPenilaianPetugas')
             },
             error: function (response) {
                 var errors = response["responseJSON"]["error"]
                 for (const [key, value] of Object.entries(errors)) {
                     var msgs = '<ul>'
                     value.forEach(function (item, index) {
-                    
                         msgs += '<li>'+item+'</li>'
                         });
-                    
                     msgs += '</ul>'
                     $('#id_'+ key).addClass('is-invalid');
                     $('#msg-id_'+key).html(msgs)

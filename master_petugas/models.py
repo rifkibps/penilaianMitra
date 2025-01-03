@@ -6,7 +6,6 @@ from master_pegawai.models import MasterPegawaiModel
 # Create your models here.
 
 class AdministrativeModel(models.Model):
-   
    code = models.CharField(max_length=10, null=False, blank=False, unique=True, verbose_name='Kode Wilayah')
    region = models.CharField(max_length=128, null=False, blank=False, verbose_name='Nama Wilayah')
    def __str__(self):

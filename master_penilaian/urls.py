@@ -4,14 +4,14 @@ from . import views
 app_name = 'master_penilaian'
 
 urlpatterns = [
-    path('master-penilaian', views.PenilaianPetugasClassView.as_view(), name='index'),
-    path('master-penilaian/json-response', views.MasterPenilaianJsonResponseClassView.as_view(), name='datatable-json'),
-    path('master_penilaian/delete', views.MasterPenilaianDeleteView.as_view(), name='delete-kegiatan'),
-    path('master_penilaian/detail', views.MasterPenilaianDetailView.as_view(), name='detail-kegiatan'),
-    path('master_penilaian/update', views.MasterPenilaianUpdateView.as_view(), name='update-kegiatan'),
-    path('master_penilaian/export', views.MasterPenilaianExportView.as_view(), name='export-kegiatan'),
-    path('master_penilaian/get-penilaian-by-survey', views.PenilaianGetBySurveiClassView.as_view(), name='get-penilaian-by-survei'),
-    path('master_penilaian/get-alokasi-by-survey', views.AlokasiGetBySurveiClassView.as_view(), name='get-alokasi-by-survei'),
+    path('kegiatan-penilaian', views.PenilaianPetugasClassView.as_view(), name='index'),
+    path('kegiatan-penilaian/json-response', views.MasterPenilaianJsonResponseClassView.as_view(), name='datatable-json'),
+    path('kegiatan-penilaian/delete', views.MasterPenilaianDeleteView.as_view(), name='delete-kegiatan'),
+    path('kegiatan-penilaian/detail', views.MasterPenilaianDetailView.as_view(), name='detail-kegiatan'),
+    path('kegiatan-penilaian/update', views.MasterPenilaianUpdateView.as_view(), name='update-kegiatan'),
+    path('kegiatan-penilaian/export', views.MasterPenilaianExportView.as_view(), name='export-kegiatan'),
+    path('kegiatan-penilaian/get-penilaian-by-survey', views.PenilaianGetBySurveiClassView.as_view(), name='get-penilaian-by-survei'),
+    path('kegiatan-penilaian/get-alokasi-by-survey', views.AlokasiGetBySurveiClassView.as_view(), name='get-alokasi-by-survei'),
 
     path('nilai-mitra', views.NilaiMitraClassView.as_view(), name='nilai-mitra'),
     path('nilai-mitra/json-response', views.NilaiMitraJsonResponseClassView.as_view(), name='nilai-mitra-json'),

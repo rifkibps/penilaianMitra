@@ -46,7 +46,7 @@
                 <ul class="nav nav-tabs nav-bordered mb-3">
                       <li class="nav-item">
                           <a href="#kegiatan-penilaian-preview" data-bs-toggle="tab" aria-expanded="false" class="nav-link active">
-                              Preview
+                              Data Kegiatan Penilaian
                           </a>
                       </li>
                       <li class="nav-item">
@@ -59,18 +59,18 @@
                       <div class="tab-pane show active" id="kegiatan-penilaian-preview">
                         <div class="row mb-2">
                             <div class="col-sm-6">
-                                <a href="#offcanvasFilter"  data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasFilter" class="btn btn-danger mb-2"><i class="mdi mdi-filter-menu me-2"></i> Filter Data</a>
+                                <a href="#offcanvasFilter"  data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasFilter" class="btn btn-primary mb-2"><i class="mdi mdi-filter-menu me-2"></i> Filter Data</a>
+                                <button type="button" class="btn btn-primary mb-2 me-1" id="redraw-table"><i class="mdi mdi-refresh"></i> Refresh</button>
                             </div>
                             <div class="col-sm-6">
                                 <div class="text-sm-end">
-                                    <button type="button" class="btn btn-success mb-2 me-1" id="redraw-table"><i class="mdi mdi-refresh"></i></button>
                                     <div class="btn-group">
-                                        <button type="button" class="btn btn-light dropdown-toggle mb-2 me-1" data-bs-toggle="dropdown" aria-expanded="false"> Tambah <span class="caret"></span> </button>
+                                        <button type="button" class="btn btn-primary dropdown-toggle mb-2 me-1" data-bs-toggle="dropdown"><i class="mdi mdi-file-move"></i> Tambah <span class="caret"></span> </button>
                                         <div class="dropdown-menu">
                                             <a class="dropdown-item" href="{% url 'master_survei:index' %}#input-tab">Survei Baru</a>
                                         </div>
                                     </div>
-                                   <a href="{% url 'master_penilaian:export-kegiatan' %}" class="btn btn-light mb-2">Export</a>
+                                   <a href="{% url 'master_penilaian:export-kegiatan' %}" class="btn btn-primary mb-2"><i class="mdi mdi-download"></i> Export</a>
                                 </div>
                             </div><!-- end col-->
                         </div>
@@ -79,7 +79,8 @@
                             <table id="basic-datatable" class="table table-centered table-striped w-100 dt-responsive nowrap">
                                 <thead>
                                     <tr>
-                                        <th>Kegiatan Penilaian</th>
+                                        <th width="5%">No</th>
+                                        <th>Kegiatan Survei</th>
                                         <th>Tgl Penilaian</th>
                                         <th>Role Petugas</th>
                                         <th>Role Penilai</th>
@@ -97,27 +98,42 @@
                 
                       <div class="tab-pane" id="input-tab">
                           <p>Silahkan isikan data Penilaian Peserta.</p>
-                          <form action="{% url 'master_penilaian:index' %}" method="POST" id="formKegiatanPenilaianPetugas" class="needs-validation" novalidate>
+                          <form action="{% url 'master_penilaian:index' %}" method="POST" id="formKegiatanPenilaianPetugas" novalidate>
                             {% csrf_token %}
                             <input type="hidden" name="id" id="id_id">
                             <div class="row mt-3">
                                 <div class="col-lg-6">
-                                    <h5 class="mb-3">{{ form.nama_kegiatan.label }}</h5>
-                                    <div class="form-floating errors" id="form_{{form.nama_kegiatan.id_for_label}}">
-                                        {{form.nama_kegiatan}}
-                                        <label for="{{form.nama_kegiatan.id_for_label}}">{{ form.nama_kegiatan.label }}</label>
-                                        <div class="invalid-feedback" id="msg-{{form.nama_kegiatan.id_for_label}}">
+                                    <h5 class="mb-3">{{ form.kegiatan_survey.label }}</h5>
+                                    <div class="form-floating errors" id="form_{{form.kegiatan_survey.id_for_label}}">
+                                        {{form.kegiatan_survey}}
+                                        <label for="{{form.kegiatan_survey.id_for_label}}">{{ form.kegiatan_survey.label }}</label>
+                                        <div class="invalid-feedback" id="msg-{{form.kegiatan_survey.id_for_label}}">
                                         </div>
                                     </div>
-
-                                    <h5 class="mb-3 mt-4">{{ form.tgl_penilaian.label }}</h5>
+                                </div>
+                            
+                                <div class="col-lg-3">
+                                    <h5 class="mb-3">{{ form.tgl_penilaian.label }}</h5>
                                     <div class="form-floating errors" id="form_{{form.tgl_penilaian.id_for_label}}">
                                         {{form.tgl_penilaian}}
                                         <label for="{{form.tgl_penilaian.id_for_label}}">{{ form.tgl_penilaian.label }}</label>
                                         <div class="invalid-feedback" id="msg-{{form.tgl_penilaian.id_for_label}}">
                                         </div>
                                     </div>
-                                
+                                </div>
+
+                                <div class="col-lg-3">
+                                    <h5 class="mb-3">{{ form.status.label }}</h5>
+                                    <div class="form-floating errors" id="form_{{form.status.id_for_label}}">
+                                        {{form.status}}
+                                        <label for="{{form.status.id_for_label}}">{{ form.status.label }}</label>
+                                        <div class="invalid-feedback" id="msg-{{form.status.id_for_label}}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-lg-4">
                                     <h5 class="mt-3">{{ form.role_permitted.label }}</h5>
                                     <p class="text-muted">Pilih role/jabatan mitra yang akan dinilai.</p>
                                     <div class="form-floating errors" id="form_{{form.role_permitted.id_for_label}}">
@@ -126,30 +142,19 @@
                                         <div class="invalid-feedback" id="msg-{{form.role_permitted.id_for_label}}">
                                         </div>
                                     </div>
-
                                 </div>
-                            
-                                <div class="col-lg-6">
-                                    <h5 class="mb-3">{{ form.survey.label }}</h5>
-                                    <div class="form-floating errors" id="form_{{form.survey.id_for_label}}">
-                                        <select name="survey" class="form-select" required id="id_survey_id">
-                                            <option value="" selected="">---------</option>
-                                            {% for dt in data_survei %}
-                                                <option value="{{dt.id}}">{{dt.nama}} [{{dt.tgl_mulai|date:'d-M-Y'}} s.d. {{dt.tgl_selesai|date:'d-M-Y'}}]</option>
-                                            {% endfor %}
-                                          </select>
-                                        <label for="{{form.survey.id_for_label}}">{{ form.survey.label }}</label>
-                                        <div class="invalid-feedback" id="msg-{{form.survey.id_for_label}}">
+                                <div class="col-lg-4">
+                                    <h5 class="mt-3">{{ form.role_penilai_permitted.label }}</h5>
+                                    <p class="text-muted">Pilih role/jabatan (organik) penilai.</p>
+                                    <div class="form-floating errors" id="form_{{form.role_penilai_permitted.id_for_label}}">
+                                        {{form.role_penilai_permitted}}
+                                        <label for="{{form.role_penilai_permitted.id_for_label}}">{{ form.role_penilai_permitted.label }}</label>
+                                        <div class="invalid-feedback" id="msg-{{form.role_penilai_permitted.id_for_label}}">
                                         </div>
                                     </div>
-
-                                    <h5 class="mb-3 mt-4">{{ form.status.label }}</h5>
-                                    <div class="form-floating errors" id="form_{{form.status.id_for_label}}">
-                                        {{form.status}}
-                                        <label for="{{form.status.id_for_label}}">{{ form.status.label }}</label>
-                                        <div class="invalid-feedback" id="msg-{{form.status.id_for_label}}">
-                                        </div>
-                                    </div>
+                                </div>
+                                <div class="col-lg-4">
+                                    
                                 </div>
                             </div>
                             <br>
@@ -257,6 +262,7 @@
         },
         columns :[
             {"data": 'kegiatan_survey__nama_kegiatan'},
+            {"data": 'kegiatan_survey__nama_kegiatan'},
             {"data" : 'tgl_penilaian'},
             {"data": 'role_permitted__jabatan'},
             {"data": 'role_penilai_permitted__jabatan'},
@@ -265,9 +271,17 @@
         ],
         lengthMenu: [5, 25, 50, 100,'All'],
         columnDefs: [ {
-            'targets': [5], /* column index */
+            'targets': [6], /* column index */
             'orderable': false, /* true or false */
             'className': "text-center"
+        },
+        {
+            "targets": 0,
+            "data": null,
+            "defaultContent": "",
+            "render": function (data, type, row, meta) {
+                return meta.row + 1;
+            }
         }],
         keys: !0,
         language: {
@@ -275,6 +289,8 @@
             previous: "<i class='mdi mdi-chevron-left'>",
             next: "<i class='mdi mdi-chevron-right'>",
             },
+            lengthMenu : "Menampilkan _MENU_",
+            search: "Cari Kegiatan Penilaian ",
         },
         drawCallback: function () {
             $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
@@ -335,7 +351,6 @@
     }
 
     function hapusKegiatanPenilaian(e){
-
         swalWithBootstrapButtons.fire({
             title: 'Are you sure?',
             text: "Apakah anda yakin ingin menghapus kegiatan penilaian?",
@@ -383,11 +398,26 @@
 
     }
 
+    function clearFormValidation(form){
+        $(form + ' .form-control').each(function(i, obj) {
+            $(obj).removeClass('is-invalid')
+            $(obj).trigger('change')
+        });
+
+        $(form + ' .form-select').each(function(j, objs) {
+            $(objs).removeClass('is-invalid')
+            $(objs).trigger('change')
+        });
+        
+        $('.invalid-feedback').each(function(i, obj) {
+            $(obj).html('')
+        });
+    }
 
     $('#formKegiatanPenilaianPetugas').on('submit', function(e){
-
         e.preventDefault()
-        
+        clearFormValidation('#formKegiatanPenilaianPetugas')
+
         var serializedData = $(this).serialize();
         $('.invalid-feedback').html('')
         $('.is_invalid').removeClass('is_invalid')
@@ -396,32 +426,33 @@
             url: $(this).attr('action'),
             data: serializedData,
             success: function (response) {
-                
-                $('#messages-content').html(response["message"])
-                $('#msgs-upload').removeClass('alert-danger')
-                $('#msgs-upload').addClass('alert-success')
-                $('#msgs-upload').removeClass('d-none')
-                table.ajax.reload();
-                resetForm()
-
-                return $('.nav-tabs a[href="#kegiatan-penilaian-preview"]').tab('show');
+                if (response.status == 'failed'){
+                    Swal.fire(
+                        'Terjadi Kesalahan!',
+                        response.message,
+                        'info'
+                    )
+                }else{
+                    $('#messages-content').html(response["message"])
+                    $('#msgs-upload').removeClass('alert-danger')
+                    $('#msgs-upload').addClass('alert-success')
+                    $('#msgs-upload').removeClass('d-none')
+                    table.ajax.reload();
+                    resetForm()
+                    clearFormValidation('#formKegiatanPenilaianPetugas')
+                    $('.nav-tabs a[href="#kegiatan-penilaian-preview"]').tab('show');
+                }
             },
             error: function (response) {
-
                 var errors = response["responseJSON"]["error"]
-               
                 for (const [key, value] of Object.entries(errors)) {
                     var msgs = '<ul>'
                     value.forEach(function (item, index) {
-                    
                         msgs += '<li>'+item+'</li>'
                         });
-                    
                     msgs += '</ul>'
-        
                     $('#id_'+ key).addClass('is-invalid');
                     $('#msg-id_'+key).html(msgs)
-                    
                 }    
             }
         })

@@ -45,7 +45,7 @@
                 <ul class="nav nav-tabs nav-bordered mb-3">
                     <li class="nav-item">
                         <a href="#nilai-mitra-preview" data-bs-toggle="tab" aria-expanded="false" class="nav-link active">
-                            Nilai Mitra
+                            Data Nilai Mitra
                         </a>
                     </li>
                     <li class="nav-item">
@@ -70,13 +70,13 @@
                       <div class="tab-pane show active" id="nilai-mitra-preview">
                             <div class="row mb-2">
                                 <div class="col-sm-6">
-                                    <a href="#offcanvasFilter"  data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasFilter" class="btn btn-danger mb-2"><i class="mdi mdi-filter-menu me-2"></i> Filter Data</a>
+                                    <a href="#offcanvasFilter"  data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasFilter" class="btn btn-primary mb-2"><i class="mdi mdi-filter-menu me-2"></i> Filter Data</a>
+                                    <button type="button" class="btn btn-primary mb-2 me-1" id="redraw-table"><i class="mdi mdi-refresh"></i> Refresh</button>
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="text-sm-end">
-                                        <button type="button" class="btn btn-success mb-2 me-1" id="redraw-table"><i class="mdi mdi-refresh"></i></button>
-                                        <button type="button" class="btn btn-light mb-2 me-1" data-bs-toggle="modal" data-bs-target="#import-modal">Import</button>
-                                        <a href="{% url 'master_penilaian:export-nilai-mitra' %}" class="btn btn-light mb-2">Export</a>
+                                        <button type="button" class="btn btn-primary mb-2 me-1" data-bs-toggle="modal" data-bs-target="#import-modal"><i class="mdi mdi-file-move"></i> Import</button>
+                                        <a href="{% url 'master_penilaian:export-nilai-mitra' %}" class="btn btn-primary mb-2"><i class="mdi mdi-download"></i> Export</a>
                                     </div>
                                 </div><!-- end col-->
                             </div>
@@ -85,13 +85,15 @@
                                 <table id="basic-datatable" class="table table-centered table-striped w-100 dt-responsive nowrap">
                                     <thead>
                                         <tr>
-                                            <th>ID Mitra</th>
+                                            <th width="4%">No</th>
+                                            <th>Desa/Kel.</th>
                                             <th>Mitra</th>
                                             <th>Jabatan</th>
                                             <th>Kegiatan Penilaian</th>
                                             <th>Indikator Penilaian</th>
                                             <th>Nilai</th> 
                                             <th>Catatan</th>
+                                            <th>Penilai</th>
                                         </tr>
                                     </thead>
                                 
@@ -106,7 +108,7 @@
 
                         <div class="row mb-2">
                             <div class="col-sm-8 d-flex justify-content-start">
-                                <a href="#offcanvasFilter2"  data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasFilter2" class="btn btn-danger mb-2 d-inline"><i class="mdi mdi-filter-menu me-2"></i> Filter Data</a>&emsp;
+                                <a href="#offcanvasFilter2"  data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasFilter2" class="btn btn-primary mb-2 d-inline"><i class="mdi mdi-filter-menu me-2"></i> Filter Data</a>&emsp;
                                 <select class="form-select mb-2 d-inline" id="nilai-mitra-filter-survey" style="width:200px">
                                     <option value="">Pilih Survei</option>
                                     {% for dt in data_survei %}
@@ -119,8 +121,8 @@
                             </div>
                             <div class="col-sm-4">
                                 <div class="text-sm-end">
-                                    <button type="button" class="btn btn-success mb-2 me-1" id="redraw-table-2"><i class="mdi mdi-refresh"></i></button>
-                                    <button onclick="ExportToExcel('xlsx')" class="btn btn-light mb-2">Export</button>
+                                    <button type="button" class="btn btn-primary mb-2 me-1" id="redraw-table-2"><i class="mdi mdi-refresh"></i> Refresh</button>
+                                    <button onclick="ExportToExcel('xlsx')" class="btn btn-primary mb-2"><i class="mdi mdi-download"></i> Export</button>
                                 </div>
                             </div><!-- end col-->
                         </div>
@@ -290,8 +292,7 @@
                             <li>Upload file pada form berikut:</li>
                         </ol>
                     </div>
-
-                    <form action="" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    <form action="" enctype="multipart/form-data" novalidate>
                         {% csrf_token %}
                         <label for="{{form_upload.import_file.id_for_label}}" class="form-label"><h5>{{ form_upload.import_file.label }}</h5></label>
                         <div class="mb-3">
@@ -328,18 +329,79 @@
             </div>
         </div>
 
-        <button class="btn btn-danger mt-3" id="reset-filter-2">Clear Filter</button>
+        <button class="btn btn-primary mt-3" id="reset-filter-2">Clear Filter</button>
     </div>
 </div>
 
 <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasFilter" aria-labelledby="offcanvasFilterLabel">
     <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasFilterLabel">Filter Nilai Mitra</h5>
+        <h5 class="offcanvas-title" id="offcanvasFilterLabel">Filter Penilaian</h5>
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
+        <h5>Filter Menurut Wilayah</h5>
+        <div class="row mb-1 mt-3">
+            <div class="col-sm-3">
+                Provinsi:
+            </div>
+            <div class="col-8">
+                <div class="d-flex align-items-center">
+                     <select class="form-select font-13 region-adm">
+                        <option value="">-- Pilih Provinsi --</option>
+                       {% for dt in adm.prov %}
+                            <option value="{{ dt.code }}">{{ dt.region }} [{{ dt.code }}]</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-1">
+            <div class="col-sm-3">
+                Kabupaten:
+            </div>
+            <div class="col-8">
+                <div class="d-flex align-items-center">
+                     <select class="form-select font-13 region-adm">
+                        <option value="">-- Pilih Kab/Kota --</option>
+                       {% for dt in adm.kabkot %}
+                            <option value="{{ dt.code }}">{{ dt.region }} [{{ dt.code }}]</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-1">
+            <div class="col-sm-3">
+                Kecamatan:
+            </div>
+            <div class="col-8">
+                <div class="d-flex align-items-center">
+                     <select class="form-select font-13 region-adm">
+                        <option value="">-- Pilih Kecamatan --</option>
+                        {% for dt in adm.kec %}
+                            <option value="{{ dt.code }}">{{ dt.region }} [{{ dt.code }}]</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-sm-3">
+                Desa:
+            </div>
+            <div class="col-8">
+                <div class="d-flex align-items-center">
+                    <select class="form-select font-13 region-adm">
+                        <option value="">-- Pilih Desa --</option>
+                        {% for dt in adm.desa %}
+                            <option value="{{ dt.code }}">{{ dt.region }} [{{ dt.code }}]</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
 
-        <h5>Filter by Mitra</h5>
+        <h5>Filter Menurut Mitra</h5>
         <div class="row mb-3">
             <div class="col-12">
                 <div class="d-flex align-items-center">
@@ -353,7 +415,7 @@
             </div>
         </div>
 
-        <h5>Filter by Survei</h5>
+        <h5>Filter Menurut Karakteristik</h5>
         <div class="row">
             <div class="col-11">
                 <div class="d-flex align-items-center">
@@ -397,23 +459,6 @@
     </div>
 </div>
 
-<!-- Success Alert Modal -->
-<div id="success-alert-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-sm">
-        <div class="modal-content modal-filled bg-success">
-            <div class="modal-body p-4">
-                <div class="text-center">
-                    <i class="dripicons-checkmark h1"></i>
-                    <h4 class="mt-2">Well Done!</h4>
-                    <p class="mt-3 message-feedback"></p>
-                    <button type="button" class="btn btn-light my-2" data-bs-dismiss="modal">Continue</button>
-                </div>
-            </div>
-        </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
-
-
 {% endblock table-content %}
 
 {% block tables-script-extend %}
@@ -450,28 +495,38 @@
                     "survei_filter": $('#survei-select-filter').val(),
                     "kegiatan_filter": $('#kegiatan-select-filter').val(),
                     "mitra_filter": $('#mitra-select-filter').val()
-
                 })
             },
             "type": "POST"
         },
-
         columns :[
-            {"data": 'petugas__petugas__kode_petugas'},
+            {"data": 'petugas__petugas__nama_petugas'},
+            {"data": 'petugas__petugas__adm_id__region'},
             {"data": 'petugas__petugas__nama_petugas'},
             {"data": 'petugas__role__jabatan'},
-            {"data" : 'penilaian__kegiatan_penilaian__nama_kegiatan'},
-            {"data" : 'penilaian__indikator_penilaian__nama_indikator'},
-            {"data" : 'nilai'},
-            {"data" : 'catatan'},
-           
-        ], 
+            {"data" : 'detail_nilai__indikator_penilaian__kegiatan_penilaian__kegiatan_survey__nama_kegiatan'},
+            {"data" : 'detail_nilai__indikator_penilaian__indikator_penilaian__nama_indikator'},
+            {"data" : 'detail_nilai__nilai'},
+            {"data" : 'detail_nilai__catatan'},
+            {"data" : 'penilai__pegawai__name'},
+        ],
+        columnDefs: [
+        {
+            "targets": 0,
+            "data": null,
+            "defaultContent": "",
+            "render": function (data, type, row, meta) {
+                return meta.row + 1;
+            }
+        }],
         keys: !0,
         language: {
             paginate: {
             previous: "<i class='mdi mdi-chevron-left'>",
             next: "<i class='mdi mdi-chevron-right'>",
             },
+            lengthMenu : "Menampilkan _MENU_",
+            search: "Cari Nilai Mitra ",
         },
         drawCallback: function () {
             $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
