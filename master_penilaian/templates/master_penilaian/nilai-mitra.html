@@ -105,14 +105,13 @@
                       </div> <!-- end preview-->
                 
                       <div class="tab-pane" id="nilai-mitra-preview-2">
-
                         <div class="row mb-2">
                             <div class="col-sm-8 d-flex justify-content-start">
                                 <a href="#offcanvasFilter2"  data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasFilter2" class="btn btn-primary mb-2 d-inline"><i class="mdi mdi-filter-menu me-2"></i> Filter Data</a>&emsp;
                                 <select class="form-select mb-2 d-inline" id="nilai-mitra-filter-survey" style="width:200px">
-                                    <option value="">Pilih Survei</option>
-                                    {% for dt in data_survei %}
-                                         <option value="{{ dt.id }}">{{ dt.nama }}</option>
+                                    <option value="">Pilih Kegiatan Survei</option>
+                                    {% for dt in data_kegiatan %}
+                                         <option value="{{ dt.id }}">{{ dt.nama_kegiatan }}</option>
                                      {% endfor %}
                                  </select>&ensp;
                                  <select class="form-select mb-2 d-inline" id="nilai-mitra-filter-kegiatan" style="width:200px">
@@ -138,13 +137,11 @@
                                         <th>Penilaian Indikator</th>
                                     </tr>
                                 </thead>
-                                  
                                 <tbody>
                                     <tr class="text-center">
                                         <td colspan="5">Silahkan Pilih Kegiatan Survei dan Penilaian</td>
                                     </tr>
                                 </tbody>
-
                             </table>                                            
                         </div>
 
@@ -401,12 +398,15 @@
             </div>
         </div>
 
-        <h5>Filter Menurut Mitra</h5>
-        <div class="row mb-3">
-            <div class="col-12">
+        <h5>Filter Menurut Karakteristik</h5>
+        <div class="row mb-1 mt-3">
+            <div class="col-sm-3">
+                Mitra:
+            </div>
+            <div class="col-8">
                 <div class="d-flex align-items-center">
-                     <select class="form-select" id="mitra-select-filter">
-                        <option selected="" value="">Filter By Mitra</option>
+                    <select class="form-select" id="mitra-select-filter">
+                        <option selected="" value="">-- Pilih Mitra --</option>
                         {% for dt in data_mitra %}
                         <option value="{{dt.id}}" data-tokens="{{dt.petugas.kode_petugas}} {{dt.petugas.nama_petugas}}">[{{dt.petugas.kode_petugas}}] {{dt.petugas.nama_petugas}}</option>
                         {% endfor %}
@@ -414,26 +414,31 @@
                 </div>
             </div>
         </div>
-
-        <h5>Filter Menurut Karakteristik</h5>
-        <div class="row">
-            <div class="col-11">
+        
+        <div class="row mb-1">
+            <div class="col-sm-3">
+                Pegawai:
+            </div>
+            <div class="col-8">
                 <div class="d-flex align-items-center">
-                     <select class="form-select" id="survei-select-filter">
-                        <option selected="" value="">Filter By Survei</option>
-                        {% for dt in data_survei %}
-                        <option value="{{dt.id}}">{{dt.nama}}</option>
+                    <select class="form-select" id="mitra-select-filter">
+                        <option selected="" value="">-- Pilih Pegawai --</option>
+                        {% for dt in data_pegawai %}
+                        <option value="{{dt.id}}" data-tokens="{{dt.pegawai.kode_petugas}} {{dt.pegawai.name}}">[{{dt.pegawai.nip}}] {{dt.pegawai.name}}</option>
                         {% endfor %}
                     </select>
                 </div>
             </div>
         </div>
-        <h5 class="mt-3">Filter by Role/Jabatan</h5>
-        <div class="row">
-            <div class="col-11">
+
+        <div class="row mb-1">
+            <div class="col-sm-3">
+                Role/Jabatan:
+            </div>
+            <div class="col-8">
                 <div class="d-flex align-items-center">
-                     <select class="form-select" id="role-select-filter">
-                        <option selected="" value="">Filter By Jabatan</option>
+                    <select class="form-select" id="role-select-filter">
+                        <option selected="" value="">-- Pilih Role/Jabatan --</option>
                         {% for dt in data_role %}
                         <option value="{{dt.id}}">{{dt.jabatan}}</option>
                         {% endfor %}
@@ -441,21 +446,42 @@
                 </div>
             </div>
         </div>
-        <h5 class="mt-3">Filter by Kegiatan Penilaian</h5>
-        <div class="row">
-            <div class="col-11">
+
+        <h5 class="mt-3">Filter Menurut Kegiatan</h5>
+
+        <div class="row mb-1 mt-3">
+            <div class="col-sm-3">
+                Survei:
+            </div>
+            <div class="col-8">
                 <div class="d-flex align-items-center">
-                     <select class="form-select" id="kegiatan-select-filter">
-                        <option selected="" value="">Filter By Kegiatan Penilaian</option>
-                        {% for dt in data_kegiatan_penilaian %}
-                        <option value="{{dt.id}}">{{dt.nama_kegiatan}}</option>
+                    <select class="form-select" id="survei-select-filter">
+                        <option selected="" value="">-- Pilih Survei --</option>
+                        {% for dt in data_survei %}
+                        <option value="{{dt.id}}">{{forloop.counter}}. {{dt.nama}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mb-1">
+            <div class="col-sm-3">
+                Kegiatan Survei:
+            </div>
+            <div class="col-8">
+                <div class="d-flex align-items-center">
+                    <select class="form-select" id="survei-select-filter">
+                        <option selected="" value="">-- Pilih Kegiatan --</option>
+                        {% for dt in data_kegiatan %}
+                        <option value="{{dt.id}}">{{forloop.counter}}. {{dt.nama_kegiatan}}</option>
                         {% endfor %}
                     </select>
                 </div>
             </div>
         </div>
 
-        <button class="btn btn-danger mt-3" id="reset-filter">Clear Filter</button>
+        <button class="btn btn-primary mt-3" id="reset-filter">Clear Filter</button>
     </div>
 </div>
 
@@ -857,7 +883,7 @@
             success: (data) => {
                 var option = '<option value="">Pilih Penilaian</option>'
                 for (let i = 0; i < data.instance.length; i++) {
-                    option += '<option value="'+ data.instance[i]['id'] +'">'+ data.instance[i]['nama_kegiatan'] +'</option>'
+                    option += '<option value="'+ data.instance[i]['id'] +'">'+ data.instance[i]['kegiatan_survey__nama_kegiatan'] +'</option>'
                 }
                 $(field_target).html(option)
             },
@@ -923,7 +949,6 @@
     }
 
     $('#nilai-mitra-filter-survey').on('change', function(){
-
         var thead_def = `<tr>
             <th>ID Mitra</th>
             <th>Mitra</th>

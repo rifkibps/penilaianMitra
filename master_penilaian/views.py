@@ -22,7 +22,7 @@ from django.http import HttpResponse
 from .resources import MasterNilaiResource, MasterKegiatanResource, IndikatorKegiatanResources
 
 from master_petugas.models import RoleMitra, AlokasiPetugas, AdministrativeModel
-from master_survey.models import SurveyModel
+from master_survey.models import SurveyModel, SubKegiatanSurvei
 
 import itertools
 import numpy as np
@@ -135,7 +135,8 @@ class PenilaianGetBySurveiClassView(LoginRequiredMixin, View):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
         if is_ajax:
-            data = models.KegiatanPenilaianModel.objects.filter(survey=request.POST.get('survey_id')).values()
+            data = models.KegiatanPenilaianModel.objects.filter(kegiatan_survey = request.POST.get('survey_id')).values('id', 'kegiatan_survey__nama_kegiatan')
+            pprint(data)
             return JsonResponse({"instance": list(data)}, status=200)
         
         return JsonResponse({"error": ""}, status=400)
@@ -609,11 +610,13 @@ class NilaiMitraClassView(LoginRequiredMixin, View):
     def get(self, request):
         context = {
             'title' : 'Nilai Mitra',
-            'data_mitra' : AlokasiPetugas.objects.all(),
-            'data_role' : RoleMitra.objects.all(),
-            'data_survei' : SurveyModel.objects.all(),
+            'data_mitra' : AlokasiPetugas.objects.filter(pegawai = None).all().order_by('petugas__nama_petugas'),
+            'data_pegawai' : AlokasiPetugas.objects.filter(petugas = None).all().order_by('pegawai__name'),
+            'data_role' : RoleMitra.objects.all().order_by('jabatan'),
+            'data_survei' : SurveyModel.objects.all().order_by('nama'),
+            'data_kegiatan' : SubKegiatanSurvei.objects.all().order_by('nama_kegiatan'),
             'data_indikator_penilaian' : models.IndikatorPenilaian.objects.all(),
-            'data_kegiatan_penilaian' : models.KegiatanPenilaianModel.objects.all(),
+            'data_kegiatan_penilaian' : models.KegiatanPenilaianModel.objects.all().order_by('-tgl_penilaian'),
             'form' : forms.PenilaianMitraForm(),
             'form_upload' : forms.NilaiFormUpload()
             }
@@ -1046,15 +1049,15 @@ class GenerateTableNilaiClassView(LoginRequiredMixin, View):
                 return JsonResponse({'status': 'failed', 'data': 'Data tidak tersedia'})
             
             kegiatan = kegiatan.first()
-            survey_id = kegiatan.survey.id
+            kegiatan_survey_id = kegiatan.kegiatan_survey.id
 
             if request.POST.get('filter_role_nilai_mitra'):
-                alokasi_petugas = AlokasiPetugas.objects.filter(survey = survey_id, role = request.POST.get('filter_role_nilai_mitra'), pegawai = None)
+                alokasi_petugas = AlokasiPetugas.objects.filter(sub_kegiatan = kegiatan_survey_id, role = request.POST.get('filter_role_nilai_mitra'), pegawai = None)
             else:
-                alokasi_petugas = AlokasiPetugas.objects.filter(survey = survey_id, pegawai = None)
+                alokasi_petugas = AlokasiPetugas.objects.filter(sub_kegiatan = kegiatan_survey_id, pegawai = None)
 
-            master_nilai = models.MasterNilaiPetugas.objects.filter(penilaian__kegiatan_penilaian = kegiatan_penilaian)
-            indikator_penilaian = list(master_nilai.values_list('penilaian__indikator_penilaian__nama_indikator', flat=True).distinct())
+            master_nilai = models.MasterNilaiPetugas.objects.filter(indikator_penilaian__kegiatan_penilaian = kegiatan_penilaian)
+            indikator_penilaian = list(master_nilai.values_list('indikator_penilaian__indikator_penilaian__nama_indikator', flat=True).distinct())
             indikator_col = [ f"Penilaian {indikator}" for indikator in indikator_penilaian]
             catatan_col = [ f"Catatan {indikator}" for indikator in indikator_penilaian]
             
@@ -1069,20 +1072,20 @@ class GenerateTableNilaiClassView(LoginRequiredMixin, View):
             tbody_data = []
             for idx, dt_alokasi in enumerate(alokasi_petugas):
                 dt_row = []
-                db_query_check = models.MasterNilaiPetugas.objects.filter(petugas = dt_alokasi.id, penilaian__kegiatan_penilaian = kegiatan.id)
                 dt_row.append(dt_alokasi.id) #[0]
                 dt_row.append(dt_alokasi.petugas.id) #[0]
                 dt_row.append(dt_alokasi.petugas.kode_petugas) #[1]
                 dt_row.append(dt_alokasi.petugas.nama_petugas) #[2]
                 dt_row.append(dt_alokasi.role.jabatan) #[3]
-                dt_row.append(kegiatan.nama_kegiatan) #[4]
+                dt_row.append(kegiatan.kegiatan_survey.nama_kegiatan) #[4]
 
+                db_query_check = models.MasterPenilaianPetugas.objects.filter(petugas = dt_alokasi.id, detail_nilai__indikator_penilaian__kegiatan_penilaian = kegiatan.id)
                 if db_query_check.exists():
                     rerata = []
                     for idx2, db_row in enumerate(db_query_check):
-
-                        db_row_indikator = db_row.penilaian.indikator_penilaian.nama_indikator
-            
+                        pprint(db_row.masternilaipetugas_ptr.nilai)
+                        pprint("########################################")
+                        db_row_indikator = db_row.indikator_penilaian.indikator_penilaian.nama_indikator
                         indikator_index = indikator_penilaian.index(db_row_indikator) if db_row_indikator in indikator_penilaian else -1
                         
                         if indikator_index >= 0:
