@@ -56,7 +56,7 @@ class MasterPenilaianPetugas(models.Model):
 
    def __str__(self):
       return f"{self.pk}. [Penilai: {self.penilai.pegawai.name}] [Dinilai: {self.petugas.petugas.nama_petugas}]"
-      
+
 class MasterNilaiPetugas(models.Model):
    penilaian = models.ForeignKey(MasterPenilaianPetugas, on_delete=models.CASCADE, related_name='detail_nilai')
    indikator_penilaian = models.ForeignKey(IndikatorKegiatanPenilaian, on_delete=models.RESTRICT, related_name='indikator_kegiatan_penilaian')

@@ -19,7 +19,7 @@ urlpatterns = [
     path('nilai-mitra/detail', views.NilaiMitraDetailClassView.as_view(), name='detail-nilai-mitra'),
     path('nilai-mitra/update', views.NilaiMitraUpdateClassView.as_view(), name='update-nilai-mitra'),
     path('nilai-mitra/export', views.NilaiMitraExportClassView.as_view(), name='export-nilai-mitra'),
-    path('nilai-mitra/template/<int:kegiatan>', views.NilaiMitraTemplateClassView.as_view(), name='template-nilai-mitra'),
+    path('nilai-mitra/template', views.NilaiMitraTemplateClassView.as_view(), name='template-nilai-mitra'),
     path('nilai-mitra/upload', views.NilaiMitraUploadClassView.as_view(), name='upload-nilai-mitra'),
     path('nilai-mitra/table', views.GenerateTableNilaiClassView.as_view(), name='generate-table-nilai'),
     path('nilai-mitra/get-nilai-mitra', views.GetNilaiMitraClassView.as_view(), name='get-nilai-mitra'),
@@ -42,6 +42,5 @@ urlpatterns = [
     path('penilaian/json-response', views.KegiatanPenilaianJsonResponseClassView.as_view(), name='list-penilaian-json'),
     path('penilaian/nilai-json-response', views.MasterNilaiPetugasClassView.as_view(), name='list-nilai-json'),
     path('penilaian/get-indicator', views.IndikatorPenilaianPetugasClassView.as_view(), name='list-indicator-json'),
-    
     path('penilaian/rank-petugas', views.MasterGlobalRankPetugasClassView.as_view(), name='rank-petugas-json'),
 ]

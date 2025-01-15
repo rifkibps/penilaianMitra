@@ -25,9 +25,7 @@
 <div class="row">
     <div class="col-12">
         <div class="alert alert-danger d-none" id="msgs-upload" role="alert">   
-           
             <div id="messages-content">
-             
             </div>
         </div>
     </div>
@@ -70,7 +68,7 @@
                       <div class="tab-pane show active" id="nilai-mitra-preview">
                             <div class="row mb-2">
                                 <div class="col-sm-6">
-                                    <a href="#offcanvasFilter"  data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasFilter" class="btn btn-primary mb-2"><i class="mdi mdi-filter-menu me-2"></i> Filter Data</a>
+                                    <a href="#offcanvasFilter" data-bs-toggle="offcanvas" role="button" class="btn btn-primary mb-2"><i class="mdi mdi-filter-menu me-2"></i> Filter Data</a>
                                     <button type="button" class="btn btn-primary mb-2 me-1" id="redraw-table"><i class="mdi mdi-refresh"></i> Refresh</button>
                                 </div>
                                 <div class="col-sm-6">
@@ -109,13 +107,13 @@
                             <div class="col-sm-8 d-flex justify-content-start">
                                 <a href="#offcanvasFilter2"  data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasFilter2" class="btn btn-primary mb-2 d-inline"><i class="mdi mdi-filter-menu me-2"></i> Filter Data</a>&emsp;
                                 <select class="form-select mb-2 d-inline" id="nilai-mitra-filter-survey" style="width:200px">
-                                    <option value="">Pilih Kegiatan Survei</option>
-                                    {% for dt in data_kegiatan %}
-                                         <option value="{{ dt.id }}">{{ dt.nama_kegiatan }}</option>
+                                    <option value="">-- Pilih Survei --</option>
+                                    {% for dt in data_survei %}
+                                         <option value="{{ dt.id }}">{{ dt.nama }}</option>
                                      {% endfor %}
                                  </select>&ensp;
                                  <select class="form-select mb-2 d-inline" id="nilai-mitra-filter-kegiatan" style="width:200px">
-                                    <option value="">Pilih Penilaian</option>
+                                    <option value="">-- Pilih Penilaian --</option>
                                  </select>
                             </div>
                             <div class="col-sm-4">
@@ -131,6 +129,7 @@
                                 <thead>
                                     <tr>
                                         <th>ID Mitra</th>
+                                        <th>Kec.</th>
                                         <th>Mitra</th>
                                         <th>Jabatan</th>
                                         <th>Kegiatan Penilaian</th>
@@ -139,7 +138,7 @@
                                 </thead>
                                 <tbody>
                                     <tr class="text-center">
-                                        <td colspan="5">Silahkan Pilih Kegiatan Survei dan Penilaian</td>
+                                        <td colspan="6">Silahkan Pilih Kegiatan Survei dan Penilaian</td>
                                     </tr>
                                 </tbody>
                             </table>                                            
@@ -148,55 +147,67 @@
                       </div> <!-- end preview-->
 
                       <div class="tab-pane" id="input-tab">
-                          <p>Silahkan isikan data Penilaian Peserta.</p>
+                          <p>Silahkan isikan data Penilaian Petugas.</p>
                           <form action="{% url 'master_penilaian:nilai-mitra' %}" method="POST" id="formPenilaianPetugas">
                             {% csrf_token %}
                             <input type="hidden" name="id" id="id_id">
-
-                            <div class="row mt-3">
-                                <div class="col-sm-3">
-                                    <h5 class="mb-3">Survei</h5>
+                            <div class="row justify-content-between">
+                                <div class="col-6">
+                                    <div class="row mt-3">
+                                        <div class="col-sm-6">
+                                            <h5 class="mb-3">Survei</h5>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <select class="form-select mb-2" id="field_survey" name="field_survey">
+                                                <option value="">-- Pilih Survei --</option>
+                                                {% for dt in data_survei %}
+                                                     <option value="{{ dt.id }}">{{ dt.nama }}</option>
+                                                 {% endfor %}
+                                             </select>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <h5 class="mb-3">Kegiatan Penilaian</h5>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <select class="form-select mb-2 d-inline" id="field_kegiatan" name="field_kegiatan">
+                                                <option value="">-- Pilih Kegiatan --</option>
+                                             </select>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-sm-4">
-                                    <select class="form-select mb-2" id="field_survey" name="field_survey">
-                                        <option value="">Pilih Survei</option>
-                                        {% for dt in data_survei %}
-                                             <option value="{{ dt.id }}">{{ dt.nama }}</option>
-                                         {% endfor %}
-                                     </select>
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-sm-3">
-                                    <h5 class="mb-3">Kegiatan Penilaian</h5>
-                                </div>
-                                <div class="col-sm-4">
-                                    <select class="form-select mb-2 d-inline" id="field_kegiatan" name="field_kegiatan">
-                                        <option value="">Pilih Kegiatan</option>
-                                     </select>
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-sm-3">
-                                    <h5 class="mb-3">Mitra</h5>
-                                </div>
-                                <div class="col-sm-4">
-                                    <select class="form-select mb-2 d-inline" id="field_mitra" name="field_mitra">
-                                        <option value="">Pilih Mitra</option>
-                                     </select>
+                                <div class="col-6">
+                                    <div class="row mt-3">
+                                        <div class="col-sm-5">
+                                            <h5 class="mb-3">Mitra/Petugas</h5>
+                                        </div>
+                                        <div class="col-sm-6 col-sm-offset-1">
+                                            <select class="form-select mb-2 d-inline" id="field_mitra" name="field_mitra">
+                                                <option value="">-- Pilih Petugas --</option>
+                                             </select>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-5">
+                                            <h5 class="mb-3">Penilai</h5>
+                                        </div>
+                                        <div class="col-sm-6 col-sm-offset-1">
+                                            <select class="form-select mb-2 d-inline" id="field_penilai" name="field_id_penilai">
+                                                <option value="">-- Pilih Penilai --</option>
+                                             </select>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
                             <hr>
-                            <p>Silahkan isikan nilai mitra.</p>
+                            <p>Silahkan isikan nilai petugas.</p>
                             <div class="row">
                                 <div class="col-lg">
-                                    
-                                    <table class="table table-sm table-centered table-striped w-100 dt-responsive nowrap" id="form-indikator-nilai">
+                                    <table class="table table-sm table-centered w-100 dt-responsive nowrap" id="form-indikator-nilai">
                                         <thead>
-                                            <tr class="bg-primary text-white">
+                                            <tr class="bg-light">
                                                 <th>No</th>
                                                 <th>Indikator Penilaian</th>
                                                 <th>Nilai Indikator</th>
@@ -204,17 +215,15 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-
                                         </tbody>
                                     </table>
-
                                 </div>
                             </div>
 
-                            <div class="row mt-2">
-                                <div class="col-lg">        
-                                    <button type="button" class="btn btn-danger" id="ResetformPenilaianPetugas">Reset Form</button>
+                            <div class="row mt-4">
+                                <div class="col-md">        
                                     <button type="submit" class="btn btn-primary" id="submitformPenilaianPetugas">Kirim Data</button>
+                                    <button type="button" class="btn btn-info" id="ResetformPenilaianPetugas">Reset Form</button>
                                 </div>
                             </div>
                         
@@ -274,12 +283,11 @@
                     <div class="mb-3">
                         <ol>
                             <li>Unduh template petugas: <br>
-                                
                                 <div class="mt-1 d-flex justify-content-start">
                                     <select class="form-select form-control-sm d-inline" style="width:250px;"  id="filter-kegiatan-template">
-                                        <option selected="" value="">Kegiatan Penilaian</option>
+                                        <option selected="" value="">-- Pilih Kegiatan Penilaian --</option>
                                         {% for dt in data_kegiatan_penilaian %}
-                                        <option value="{{dt.id}}">[{{dt.survey.nama}}] {{dt.nama_kegiatan}}</option>
+                                        <option value="{{dt.id}}">{{dt.kegiatan_survey.nama_kegiatan}}</option>
                                         {% endfor %}
                                     </select>&ensp;
                                      <button class="btn btn-primary btn-sm d-inline" id="get-templates-upload">Unduh</button>
@@ -579,6 +587,7 @@
         $('#formPenilaianPetugas')[0].reset();
         $('.was-validated').removeClass('was-validated')
         $('#submitformPenilaianPetugas').html('Kirim Data')
+        $('#form-indikator-nilai tbody').html('')
     }
 
     function preview_excel(table_id, field_file_id){
@@ -623,8 +632,6 @@
     }
 
     function deleteNilaiMitra (e){
-        var kegiatan = $('#nilai-mitra-filter-kegiatan').val()
-
         swalWithBootstrapButtons.fire({
             title: 'Are you sure?',
             text: "Apakah anda yakin ingin menghapus indikator penilaian mitra?",
@@ -640,8 +647,7 @@
                     type: "POST",
                     dataType: "json",
                     data : {
-                        'id_alokasi' : e,
-                        'id_kegiatan' : kegiatan
+                        'id' : e,
                     },
                     headers: {
                         "X-Requested-With": "XMLHttpRequest",
@@ -679,48 +685,48 @@
     }
 
     function updateNilaiMitra (e){
-
-        var kegiatan = $('#nilai-mitra-filter-kegiatan').val()
-
         $.ajax({
             url: '{% url 'master_penilaian:get-nilai-mitra' %}',
             type: "POST",
             dataType: "json",
             data : {
-                'id_alokasi' : e,
-                'id_kegiatan' : kegiatan
-
+                'id_penilaian' : e,
             },
             headers: {
                 "X-Requested-With": "XMLHttpRequest",
                 "X-CSRFToken": '{{csrf_token}}',
             },
             success: (data) => {
-
                 if (data.status == 'success'){
-                    $('#field_survey').val(data.data_mitra.survey__id)
-                    var opt_mitra = '<option value="'+ data.data_mitra.id +'" selected>['+data.data_mitra.petugas__kode_petugas + '] '+ data.data_mitra.petugas__nama_petugas+' | ' +data.data_mitra.role__jabatan + '</option>'
-                    var opt_kegiatan = '<option value="'+ data.data_kegiatan.id +'" selected>'+data.data_kegiatan.nama_kegiatan + '</option>'
+                    console.log(data)
+                    var opt_kegiatan = '<option value="">-- Pilih Kegiatan --</option><option value="'+ data.data_kegiatan.id +'" selected>'+data.data_kegiatan.kegiatan_survey__nama_kegiatan + '</option>'
+                    var opt_mitra = '<option value="">-- Pilih Petugas --</option><option value="'+ data.data_mitra.id +'" selected>['+data.data_mitra.petugas__kode_petugas + '] '+ data.data_mitra.petugas__nama_petugas+' | ' +data.data_mitra.role__jabatan + '</option>'
+                    var opt_penilai = '<option value="">-- Pilih Penilai --</option><option value="'+ data.data_penilai.id +'" selected>['+data.data_penilai.pegawai__nip + '] '+ data.data_penilai.pegawai__name+' | ' +data.data_penilai.role__jabatan + '</option>'
                     $('#field_mitra').html(opt_mitra)
+                    $('#field_penilai').html(opt_penilai)
                     $('#field_kegiatan').html(opt_kegiatan)
+                    $('#field_survey').val(data.data_mitra.sub_kegiatan__survey__id)
+                    
+                    var tbody_rows = ''
+                    if(data.nilai_mitra.length > 0){
+                        for (let i = 0; i < data.nilai_mitra.length; i++) {
+                            tbody_rows += `<tr>
+                                <td>`+(i+1)+`.</td>
+                                <td>`+data.nilai_mitra[i]['detail_nilai__indikator_penilaian__indikator_penilaian__nama_indikator'] +`</td>
+                                <td>
+                                    <input type="number" class="form-control d-inline" name="nilai_indikator_`+data.nilai_mitra[i]['detail_nilai__indikator_penilaian'] +`" placeholder="Isikan nilai" alt="Isikan nilai" min="`+data.nilai_mitra[i]['detail_nilai__indikator_penilaian__n_min'] +`" max="`+data.nilai_mitra[i]['detail_nilai__indikator_penilaian__n_max'] +`" onkeyup="if(this.value > `+data.nilai_mitra[i]['detail_nilai__indikator_penilaian__n_max'] +` || this.value < `+data.nilai_mitra[i]['detail_nilai__indikator_penilaian__n_min'] +`) this.value = null;" value="`+data.nilai_mitra[i]['detail_nilai__nilai'] +`">   
+                                </td>
+                                <td>
+                                    <textarea class="form-control" name="catatan_indikator_`+data.nilai_mitra[i]['detail_nilai__indikator_penilaian'] +`" cols="30" rows="5">`+data.nilai_mitra[i]['detail_nilai__catatan'] +`</textarea>
+                                </td>
+                            </tr>`
+                        }
+                    }else{
+                        tbody_rows = '<tr><td colspan="4" class="text-center">Kegiatan Penilaian Belum Memiliki Indiktor Penilaian/ Kegiatan sedang Tidak Aktif</td></tr>'
+                    }
+                    $('#form-indikator-nilai tbody').html(tbody_rows)
+                    $('.nav-tabs a[href="#input-tab"]').tab('show');
                 }
-                $('.nav-tabs a[href="#input-tab"]').tab('show');
-
-                tbody_rows = ''
-                for (let i = 0; i < data.nilai_mitra.length; i++) {
-                    tbody_rows += `<tr>
-                        <td>`+(i+1)+`.</td>
-                        <td>`+data.nilai_mitra[i]['penilaian__indikator_penilaian__nama_indikator'] +`</td>
-                        <td>
-                            <input type="number" class="form-control d-inline" name="nilai_indikator_`+data.nilai_mitra[i]['penilaian'] +`" placeholder="Isikan nilai" alt="Isikan nilai" min="0" max="100" onkeyup="if(this.value > 100 || this.value < 0) this.value = null;" value="`+data.nilai_mitra[i]['nilai'] +`">   
-                        </td>
-                        <td>
-                            <textarea class="form-control" name="catatan_indikator_`+data.nilai_mitra[i]['penilaian'] +`" cols="30" rows="5">`+data.nilai_mitra[i]['catatan'] +`</textarea>
-                        </td>
-                    </tr>`          
-                 }
-                $('#form-indikator-nilai tbody').html(tbody_rows)
-
             },
             error: (error) => {
                 console.log(error);
@@ -729,11 +735,8 @@
     }
 
     $('#formPenilaianPetugas').on('submit', function(e){
-
         e.preventDefault()
-       
         var serializedData = $(this).serialize();
-
         $.ajax({
             type: 'POST',
             url: $(this).attr('action'),
@@ -741,7 +744,7 @@
             success: function (response) {
 
                 if (response.status == 'success'){
-                            
+                        
                     $('#messages-content').html(response.messages)
                     $('#msgs-upload').removeClass('alert-danger')
                     $('#msgs-upload').addClass('alert-success')
@@ -758,7 +761,18 @@
                 table.ajax.reload();
             },
             error: function (response) {
-            console.log(response)
+                var errors = response["responseJSON"]["error"]
+                var msgs = '<ul>'
+                for (const [key, value] of Object.entries(errors)) {
+                    value.forEach(function (item, index) {
+                        msgs += '<li>'+item+'</li>'
+                        });
+                    }   
+                msgs += '</ul>'
+                $('#messages-content').html(msgs)
+                $('#msgs-upload').addClass('alert-danger')
+                $('#msgs-upload').removeClass('alert-success')
+                $('#msgs-upload').removeClass('d-none')
             }
         })
     })
@@ -778,9 +792,8 @@
     })
 
     $('#get-templates-upload').on('click', function(){
-
         var kegiatan = $('#filter-kegiatan-template').val()
-        return window.location.replace("http://127.0.0.1:8000/nilai-mitra/template/" + kegiatan);
+        return window.location.replace("{% url 'master_penilaian:template-nilai-mitra' %}?kegiatan=" + kegiatan);
     })
 
     $('#{{form_upload.import_file.id_for_label}}').on('change', function(){
@@ -791,12 +804,9 @@
         $('#nav-item-import').removeClass('d-none')
         $('#import-modal').modal('toggle')
         $('.nav-tabs a[href="#import-tab"]').tab('show');
-
     })
-   
     
     $('#confirm-submit-file').on('click', function(){
-
         const swalWithBootstrapButtons = Swal.mixin({
             customClass: {
               confirmButton: 'btn btn-primary'},
@@ -870,7 +880,6 @@
     })
 
     function get_data_penilaian_by_survei(data, field_target, url){
-
         $.ajax({
             url: url,
             type: "POST",   
@@ -881,7 +890,7 @@
                 "X-CSRFToken": '{{csrf_token}}',
             },
             success: (data) => {
-                var option = '<option value="">Pilih Penilaian</option>'
+                var option = '<option value="">-- Pilih Penilaian --</option>'
                 for (let i = 0; i < data.instance.length; i++) {
                     option += '<option value="'+ data.instance[i]['id'] +'">'+ data.instance[i]['kegiatan_survey__nama_kegiatan'] +'</option>'
                 }
@@ -900,6 +909,7 @@
           
         var thead_def = `<tr>
                 <th>ID Mitra</th>
+                <th>Kec.</th>
                 <th>Mitra</th>
                 <th>Jabatan</th>
                 <th>Kegiatan Penilaian</th>
@@ -907,7 +917,7 @@
             </tr>`
           
         var tbody_def = `<tr class="text-center">
-                <td colspan="5">Silahkan Pilih Kegiatan Survei dan Penilaian</td>
+                <td colspan="6">Silahkan Pilih Kegiatan Survei dan Penilaian</td>
             </tr>`
 
         $('#basic-datatable-2 thead').html(thead_def);
@@ -934,6 +944,8 @@
                                 previous: "<i class='mdi mdi-chevron-left'>",
                                 next: "<i class='mdi mdi-chevron-right'>",
                                 },
+                                lengthMenu : "Menampilkan _MENU_",
+                                search: "Cari Nilai Mitra ",
                             },
                             drawCallback: function () {
                                 $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
@@ -958,9 +970,8 @@
         </tr>`
       
         var tbody_def = `<tr class="text-center">
-                <td colspan="5">Silahkan Pilih Kegiatan Survei dan Penilaian</td>
+                <td colspan="6">Silahkan Pilih Kegiatan Survei dan Penilaian</td>
             </tr>`
-
             
         if ($('#nilai-mitra-filter-survey').val() == '') {
             if ( $.fn.DataTable.isDataTable('#basic-datatable-2') ) {
@@ -969,7 +980,6 @@
             $('#basic-datatable-2 thead').html(thead_def);
             $('#basic-datatable-2 tbody').html(tbody_def);
             $('#nilai-mitra-filter-kegiatan').html('<option value="">Pilih Penilaian</option>');
-
             return
         }
         var data = {'survey_id' : $('#nilai-mitra-filter-survey').val()}
@@ -988,7 +998,6 @@
     })
 
     $('#field_kegiatan').on('change', function(){
-
         $.ajax({
             url: '{% url 'master_penilaian:get-alokasi-by-survei' %}',
             type: "POST",   
@@ -999,27 +1008,57 @@
                 "X-CSRFToken": '{{csrf_token}}',
             },
             success: (data) => {
-                var option = '<option value="">Pilih Mitra</option>'
+                var opt_mitra = '<option value="">-- Pilih Petugas --</option>'
+                var opt_penilai = '<option value="">-- Pilih Penilai --</option>'
                 for (let i = 0; i < data.instance.length; i++) {
-                    option += '<option value="'+ data.instance[i]['id'] +'">['+ data.instance[i]['petugas__kode_petugas'] +'] '+ data.instance[i]['petugas__nama_petugas'] + ' | ' + data.instance[i]['role__jabatan']  + ' </option>'
+                    opt_mitra += '<option value="'+ data.instance[i]['id'] +'">['+ data.instance[i]['petugas__kode_petugas'] +'] '+ data.instance[i]['petugas__nama_petugas'] + ' | ' + data.instance[i]['role__jabatan']  + ' </option>'
                 }
-                $('#field_mitra').html(option)
-
-                tbody_rows = ''
                 for (let i = 0; i < data.instance_2.length; i++) {
-                    tbody_rows += `<tr>
-                        <td>`+(i+1)+`.</td>
-                        <td>`+data.instance_2[i]['indikator_penilaian__nama_indikator'] +`</td>
-                        <td>
-                            <input type="number" class="form-control d-inline" name="nilai_indikator_`+data.instance_2[i]['id'] +`" placeholder="Isikan nilai" alt="Isikan nilai" min="0" max="100" onkeyup="if(this.value > 100 || this.value < 0) this.value = null;">   
-                        </td>
-                        <td>
-                            <textarea class="form-control" name="catatan_indikator_`+data.instance_2[i]['id'] +`" cols="30" rows="5"></textarea>
-                        </td>
-                    </tr>`          
-                 }
+                    opt_penilai += '<option value="'+ data.instance_2[i]['id'] +'">['+ data.instance_2[i]['pegawai__nip'] +'] '+ data.instance_2[i]['pegawai__name'] + ' | ' + data.instance_2[i]['role__jabatan']  + ' </option>'
+                }
+                $('#field_mitra').html(opt_mitra)
+                $('#field_penilai').html(opt_penilai)
+            },
+            error: (error) => {
+                console.log(error);
+            }
+        });
+    })
+
+    $('#field_mitra, #field_penilai').on('change', function(){
+        var id_petugas = $('#field_mitra').val()
+        var id_penilai = $('#field_penilai').val()
+        var id_kegiatan = $('#field_kegiatan').val()
+        if (id_petugas.length == 0 || id_penilai.length == 0 || id_kegiatan.length == 0) return false
+        
+        $.ajax({
+            url: '{% url 'master_penilaian:get-nilai-mitra' %}',
+            type: "POST",   
+            dataType: "json",
+            data :  {'id_petugas' : id_petugas, 'id_penilai' : id_penilai, 'id_kegiatan' : id_kegiatan},
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": '{{csrf_token}}',
+            },
+            success: (data) => {
+                var tbody_rows = ''
+                if(data.nilai_mitra.length > 0){
+                    for (let i = 0; i < data.nilai_mitra.length; i++) {
+                        tbody_rows += `<tr>
+                            <td>`+(i+1)+`.</td>
+                            <td>`+data.nilai_mitra[i]['detail_nilai__indikator_penilaian__indikator_penilaian__nama_indikator'] +`</td>
+                            <td>
+                                <input type="number" class="form-control d-inline" name="nilai_indikator_`+data.nilai_mitra[i]['detail_nilai__indikator_penilaian'] +`" placeholder="Isikan nilai" alt="Isikan nilai" min="`+data.nilai_mitra[i]['detail_nilai__indikator_penilaian__n_min'] +`" max="`+data.nilai_mitra[i]['detail_nilai__indikator_penilaian__n_max'] +`" onkeyup="if(this.value > `+data.nilai_mitra[i]['detail_nilai__indikator_penilaian__n_max'] +` || this.value < `+data.nilai_mitra[i]['detail_nilai__indikator_penilaian__n_min'] +`) this.value = null;" value="`+data.nilai_mitra[i]['detail_nilai__nilai'] +`">   
+                            </td>
+                            <td>
+                                <textarea class="form-control" name="catatan_indikator_`+data.nilai_mitra[i]['detail_nilai__indikator_penilaian'] +`" cols="30" rows="5">`+data.nilai_mitra[i]['detail_nilai__catatan'] +`</textarea>
+                            </td>
+                        </tr>`
+                    }
+                }else{
+                    tbody_rows = '<tr><td colspan="4" class="text-center">Kegiatan Penilaian Belum Memiliki Indiktor Penilaian/ Kegiatan sedang Tidak Aktif</td></tr>'
+                }
                 $('#form-indikator-nilai tbody').html(tbody_rows)
-                
             },
             error: (error) => {
                 console.log(error);
@@ -1040,6 +1079,9 @@
 
     $('#ResetformPenilaianPetugas').on('click', function(e){
         resetForm()
+        $('#field_mitra').val('')
+        $('#field_penilai').val('')
+        $('#field_kegiatan').val('')
     })
 
     $('#role-select-filter-2').on('change', function(){

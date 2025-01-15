@@ -121,33 +121,52 @@ class IndikatorKegiatanPenilaianForm(forms.ModelForm):
             'n_max': forms.NumberInput(
                 attrs = attrs_input
             ),
-          
         }
 
 
 class PenilaianMitraForm(forms.Form):
-    
+
     def clean(self):
-
         df = []
-
+        base_errors = []
         for key, value in self.data.items():
             if 'nilai_indikator_' in key:
+                indikator_penilaian = key.replace('nilai_indikator_', '')
+                indikator_penilaian_model = models.IndikatorKegiatanPenilaian.objects.filter(pk = indikator_penilaian)
+                if indikator_penilaian_model.exists():
+                    n_min = indikator_penilaian_model.first().n_min
+                    n_max = indikator_penilaian_model.first().n_max
 
-                df.append({
-                    'petugas' : self.data['field_mitra'], #ID ALOKASI
-                    'penilai' : self.data['field_id_penilai'], #ID ALOKASI
-                    'penilaian' : key.replace('nilai_indikator_', ''),
-                    'nilai': value
-                })
+                    if value.isnumeric() == False or len(value) == 0:
+                        base_errors.append('Nilai petugas tidak boleh kosong.') # Sesuaikan sama threshold nilainya yaaaaaaa
+                    else:
+                        nilai = int(value)
+                        if nilai > n_max or nilai < n_min:
+                            base_errors.append(f'Nilai petugas harus berkisar [{n_min} - {n_max}]') # Sesuaikan sama threshold nilainya yaaaaaaa
+
+                    df.append({
+                        'petugas' : self.data['field_mitra'], #ID ALOKASI
+                        'penilai' : self.data['field_id_penilai'], #ID ALOKASI
+                        'penilaian' : indikator_penilaian,
+                        'nilai': value
+                    })
+                else:
+                    base_errors.append('Terdapat indikator penilaian yang tidak relevan.')
+                    continue
 
             if 'catatan_indikator_' in key:
-                
                 check_exist = [index for (index, d) in enumerate(df) if d["penilaian"] == key.replace('catatan_indikator_', '')]
-        
                 if len(check_exist) > 0:
                     df[check_exist[0]]['catatan'] = value
 
+
+            
+
+
+        if len(base_errors) > 0:
+            self._errors['nilai_petugas'] = self.error_class(base_errors)
+            return self._errors['nilai_petugas'] 
+        
         self.cleaned_data = df
         return self.cleaned_data    
 
