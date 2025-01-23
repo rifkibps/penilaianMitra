@@ -316,6 +316,8 @@ class MasterPetugasFormUpload(forms.Form):
         
         duplicated_npwp = df[df.duplicated('npwp')].npwp
         for idx, row in duplicated_npwp.items():
+            if pd.isna(row):
+                continue
             base_errors.append(f'Duplikasi NPWP: <b>{row}</b> ditemukan. Harap periksa baris <b>{idx+1}</b>')
                 
         duplicated_email = df[df.duplicated('email')].email
@@ -324,6 +326,8 @@ class MasterPetugasFormUpload(forms.Form):
         
         duplicated_rekening = df[df.duplicated('rekening')].rekening
         for idx, row in duplicated_rekening.items():
+            if pd.isna(row):
+                continue
             base_errors.append(f'Duplikasi Rekening: <b>{row}</b> ditemukan. Harap periksa baris <b>{idx+1}</b>')
 
         # Cek duplikasi Data pada Database

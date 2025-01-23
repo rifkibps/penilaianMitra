@@ -40,7 +40,8 @@ class PenilaianPetugasClassView(LoginRequiredMixin, View):
     def get(self, request):
         context = {
             'title' : 'Kegiatan Penilaian',
-            'data_survei' : SurveyModel.objects.all(),
+            'data_survei' : SurveyModel.objects.filter(~Q(state = 0)),
+            'data_subkegiatan' : SubKegiatanSurvei.objects.filter(~Q(status = 0)),
             'data' : models.KegiatanPenilaianModel.objects.all(),
             'roles' : RoleMitra.objects.all(),
             'form' : forms.KegiatanPenilaianForm()

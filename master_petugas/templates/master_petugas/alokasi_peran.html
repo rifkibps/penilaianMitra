@@ -143,7 +143,12 @@
                                 <div class="col-lg-4">
                                     <h5 class="mb-3">{{ form.sub_kegiatan.label }}</h5>
                                     <div class="form-floating errors" id="form_{{form.sub_kegiatan.id_for_label}}">
-                                        {{form.sub_kegiatan}}
+                                        <select name="sub_kegiatan" class="form-select" required="" placeholder="..." id="id_sub_kegiatan_id">
+                                            <option value="" selected="">---------</option>
+                                            {% for dt in data_sub_kegiatan %}
+                                            <option value="{{dt.id}}">{{dt.nama_kegiatan}} ({{dt.survey.nama}})</option>
+                                            {% endfor %}
+                                          </select>
                                         <label for="{{form.sub_kegiatan.id_for_label}}">{{ form.sub_kegiatan.label }}</label>
                                         <div class="invalid-feedback" id="msg-{{form.sub_kegiatan.id_for_label}}">
                                         </div>

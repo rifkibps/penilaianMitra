@@ -608,6 +608,7 @@ class AlokasiPetugasClassView(LoginRequiredMixin, View):
             'data_mitra': models.MasterPetugas.objects.filter(~Q(status = 3), ~Q(status = 1)),
             'data_pegawai': MasterPegawaiModel.objects.all(),
             'data_survei' : SurveyModel.objects.all(),
+            'data_sub_kegiatan' : SubKegiatanSurvei.objects.filter(status = 1),
             'data_jabatan' : models.RoleMitra.objects.all(),
             'data_batasan_honor' : HonorModel.objects.all(),
             'form_upload' : forms.AlokasiPetugasFormUpload(),
@@ -891,7 +892,7 @@ class MasterAlokasiTemplateClassView(LoginRequiredMixin, View):
         for dt in mitra_lists:
             mitra_choices.append((dt[0], f'[{dt[0]}] {dt[1]}'))
 
-        survey_lists = list(SubKegiatanSurvei.objects.values_list('id','nama_kegiatan'))
+        survey_lists = list(SubKegiatanSurvei.objects.filter(status='1').values_list('id','nama_kegiatan'))
         survey_choices = []
         for dt in survey_lists:
             survey_choices.append((dt[0], dt[1]))

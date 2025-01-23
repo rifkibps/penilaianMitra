@@ -27,7 +27,7 @@ class SubKegiatanSurvei(models.Model):
     )
     
     nama_kegiatan = models.CharField(max_length=256, null=False, blank=False, verbose_name='Nama Kegiatan Penilaian' )
-    survey = models.ForeignKey(SurveyModel, on_delete=models.RESTRICT, related_name='master_alokasi_survey', verbose_name='Survei/Sensus')
+    survey = models.ForeignKey(SurveyModel, on_delete=models.CASCADE, related_name='master_alokasi_survey', verbose_name='Survei/Sensus')
     status = models.CharField(max_length=1, choices=status, default=0, null=False, blank=False, verbose_name='Status Kegiatan')
 
     def __str__(self):

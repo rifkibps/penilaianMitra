@@ -97,7 +97,7 @@
                       </div> <!-- end preview-->
                 
                       <div class="tab-pane" id="input-tab">
-                          <p>Silahkan isikan data Penilaian Peserta.</p>
+                          <p>Silahkan isikan data Penilaian Mitra.</p>
                           <form action="{% url 'master_penilaian:index' %}" method="POST" id="formKegiatanPenilaianPetugas" novalidate>
                             {% csrf_token %}
                             <input type="hidden" name="id" id="id_id">
@@ -105,7 +105,12 @@
                                 <div class="col-lg-6">
                                     <h5 class="mb-3">{{ form.kegiatan_survey.label }}</h5>
                                     <div class="form-floating errors" id="form_{{form.kegiatan_survey.id_for_label}}">
-                                        {{form.kegiatan_survey}}
+                                        <select name="kegiatan_survey" class="form-select" required="" placeholder="..." id="id_kegiatan_survey">
+                                            <option value="" selected="">---------</option>
+                                            {% for dt in data_subkegiatan %}
+                                            <option value="{{dt.pk}}">{{forloop.counter}}. {{dt.nama_kegiatan}} ({{dt.survey.nama}})</option>
+                                            {% endfor %}
+                                          </select>
                                         <label for="{{form.kegiatan_survey.id_for_label}}">{{ form.kegiatan_survey.label }}</label>
                                         <div class="invalid-feedback" id="msg-{{form.kegiatan_survey.id_for_label}}">
                                         </div>
