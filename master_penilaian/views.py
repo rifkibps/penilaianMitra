@@ -866,7 +866,7 @@ class NilaiMitraTemplateClassView(LoginRequiredMixin, RestrictionsAccess, View):
         indikator = list(indikator_kegiatan_penilaian.values_list('indikator_penilaian__nama_indikator', flat=True))
         catatan_indikator = [f"Catatan Personal {dt}" for dt in indikator]
         indikator_penilaian = [f"Penilaian Indikator {dt}" for dt in indikator]
-        headers = ['No', 'ID Alokasi Mitra', 'ID Kegiatan Penilaian', 'Kode Petugas', 'Nama Petugas', 'Survei', 'Jabatan', 'Kegiatan Penilaian'] + indikator_penilaian + catatan_indikator
+        headers = ['No', 'ID Alokasi Mitra', 'ID Kegiatan Penilaian', 'ID Penilai', 'Kode Petugas', 'Nama Petugas', 'Survei', 'Jabatan', 'Kegiatan Penilaian', 'Nama Penilai (Organik)'] + indikator_penilaian + catatan_indikator
 
         head_row = 2
         alphabet_string = utils.generate_headers_excel(100)
@@ -897,7 +897,7 @@ class NilaiMitraTemplateClassView(LoginRequiredMixin, RestrictionsAccess, View):
         ws.row_dimensions[1].height = 25
         ws.row_dimensions[2].height = 22.50
     
-        ws.merge_cells(f'A1:{alphabet_string[8:8 + len(indikator_penilaian)*2][-1]}1')
+        ws.merge_cells(f'A1:{alphabet_string[10:10 + len(indikator_penilaian)*2][-1]}1')
         ws['A1'] = 'Template Upload Nilai Mitra'
         ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
         ws['A1'].font = Font(name='Calibri',bold=True, size=14)
@@ -914,13 +914,15 @@ class NilaiMitraTemplateClassView(LoginRequiredMixin, RestrictionsAccess, View):
                     ws[f'A{no_+3}'] = no_ + 1
                     ws[f'B{no_+3}'] = dt_alokasi.id
                     ws[f'C{no_+3}'] = kegiatan.id
-                    ws[f'D{no_+3}'] = dt_alokasi.petugas.kode_petugas
-                    ws[f'E{no_+3}'] = dt_alokasi.petugas.nama_petugas
-                    ws[f'F{no_+3}'] = dt_alokasi.sub_kegiatan.survey.nama
-                    ws[f'G{no_+3}'] = dt_alokasi.role.jabatan
-                    ws[f'H{no_+3}'] = kegiatan.kegiatan_survey.nama_kegiatan
+                    ws[f'D{no_+3}'] = penilai.id
+                    ws[f'E{no_+3}'] = dt_alokasi.petugas.kode_petugas
+                    ws[f'F{no_+3}'] = dt_alokasi.petugas.nama_petugas
+                    ws[f'G{no_+3}'] = dt_alokasi.sub_kegiatan.survey.nama
+                    ws[f'H{no_+3}'] = dt_alokasi.role.jabatan
+                    ws[f'I{no_+3}'] = kegiatan.kegiatan_survey.nama_kegiatan
+                    ws[f'J{no_+3}'] = penilai.pegawai.name
 
-                    for c in alphabet_string[:8]:
+                    for c in alphabet_string[:10]:
                         ws[f'{c}{no_+3}'].fill = PatternFill(start_color="66FF66", end_color="66FF66", fill_type = "solid")
 
                     for idx2, db_row in enumerate(db_query_check2):
@@ -928,24 +930,27 @@ class NilaiMitraTemplateClassView(LoginRequiredMixin, RestrictionsAccess, View):
                         indikator_index = indikator.index(db_row_indikator) if db_row_indikator in indikator else -1
 
                         if indikator_index >= 0:
-                            ws[f'{alphabet_string[8 + indikator_index]}{no_+3}'] = db_row['detail_nilai__nilai']
-                            ws[f'{alphabet_string[8 + len(indikator) + indikator_index]}{no_+3}'] = db_row['detail_nilai__catatan']
-                            ws[f'{alphabet_string[8 + indikator_index]}{no_+3}'].fill = PatternFill(start_color="66FF66", end_color="66FF66", fill_type = "solid")
-                            ws[f'{alphabet_string[8 + len(indikator) + indikator_index]}{no_+3}'].fill = PatternFill(start_color="66FF66", end_color="66FF66", fill_type = "solid")
+                            ws[f'{alphabet_string[10 + indikator_index]}{no_+3}'] = db_row['detail_nilai__nilai']
+                            ws[f'{alphabet_string[10 + len(indikator) + indikator_index]}{no_+3}'] = db_row['detail_nilai__catatan']
+                            ws[f'{alphabet_string[10 + indikator_index]}{no_+3}'].fill = PatternFill(start_color="66FF66", end_color="66FF66", fill_type = "solid")
+                            ws[f'{alphabet_string[10 + len(indikator) + indikator_index]}{no_+3}'].fill = PatternFill(start_color="66FF66", end_color="66FF66", fill_type = "solid")
                     no_ += 1
             else:
                 ws[f'A{no_+3}'] = no_ + 1
                 ws[f'B{no_+3}'] = dt_alokasi.id
                 ws[f'C{no_+3}'] = kegiatan.id
-                ws[f'D{no_+3}'] = dt_alokasi.petugas.kode_petugas
-                ws[f'E{no_+3}'] = dt_alokasi.petugas.nama_petugas
-                ws[f'F{no_+3}'] = dt_alokasi.sub_kegiatan.survey.nama
-                ws[f'G{no_+3}'] = dt_alokasi.role.jabatan
-                ws[f'H{no_+3}'] = kegiatan.kegiatan_survey.nama_kegiatan
+                ws[f'D{no_+3}'] = penilai.id
+                ws[f'E{no_+3}'] = dt_alokasi.petugas.kode_petugas
+                ws[f'F{no_+3}'] = dt_alokasi.petugas.nama_petugas
+                ws[f'G{no_+3}'] = dt_alokasi.sub_kegiatan.survey.nama
+                ws[f'H{no_+3}'] = dt_alokasi.role.jabatan
+                ws[f'I{no_+3}'] = kegiatan.kegiatan_survey.nama_kegiatan
+                ws[f'J{no_+3}'] = penilai.pegawai.name
                 no_ += 1
 
         ws.column_dimensions['B'].hidden= True
         ws.column_dimensions['C'].hidden= True
+        ws.column_dimensions['D'].hidden= True
         # ws[f'A{no_+4}'] = 'Keterangan:'
         # ws[f'D{no_+5}'] = 'Telah tercatat pada database, ubah data untuk mengupdate nilai mitra.'
         # ws[f'A{no_+5}'].fill = PatternFill(start_color="66FF66", end_color="66FF66", fill_type = "solid")
@@ -970,17 +975,16 @@ class NilaiMitraUploadClassView(LoginRequiredMixin, RestrictionsHttpRequestAcces
 
             if form.is_valid():
                 df = form.cleaned_data
-
                 objs_create = 0
                 objs_update = 0
                 for dt in df:
-                    petugas = AlokasiPetugas.objects.get(pk = dt['petugas'])
-                    penilai = AlokasiPetugas.objects.get(pk = dt['penilai'])
+                    petugas = dt['petugas']
+                    penilai = dt['penilai']
                     penilaian = dt['penilaian']
                     nilai = dt['nilai']
                     catatan = dt['catatan']
                     
-                    db_check = model.objects.filter(petugas = petugas, penilai = penilai, detail_nilai__indikator_penilaian = penilaian.pk).values('id', 'petugas', 'penilai').distinct()
+                    db_check = model.objects.filter(petugas = petugas.pk, penilai = penilai.pk, detail_nilai__indikator_penilaian = penilaian.pk).values('id', 'petugas', 'penilai').distinct()
                     if db_check.exists():
                         db_check2 = models.MasterNilaiPetugas.objects.filter(penilaian = db_check.first()['id'], indikator_penilaian = penilaian.pk)
                         if db_check2.exists():
@@ -1014,7 +1018,10 @@ class NilaiMitraUploadClassView(LoginRequiredMixin, RestrictionsHttpRequestAcces
                     msg += f"Data <strong>berhasil</strong> diperbarui.<br>"
 
                 return JsonResponse({"status": "success", "messages":  msg})
-
+            else:
+                error_messages = list(itertools.chain.from_iterable(form.errors['import_file'].as_data()))
+                return JsonResponse({"status": "error", "messages": error_messages})
+            
         return JsonResponse({"error": ""}, status=403)  
 
 class GenerateTableNilaiClassView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
@@ -1085,7 +1092,6 @@ class GenerateTableNilaiClassView(LoginRequiredMixin, RestrictionsHttpRequestAcc
                         tbody_data.append([db_row['id']] + dt_row + nilai + [rerata_nilai, catatan, db_row['penilai__pegawai__name']])
 
             tbody = ''
-            pprint(tbody_data)
             for data in tbody_data:
                 tbody += '<tr>'
                 for idx, dt in enumerate(data):
@@ -1096,7 +1102,7 @@ class GenerateTableNilaiClassView(LoginRequiredMixin, RestrictionsHttpRequestAcc
                     elif idx == 3:
                         tbody += f'<td class="text-center"><a href="{reverse_lazy("master_petugas:mitra-view-detail", kwargs={"mitra_id": data[1]})}" class="text-body" target="_blank">{data[3]}</a></td>'
                     else:
-                        txt_style = '' if (idx+1) == len(data) or (idx+1) == (len(data) - 1) else 'text-center'
+                        txt_style = '' if (idx+1) == len(data) or (idx+1) == (len(data) - 1) or (idx+1) == (len(data) - 1) else 'text-center'
                         tbody += f'<td class="{txt_style}">{dt}</td>'
 
                 tbody += button_action
@@ -1556,7 +1562,7 @@ class MasterGlobalRankPetugasClassView(LoginRequiredMixin, View):
         length = int(datatables.get('length'))
         page_number = int(start / length + 1)
 
-        search = datatables.get('search[value]')
+        search = request.POST.get('search_mitra')
 
         order_idx = int(datatables.get('order[0][column]')) # Default 1st index for
         order_dir = datatables.get('order[0][dir]') # Descending or Ascending
@@ -1566,11 +1572,13 @@ class MasterGlobalRankPetugasClassView(LoginRequiredMixin, View):
         if (order_dir == "desc"):
             order_col_name =  str('-' + order_col_name)
 
-        data = (models.MasterPenilaianPetugas.objects
-            .values('petugas__petugas__adm_id__code', 'petugas__petugas__nama_petugas')
+        data = models.MasterPenilaianPetugas.objects
+        if search:
+            data = data.filter(Q(petugas__petugas__adm_id__code__icontains = search) | Q(petugas__petugas__nama_petugas__icontains = search) | Q(petugas__petugas__kode_petugas__icontains = search) )
+
+        data = (data.values('petugas__petugas__adm_id__code', 'petugas__petugas__nama_petugas')
             .annotate(avg = Avg('detail_nilai__nilai'))
-            .order_by('-avg')
-        )
+            .order_by('-avg'))
 
         records_total = data.count()
         records_filtered = records_total

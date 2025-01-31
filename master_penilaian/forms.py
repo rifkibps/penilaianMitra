@@ -186,14 +186,14 @@ class NilaiFormUpload(forms.Form):
         base_errors = []
 
        ### PENGECEKAN FORMAT TEMPLATE ###
-        headers = ['No', 'ID Alokasi Mitra', 'ID Kegiatan Penilaian', 'Kode Petugas', 'Nama Petugas', 'Survei', 'Jabatan', 'Kegiatan Penilaian']  
+        headers = ['No', 'ID Alokasi Mitra', 'ID Kegiatan Penilaian', 'ID Penilai', 'Kode Petugas', 'Nama Petugas', 'Survei', 'Jabatan', 'Kegiatan Penilaian', 'Nama Penilai (Organik)']  
         for header in headers:
             if header not in df.columns:
                 self._errors['import_file'] = self.error_class(['Format template tidak sesuai. Silahkan gunakan template yang telah disediakan.'])
                 return self._errors['import_file']
         
         ### VALIDASI NULL UNTUK COMMOM HEADER
-        df_id = df[['ID Alokasi Mitra', 'ID Kegiatan Penilaian']]
+        df_id = df[['ID Alokasi Mitra', 'ID Kegiatan Penilaian', 'ID Penilai']]
         df_null = df_id[df_id.isna().any(axis=1)]
         for idx, i in df_null.iterrows():
             self._errors['import_file'] = self.error_class([f'Nilai kosong pada <b>Baris {idx+1}</b> ditemukan. Periksa kolom <b>ID Alokasi Mitra (Kol. B)</b> atau <b>ID Kegiatan Penilaian (Kol. C)</b>'])
@@ -205,10 +205,22 @@ class NilaiFormUpload(forms.Form):
             self._errors['import_file'] = self.error_class([f'Satu file upload hanya digunakan untuk satu jenis kegiatan penilaian penilaian. Periksa kolom <b>ID Kegiatan Penilaian (Kol.C) </b>'])
             return self._errors['import_file']
 
+        # CHECK HANYA ADA SATU Penilai DALAM FILE UPLOAD
+        df_kegiatan_ = df['ID Penilai'].unique()
+        if len(df_kegiatan_) > 1 :
+            self._errors['import_file'] = self.error_class([f'Satu file upload hanya digunakan untuk satu orang penilai. Periksa kolom <b>ID Penilai (Kol.D) </b>'])
+            return self._errors['import_file']
+
         for idx, dt in df['ID Kegiatan Penilaian'].items():
             check_db = models.KegiatanPenilaianModel.objects.filter(pk = dt)
             if not check_db.exists():
                 self._errors['import_file'] = self.error_class([f'Kegiatan penilaian [{dt}] tidak tersedia pada database. Periksa kolom <b>ID Kegiatan Penilaian [KOLOM C] Baris {idx+1}</b>.'])
+                return self._errors['import_file']
+            
+        for idx, dt in df['ID Penilai'].items():
+            check_db = AlokasiPetugas.objects.filter(pk = dt)
+            if not check_db.exists():
+                self._errors['import_file'] = self.error_class([f'Penilai [{dt}] tidak tersedia pada database. Periksa kolom <b>ID Penilai [KOLOM D] Baris {idx+1}</b>.'])
                 return self._errors['import_file']
 
         kegiatan_penilaian = models.KegiatanPenilaianModel.objects.filter(pk = df['ID Kegiatan Penilaian'][0]).first()
@@ -242,6 +254,16 @@ class NilaiFormUpload(forms.Form):
             if len(null_cols) > 0:
                 base_errors.append(f'Nilai kosong pada <b>Baris {idx+1}</b> ditemukan. Periksa kolom <b>({", ".join(null_cols)})</b>')
         
+        for idx, dt in df.iterrows():
+            id_penilai = dt['ID Penilai']
+            nama_penilai = dt['Nama Penilai (Organik)']
+            db_check = AlokasiPetugas.objects.filter(
+                pk = id_penilai,
+                pegawai__name = nama_penilai,
+            )
+            if not db_check.exists():
+                base_errors.append(f'Data penilai: <b>{nama_penilai}</b> tidak sesuai dengan ID Penilai. Harap periksa baris <b>{idx+1}</b>')
+
         # Cek ID Alokasi Mitra dengan data file upload sesuai atau tidak
         for idx, dt in df.iterrows():
             id_alokasi = dt['ID Alokasi Mitra']
@@ -287,9 +309,8 @@ class NilaiFormUpload(forms.Form):
         duplicated_petugas = df_data_mitra[df_data_mitra.duplicated()]['Nama Petugas']
         for idx, row in duplicated_petugas.items():
             base_errors.append(f'Duplikasi data petugas: <b>{row}</b> dengan beban tugas yang sama ditemukan. Harap periksa baris <b>{idx+1}</b>')
-
-        # Pengecekan tipe data dari nilai pada master file
-        # Numerik Value
+        
+        pprint(base_errors)
         if len(base_errors) > 0:
             self._errors['import_file'] = self.error_class(base_errors)
             return self._errors['import_file'] 
@@ -322,13 +343,14 @@ class NilaiFormUpload(forms.Form):
             for id in id_indikator:
                 row_db =  {}
                 penilaian = models.IndikatorKegiatanPenilaian.objects.filter(kegiatan_penilaian = kegiatan_penilaian.id, indikator_penilaian = id).first()
-                row_db['petugas'] = data['ID Alokasi Mitra']
-                row_db['penilai'] = 1
+                petugas = AlokasiPetugas.objects
+                row_db['petugas'] = petugas.filter(pk = data['ID Alokasi Mitra']).first()
+                row_db['penilai'] = petugas.filter(pk = data['ID Penilai']).first()
                 row_db['penilaian'] = penilaian
                 row_db['nilai'] = data[id]
 
                 if not type(data[f'catatan_{id}']) is str:
-                    row_db['catatan'] = None
+                    row_db['catatan'] = ''
                 else:
                     row_db['catatan'] = data[f'catatan_{id}']
                 df_dict.append(row_db)
