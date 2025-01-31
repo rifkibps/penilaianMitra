@@ -17,9 +17,9 @@ from . import models
 from master_petugas.models import AlokasiPetugas
 
 from munapps.helpers import currency_formatting as cf
-# Create your views here.
+from munapps.mixins import RestrictionsAccess, RestrictionsHttpRequestAccess
 
-class MasterHonorClassView(LoginRequiredMixin, View):
+class MasterHonorClassView(LoginRequiredMixin, RestrictionsAccess, View):
 
     def get(self, request):
 
@@ -29,8 +29,7 @@ class MasterHonorClassView(LoginRequiredMixin, View):
         
         return render(request, 'master_honor/index.html', context)
 
-
-class MasterHonorSettingClassView(LoginRequiredMixin, View):
+class MasterHonorSettingClassView(LoginRequiredMixin, RestrictionsAccess, View):
 
     def get(self, request):
 
@@ -57,7 +56,7 @@ class MasterHonorSettingClassView(LoginRequiredMixin, View):
                 return JsonResponse({"error": form.errors}, status=400)
         return JsonResponse({"error": ""}, status=400)
 
-class MasterConstHonorSettingUpdateView(LoginRequiredMixin, View):
+class MasterConstHonorSettingUpdateView(LoginRequiredMixin, RestrictionsAccess, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -77,7 +76,7 @@ class MasterConstHonorSettingUpdateView(LoginRequiredMixin, View):
                 return JsonResponse({"error": form.errors}, status=400)
         return JsonResponse({"error": ""}, status=400)
 
-class MasterHonorJsonResponseClassView(LoginRequiredMixin, View):
+class MasterHonorJsonResponseClassView(LoginRequiredMixin, RestrictionsAccess, View):
 
     def post(self, request):
         
@@ -166,7 +165,7 @@ class MasterHonorJsonResponseClassView(LoginRequiredMixin, View):
         }
 
 
-class MasterConstSalarytGetClassView(LoginRequiredMixin, View):
+class MasterConstSalarytGetClassView(LoginRequiredMixin, RestrictionsAccess, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -185,7 +184,7 @@ class MasterConstSalarytGetClassView(LoginRequiredMixin, View):
     
 
 
-class MasterConstSalaryDeleteView(LoginRequiredMixin, View):
+class MasterConstSalaryDeleteView(LoginRequiredMixin, RestrictionsAccess, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'

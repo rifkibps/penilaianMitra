@@ -30,16 +30,13 @@ from statistics import mean
 from operator import itemgetter
 from django.shortcuts import redirect
 
-from munapps.helpers import currency_formatting as cf
+from munapps.helpers import currency_formatting as cf, restrict_datatable_actions
 from django.db.models.functions import Length
 
 from master_honor.models import HonorModel
 from master_pegawai.models import MasterPegawaiModel
 
-from master_penilaian.helpers import get_summarize_penilaian
-# Packages for upload master petugas
-
-# Create your views here.
+from munapps.mixins import RestrictionsAccess, RestrictionsHttpRequestAccess
 
 class MasterPetugasJsonResponseClassView(LoginRequiredMixin, View):
 
@@ -95,9 +92,8 @@ class MasterPetugasJsonResponseClassView(LoginRequiredMixin, View):
 
         records_total = data.count()
         records_filtered = records_total
-
+        
         data = data.order_by(order_col_name)
-        # Conf Paginator
         paginator = Paginator(data, length)
 
         try:
@@ -107,8 +103,8 @@ class MasterPetugasJsonResponseClassView(LoginRequiredMixin, View):
         except EmptyPage:
             object_list = paginator.page(1).object_list
 
+        restrict_actions = restrict_datatable_actions(request)
         data = []
-
         for obj in object_list:
             if obj.status == '0':
                 class_badge = 'badge badge-success-lighten'
@@ -126,7 +122,7 @@ class MasterPetugasJsonResponseClassView(LoginRequiredMixin, View):
                         'email': obj.email,
                         'no_telp': obj.no_telp,
                         'status': f'<span class="badge {class_badge}"> {obj.get_status_display()} </span>',
-                        'aksi': f'<a href="javascript:void(0);" onclick="editPetugas({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline font-15"></i></a> <a href="javascript:void(0);" onclick="hapusPetugas({obj.id});" class="action-icon"> <i class="mdi mdi-delete font-15"></i></a>'
+                        'aksi': '-' if restrict_actions else f'<a href="javascript:void(0);" onclick="editPetugas({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline font-15"></i></a> <a href="javascript:void(0);" onclick="hapusPetugas({obj.id});" class="action-icon"> <i class="mdi mdi-delete font-15"></i></a>'
             })
             
         return {
@@ -136,30 +132,21 @@ class MasterPetugasJsonResponseClassView(LoginRequiredMixin, View):
             'data': data,
         }
 
-
 class MasterPetugasClassView(LoginRequiredMixin, View):
-
-    data_petugas = models.MasterPetugas.objects
-
+    
     def post(self, request):
-
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         if is_ajax:
             form = forms.MasterPetugasForm(request.POST)
-
             if form.is_valid():
                 instance = form.save()
                 ser_instance = serializers.serialize('json', [ instance, ])
-                
-                # send to client side.
                 return JsonResponse({"instance": ser_instance, 'message': 'Data berhasil ditambahkan'}, status=200)
             else:
                 return JsonResponse({"error": form.errors}, status=400)
         return JsonResponse({"error": ""}, status=400)
 
-
     def get(self, request):
-
         form = forms.MasterPetugasForm()
         adm = models.AdministrativeModel.objects.annotate(text_len=Length('code'))
         adm = {
@@ -171,7 +158,7 @@ class MasterPetugasClassView(LoginRequiredMixin, View):
 
         context = {
             'title' : 'Master Mitra',
-            'data_petugas' : self.data_petugas.all(),
+            'data_petugas' : models.MasterPetugas.objects.all(),
             'adm' :adm ,
             'form': form,
             'form_upload': forms.MasterPetugasFormUpload()
@@ -180,11 +167,10 @@ class MasterPetugasClassView(LoginRequiredMixin, View):
         return render(request, 'master_petugas/index.html', context)
 
 
-class MasterPetugasDeleteView(LoginRequiredMixin, View):
+class MasterPetugasDeleteView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-
         if is_ajax:
             if request.method == 'POST':
                 id = request.POST.get('id')
@@ -198,7 +184,7 @@ class MasterPetugasDeleteView(LoginRequiredMixin, View):
         return JsonResponse({'status': 'Invalid request'}, status=400)
 
 
-class MasterPetugasDetailView(LoginRequiredMixin, View):
+class MasterPetugasDetailView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
 
 
     def post(self, request):
@@ -218,7 +204,7 @@ class MasterPetugasDetailView(LoginRequiredMixin, View):
         return JsonResponse({'status': 'Invalid request'}, status=400) 
 
 
-class MasterPetugasUpdateView(LoginRequiredMixin, View):
+class MasterPetugasUpdateView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
     data_petugas = models.MasterPetugas.objects
 
     def post(self, request):
@@ -251,7 +237,7 @@ class MasterPetugasExportClassView(LoginRequiredMixin, View):
         return response 
     
 
-class MasterPetugasTemplateClassView(LoginRequiredMixin, View):
+class MasterPetugasTemplateClassView(LoginRequiredMixin, RestrictionsAccess, View):
 
     def get(self, request, *args, **kwargs): 
 
@@ -347,7 +333,7 @@ class MasterPetugasTemplateClassView(LoginRequiredMixin, View):
         wb.save(response)
         return response
 
-class MasterPetugasUploadClassView(LoginRequiredMixin, View):
+class MasterPetugasUploadClassView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
     
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -391,60 +377,9 @@ class MasterPetugasUploadClassView(LoginRequiredMixin, View):
                 error_messages = list(itertools.chain.from_iterable(form.errors['import_file'].as_data()))
                 return JsonResponse({"status": "error", "messages": error_messages})
 
-        return JsonResponse({"error": ""}, status=403)  
-
-
-class MasterPetugasDetailViewClassView(LoginRequiredMixin, View):
+        return JsonResponse({"error": ""}, status=403)
     
-    # def _globalRank(self, request):
-    #     data = MasterPenilaianPetugas.objects.values('petugas__petugas__kode_petugas', 'petugas__petugas__nama_petugas', 'petugas__sub_kegiatan__survey__nama', 'petugas__sub_kegiatan__survey__tgl_mulai', 'petugas__role__jabatan', 'detail_nilai__indikator_penilaian__kegiatan_penilaian','petugas__sub_kegiatan__nama_kegiatan', 'detail_nilai__nilai', 'detail_nilai__catatan')
-       
-    #     master_data = []
-        
-    #     for dt in data:
-  
-    #         check_exist = [index for (index, d) in enumerate(master_data) if d["kode_petugas"] == dt['petugas__petugas__kode_petugas']]
-            
-    #         if len(check_exist) > 0:
-
-    #             check_exist_2 = [index for (index, d) in enumerate(master_data[check_exist[0]]['kegiatan_penilaian']) if d["id_kegiatan"] == dt['penilaian__kegiatan_penilaian']]
-                
-    #             if len(check_exist_2) > 0:
-    #                 master_data[check_exist[0]]['kegiatan_penilaian'][check_exist_2[0]]['nilai'].append(dt['nilai'])
-    #                 master_data[check_exist[0]]['kegiatan_penilaian'][check_exist_2[0]]['catatan'].append(dt['catatan'])
-    #             else:
-    #                 master_data[check_exist[0]]['kegiatan_penilaian'].append({
-    #                     'id_kegiatan' : dt['penilaian__kegiatan_penilaian'],
-    #                     'survey' : dt['petugas__survey__nama'],
-    #                     'nama_kegiatan': dt['penilaian__kegiatan_penilaian__nama_kegiatan'],
-    #                     'role': dt['petugas__role__jabatan'],
-    #                     'nilai' : [dt['nilai']],
-    #                     'catatan' : [dt['catatan']],
-    #                 })
-
-    #             continue
-
-    #         master_data.append({
-    #             'kode_petugas': dt['petugas__petugas__kode_petugas'],
-    #             'nama_petugas': dt['petugas__petugas__nama_petugas'],
-    #             'rerata_final': 0,
-    #             'ranking_final': 0,
-    #             'kegiatan_penilaian' : [{'id_kegiatan': dt['penilaian__kegiatan_penilaian'] , 'role' :  dt['petugas__role__jabatan'], 'survey' : dt['petugas__survey__nama'], 'nama_kegiatan': dt['penilaian__kegiatan_penilaian__nama_kegiatan'], 'nilai': [dt['nilai']], 'catatan': [dt['catatan']]}]
-    #         })
-
-    #     for dt in master_data:
-            
-    #         mean_data = []
-    #         for dt_kegiatan in dt['kegiatan_penilaian']:
-    #             mean_data.append(round(mean(dt_kegiatan['nilai']), 2))
-        
-    #         dt['rerata_final'] = round(mean(mean_data), 2)
-
-    #     data_sorted = sorted(master_data, key = itemgetter('rerata_final'), reverse=True)
-    #     for idx, dt in enumerate(data_sorted):
-    #         dt['ranking_final'] = idx+1
-
-    #     return data_sorted
+class MasterPetugasDetailViewClassView(LoginRequiredMixin, View):
 
     def _globalRank(self, request):
         data = MasterPenilaianPetugas.objects.values('petugas__petugas__kode_petugas', 'petugas__petugas__nama_petugas', 'petugas__sub_kegiatan__survey__nama', 'petugas__sub_kegiatan__survey__tgl_mulai', 'petugas__role__jabatan', 'detail_nilai__indikator_penilaian__kegiatan_penilaian','petugas__sub_kegiatan__nama_kegiatan', 'detail_nilai__nilai', 'detail_nilai__catatan')
@@ -590,7 +525,7 @@ class MasterPetugasSearchClassView(LoginRequiredMixin, View):
 
 ### Alokasi Petugas
 
-class AlokasiPenugasanClassView(LoginRequiredMixin, View):
+class AlokasiPenugasanClassView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
     
     def get(self, request):
         context = {
@@ -600,7 +535,7 @@ class AlokasiPenugasanClassView(LoginRequiredMixin, View):
 
         return render(request, 'master_petugas/alokasi_penugasan.html', context)
     
-class AlokasiPetugasClassView(LoginRequiredMixin, View):
+class AlokasiPetugasClassView(LoginRequiredMixin, RestrictionsAccess, View):
     
     def get(self, request):
         context = {
@@ -649,7 +584,7 @@ class AlokasiPetugasClassView(LoginRequiredMixin, View):
         return JsonResponse({"status":"failed", "error": ""}, status=400)
     
 
-class AlokasiPetugasDeleteView(LoginRequiredMixin, View):
+class AlokasiPetugasDeleteView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -671,7 +606,7 @@ class AlokasiPetugasDeleteView(LoginRequiredMixin, View):
         return JsonResponse({'status': 'Invalid request'}, status=400)
 
 
-class MasterAlokasiDetailView(LoginRequiredMixin, View):
+class MasterAlokasiDetailView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -694,7 +629,7 @@ class MasterAlokasiDetailView(LoginRequiredMixin, View):
         return JsonResponse({'status': 'Invalid request'}, status=400) 
 
 
-class MasterAlokasiUpdateView(LoginRequiredMixin, View):
+class MasterAlokasiUpdateView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -733,7 +668,7 @@ class MasterAlokasiUpdateView(LoginRequiredMixin, View):
         return JsonResponse({"status": "failed", "message": "Terjadi Kesalahan"}, status=400)
 
 
-class MasterAlokasiJsonResponseClassView(LoginRequiredMixin, View):
+class MasterAlokasiJsonResponseClassView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
 
     def post(self, request):    
         data_wilayah = self._datatables(request)
@@ -815,7 +750,7 @@ class MasterAlokasiJsonResponseClassView(LoginRequiredMixin, View):
         }
 
 
-class MasterAlokasiExportClassView(LoginRequiredMixin, View):
+class MasterAlokasiExportClassView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
     def get(self, request):
     
         resource = MasterAlokasiResource()
@@ -825,7 +760,7 @@ class MasterAlokasiExportClassView(LoginRequiredMixin, View):
         response['Content-Disposition'] = 'attachment; filename="Alokasi Petugas.xls"'
         return response 
 
-class MasterAlokasiTemplateClassView(LoginRequiredMixin, View):
+class MasterAlokasiTemplateClassView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
 
     def get(self, request):
         if request.GET.get('rows') is None:
@@ -922,7 +857,7 @@ class MasterAlokasiTemplateClassView(LoginRequiredMixin, View):
         return response
 
 
-class MasterAlokasiUploadClassView(LoginRequiredMixin, View):
+class MasterAlokasiUploadClassView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
     
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -966,7 +901,7 @@ class MasterAlokasiUploadClassView(LoginRequiredMixin, View):
 
 # Role Petugas
 
-class RolePetugasClassView(LoginRequiredMixin, View):
+class RolePetugasClassView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
     
     def get(self, request):
         context = {
@@ -992,7 +927,7 @@ class RolePetugasClassView(LoginRequiredMixin, View):
         return JsonResponse({"error": ""}, status=400)
     
 
-class MasterRoleJsonResponseClassView(LoginRequiredMixin, View):
+class MasterRoleJsonResponseClassView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
 
     def post(self, request):    
         data_wilayah = self._datatables(request)
@@ -1050,8 +985,7 @@ class MasterRoleJsonResponseClassView(LoginRequiredMixin, View):
             'data': data,
         }
 
-
-class RolePetugasDeleteView(LoginRequiredMixin, View):
+class RolePetugasDeleteView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         if is_ajax:
@@ -1075,7 +1009,7 @@ class RolePetugasDeleteView(LoginRequiredMixin, View):
                 
         return JsonResponse({'status': 'Invalid request'}, status=400)
 
-class MasterRoleDetailView(LoginRequiredMixin, View):
+class MasterRoleDetailView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -1091,8 +1025,7 @@ class MasterRoleDetailView(LoginRequiredMixin, View):
                 
         return JsonResponse({'status': 'Invalid request'}, status=400) 
 
-
-class MasterRoleUpdateView(LoginRequiredMixin, View):
+class MasterRoleUpdateView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -1116,7 +1049,7 @@ class MasterRoleUpdateView(LoginRequiredMixin, View):
                 return JsonResponse({"status" : "failed", "error": form.errors, "message": "Terjadi Kesalahan"}, status=400)
         return JsonResponse({"status" : "failed", "message": "Terjadi Kesalahan"}, status=400)
 
-class MasterRoleExportClassView(LoginRequiredMixin, View):
+class MasterRoleExportClassView(LoginRequiredMixin, RestrictionsAccess, View):
     def get(self, request):
         resource = MasterRoleResource()
         dataset = resource.export()
@@ -1268,7 +1201,6 @@ class DetailPetugasPreviewClassView(LoginRequiredMixin, View):
         }
 
         return render(request, 'master_petugas/detail_petugas_preview.html', context)
-
 
 class ListPetugasClassView(LoginRequiredMixin, View):
     

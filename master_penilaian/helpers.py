@@ -4,6 +4,34 @@ from master_petugas.models import AlokasiPetugas
 from . import models
 from django.db.models import Q
 
+def convert_table_penilaian(nilai_mitra, indicators, empty = False):
+
+    opt = ''
+    for idx, dt in enumerate(indicators):
+        nilai, catatan = '', ''
+
+        if empty is False:
+            nilai_mitra_ = nilai_mitra.filter(detail_nilai__indikator_penilaian = dt.pk ).values('detail_nilai__nilai', 'detail_nilai__catatan')
+            if nilai_mitra_.exists():
+                nilai = nilai_mitra_.first().get('detail_nilai__nilai')
+                catatan = nilai_mitra_.first().get('detail_nilai__catatan')
+
+        opt +=  f"""<tr>
+                <td>{idx+1}</td>
+                <td>{dt.indikator_penilaian.nama_indikator}</td>
+                <td>
+                    <input type="number" class="form-control d-inline" name="nilai_indikator_{dt.pk}" value="{nilai}" placeholder="Isikan nilai" alt="Isikan nilai" min="{dt.n_min}" max="{dt.n_max}" onkeyup="if(this.value > {dt.n_max} || this.value < {dt.n_min}) this.value = null;">   
+                </td>
+                <td>
+                    <textarea class="form-control" name="catatan_indikator_{dt.pk}" cols="30" rows="5">{catatan}</textarea>
+                </td>
+            </tr>"""
+
+    if len(opt) == 0:
+        opt = '<tr><td colspan="4" class="text-center">Kegiatan Penilaian Belum Memiliki Indiktor Penilaian/ Kegiatan sedang Tidak Aktif</td></tr>'
+
+    return opt
+
 def get_summarize_penilaian(user_id):
     data_pegawai= model_pegawai.MasterPegawaiModel.objects.filter(user=user_id)
         

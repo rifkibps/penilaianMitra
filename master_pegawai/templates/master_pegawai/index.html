@@ -47,11 +47,14 @@
                         Data Pegawai
                     </a>
                 </li>
+                
+                {% if user.is_staff or 'Administrator' in user.groups.all or user.is_superuser %}
                 <li class="nav-item">
                     <a href="#input-tab" data-bs-toggle="tab" aria-expanded="true" class="nav-link">
                         Input
                     </a>
                 </li>
+                {% endif %}
 
               </ul> <!-- end nav-->
               <div class="tab-content">
@@ -63,6 +66,7 @@
                             </div>
                             <div class="col-sm-6">
                                 <div class="text-sm-end">
+                                    {% if user.is_staff or 'Administrator' in user.groups.all or user.is_superuser %}
                                     <div class="btn-group">
                                         <button type="button" class="btn btn-primary dropdown-toggle mb-2 me-1" data-bs-toggle="dropdown"><i class="mdi mdi-account-switch"></i> Akses <span class="caret"></span> </button>
                                         <div class="dropdown-menu">
@@ -70,6 +74,7 @@
                                             <a class="dropdown-item" href="{% url 'master_pegawai:pangkat' %}">Pangkat/Golongan</a>
                                         </div>
                                     </div>
+                                    {% endif %}
                                     <a href="{% url 'master_petugas:mitra-export' %}" class="btn btn-primary mb-2"><i class="mdi mdi-download"></i> Export</a>
                                 
                                 </div>
@@ -93,10 +98,10 @@
                                 <tbody>
                         
                                 </tbody>
-                            </table>                                            
+                            </table>
                         </div>
                     </div> <!-- end preview-->
-              
+                    {% if user.is_staff or 'Administrator' in user.groups.all or user.is_superuser %}
                     <div class="tab-pane" id="input-tab"> 
                         <form action="{% url 'master_pegawai:index' %}" method="POST" id="formMasterPegawai" class="px-2" novalidate>
                             {% csrf_token %}
@@ -166,7 +171,8 @@
                             </div>
                         </form>
        
-                    </div> <!-- end preview code-->
+                    </div>
+                    {% endif %}
                 </div> <!-- end tab-content-->
 
           </div> <!-- end card body-->
@@ -222,11 +228,6 @@
 
 <script>
     'use strict'
-    var swalWithBootstrapButtons = Swal.mixin({
-        customClass: {
-          confirmButton: 'btn btn-primary'},
-        buttonsStyling: true
-    })
 
     var table = $("#basic-datatable").DataTable({
         processing: true,
@@ -257,7 +258,7 @@
         ],
         lengthMenu: [10, 25, 50, 100],
         columnDefs: [ {
-            'targets': [6], /* column index */
+            'targets': [7], /* column index */
             'orderable': false, /* true or false */
         },
         {
@@ -283,120 +284,12 @@
         },
     });
 
-    openTabInput()
-    table.draw()
-
     $('#jabatan-filter, #pangkat-filter').bind("change", () => {
         table.draw()
     })
 
-    function editPegawai(e){
-        $('#formMasterPegawai')[0].reset();
-        $('#formMasterPegawai').attr('action', "{% url 'master_pegawai:update' %}")
-        $('#submitFormPegawai').html('Update Data')
-    
-        $.ajax({
-            url: '{% url 'master_pegawai:detail' %}',
-            type: "POST",
-            dataType: "json",
-            data : {
-                'id' : e
-            },
-            headers: {
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": '{{csrf_token}}',
-            },
-            success: (data) => {
-                for (const [key, value] of Object.entries(data.instance)) {
-                    $('#id_'+key).val(value)
-                }
-                $('.nav-tabs a[href="#input-tab"]').tab('show');
-            },
-            error: (error) => {
-                console.log(error);
-            }
-        });
-        
-    }
-    
-    function hapusPegawai(e){
-        swalWithBootstrapButtons.fire({
-            title: 'Are you sure?',
-            text: "Apakah anda yakin ingin menghapus data pegawai?",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'No, cancel!',
-            reverseButtons: false
-          }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    url: '{% url 'master_pegawai:delete' %}',
-                    type: "POST",
-                    dataType: "json",
-                    data : {
-                        'id' : e
-                    },
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest",
-                        "X-CSRFToken": '{{csrf_token}}',
-                    },
-                    success: (data) => {
-                        if (data.status == 'success'){
-                            Swal.fire(
-                                'Deleted!',
-                                data.message,
-                                'success'
-                                )
-                            table.ajax.reload();
-                        }else{
-                            Swal.fire(
-                                'Terjadi Kesalahan!',
-                                 data.message,
-                                'info'
-                            )
-                        }
-                    },
-                    error: (error) => {
-                        console.log(error);
-                    }
-                });
-            }
-        }) 
-    }
-
-    function openTabInput(){
-        var url = $(location).attr('href')
-        if (url.search('#input-tab') > 0) {
-            return $('.nav-tabs a[href="#input-tab"]').tab('show');
-        }
-    }
-    
-    function clearFormValidation(form){
-        $(form + ' .form-control').each(function(i, obj) {
-            $(obj).removeClass('is-invalid')
-            $(obj).trigger('change')
-        });
-
-        $(form + ' .form-select').each(function(j, objs) {
-            $(objs).removeClass('is-invalid')
-            $(objs).trigger('change')
-        });
-        
-        $('.invalid-feedback').each(function(i, obj) {
-            $(obj).html('')
-        });
-    }
-
-    function resetForm(){
-        $('#formMasterPegawai')[0].reset();
-        $('#formMasterPegawai').attr('action', "{% url 'master_pegawai:index' %}")
-        $('#submitFormPegawai').html('Kirim Data')
-        clearFormValidation('#formMasterPegawai')
-    }
-    
-    $("#formMasterPegawai").on("submit", function (e){
-        e.preventDefault()
+    $('#redraw-table').on('click', () => {
+        table.draw();
     })
 
     $('#reset-filter').on('click', () => {
@@ -404,57 +297,155 @@
         table.draw();
     })
 
-    $('#redraw-table').on('click', () => {
-        table.draw();
-    })
-
-    $(document).on('change', '.form-control, .form-select', () => {
-        if ($(this).hasClass('is-invalid')){
-            $(this).removeClass('is-invalid')
-        }
-    });
-    
-    function checkSubmit(){
-        var serializedData = $('#formMasterPegawai').serialize();
-        clearFormValidation('#formMasterPegawai')
+    {% if user.is_staff or 'Administrator' in user.groups.all or user.is_superuser %}
+        function editPegawai(e){
+            $('#formMasterPegawai')[0].reset();
+            $('#formMasterPegawai').attr('action', "{% url 'master_pegawai:update' %}")
+            $('#submitFormPegawai').html('Update Data')
         
-        $.ajax({
-            type: 'POST',
-            url: $('#formMasterPegawai').attr('action'),
-            data: serializedData,
-            success: function (response) {
-                $('#messages-content').html(response["message"])
-                $('#msgs-feedback').removeClass('alert-danger')
-                $('#msgs-feedback').addClass('alert-success')
-                $('#msgs-feedback').removeClass('d-none')
-                table.ajax.reload();
-                $('.nav-tabs a[href="#pegawai-preview"]').tab('show');
-                $('#formMasterPegawai')[0].reset();
-            },
-            error: function (response) {
-                var errors = response["responseJSON"]["error"]
-                console.log(errors)
-                for (const [key, value] of Object.entries(errors)) {
-                    var msgs = '<ul>'
-                    value.forEach(function (item, index) {
-                    
-                        msgs += '<li>'+item+'</li>'
-                        });
-                    
-                    msgs += '</ul>'
-                    if (key == 'adm_id'){
-                        $('#id_'+ key +'_id').addClass('is-invalid');
-                        $('#msg-id_'+key+'_id').html(msgs)
-                    }else{
-                        $('#id_'+ key).addClass('is-invalid');
-                        $('#msg-id_'+key).html(msgs)
+            $.ajax({
+                url: '{% url 'master_pegawai:detail' %}',
+                type: "POST",
+                dataType: "json",
+                data : {
+                    'id' : e
+                },
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRFToken": '{{csrf_token}}',
+                },
+                success: (data) => {
+                    for (const [key, value] of Object.entries(data.instance)) {
+                        $('#id_'+key).val(value)
                     }
-                }    
-            }
+                    $('.nav-tabs a[href="#input-tab"]').tab('show');
+                },
+                error: (error) => {
+                    console.log(error);
+                }
+            });
+            
+        }
+        
+        function hapusPegawai(e){
+            swalWithBootstrapButtons.fire({
+                title: 'Are you sure?',
+                text: "Apakah anda yakin ingin menghapus data pegawai?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'No, cancel!',
+                reverseButtons: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '{% url 'master_pegawai:delete' %}',
+                        type: "POST",
+                        dataType: "json",
+                        data : {
+                            'id' : e
+                        },
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest",
+                            "X-CSRFToken": '{{csrf_token}}',
+                        },
+                        success: (data) => {
+                            if (data.status == 'success'){
+                                Swal.fire(
+                                    'Deleted!',
+                                    data.message,
+                                    'success'
+                                    )
+                                table.ajax.reload();
+                            }else{
+                                Swal.fire(
+                                    'Terjadi Kesalahan!',
+                                    data.message,
+                                    'info'
+                                )
+                            }
+                        },
+                        error: (error) => {
+                            console.log(error);
+                        }
+                    });
+                }
+            }) 
+        }
+        
+        function clearFormValidation(form){
+            $(form + ' .form-control').each(function(i, obj) {
+                $(obj).removeClass('is-invalid')
+                $(obj).trigger('change')
+            });
+
+            $(form + ' .form-select').each(function(j, objs) {
+                $(objs).removeClass('is-invalid')
+                $(objs).trigger('change')
+            });
+            
+            $('.invalid-feedback').each(function(i, obj) {
+                $(obj).html('')
+            });
+        }
+
+        function resetForm(){
+            $('#formMasterPegawai')[0].reset();
+            $('#formMasterPegawai').attr('action', "{% url 'master_pegawai:index' %}")
+            $('#submitFormPegawai').html('Kirim Data')
+            clearFormValidation('#formMasterPegawai')
+        }
+        
+        function checkSubmit(){
+            var serializedData = $('#formMasterPegawai').serialize();
+            clearFormValidation('#formMasterPegawai')
+            
+            $.ajax({
+                type: 'POST',
+                url: $('#formMasterPegawai').attr('action'),
+                data: serializedData,
+                success: function (response) {
+                    $('#messages-content').html(response["message"])
+                    $('#msgs-feedback').removeClass('alert-danger')
+                    $('#msgs-feedback').addClass('alert-success')
+                    $('#msgs-feedback').removeClass('d-none')
+                    table.ajax.reload();
+                    $('.nav-tabs a[href="#pegawai-preview"]').tab('show');
+                    $('#formMasterPegawai')[0].reset();
+                },
+                error: function (response) {
+                    var errors = response["responseJSON"]["error"]
+                    console.log(errors)
+                    for (const [key, value] of Object.entries(errors)) {
+                        var msgs = '<ul>'
+                        value.forEach(function (item, index) {
+                        
+                            msgs += '<li>'+item+'</li>'
+                            });
+                        
+                        msgs += '</ul>'
+                        if (key == 'adm_id'){
+                            $('#id_'+ key +'_id').addClass('is-invalid');
+                            $('#msg-id_'+key+'_id').html(msgs)
+                        }else{
+                            $('#id_'+ key).addClass('is-invalid');
+                            $('#msg-id_'+key).html(msgs)
+                        }
+                    }    
+                }
+            })
+        }
+
+        $("#formMasterPegawai").on("submit", function (e){
+            e.preventDefault()
         })
-    }
 
-
+        $(document).on('change', '.form-control, .form-select', () => {
+            if ($(this).hasClass('is-invalid')){
+                $(this).removeClass('is-invalid')
+            }
+        });
+    {% endif %}
 </script>
 
 {% endblock tables-script-extend %}

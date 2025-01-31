@@ -26,8 +26,11 @@ from master_penilaian.models import MasterNilaiPetugas, KegiatanPenilaianModel, 
 from pprint import pprint
 
 from munapps.helpers import currency_formatting as cf
+from munapps.mixins import RestrictionsAccess, RestrictionsHttpRequestAccess
+
+
 # Create your views here.
-class SurveyJsonResponseClassView(LoginRequiredMixin, View):
+class SurveyJsonResponseClassView(LoginRequiredMixin, RestrictionsAccess, View):
 
     def post(self, request):
         
@@ -104,7 +107,7 @@ class SurveyJsonResponseClassView(LoginRequiredMixin, View):
             'data': data,
         }
 
-class MasterSurveiClassView(LoginRequiredMixin, View):
+class MasterSurveiClassView(LoginRequiredMixin, RestrictionsAccess, View):
 
     def get(self, request):
         form = forms.SurveiForm()
@@ -127,7 +130,7 @@ class MasterSurveiClassView(LoginRequiredMixin, View):
                 return JsonResponse({"error": form.errors}, status=400)
         return JsonResponse({"error": ""}, status=400)
     
-class MasterSurveyUpdateView(LoginRequiredMixin, View):
+class MasterSurveyUpdateView(LoginRequiredMixin, RestrictionsAccess, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -148,7 +151,7 @@ class MasterSurveyUpdateView(LoginRequiredMixin, View):
         return JsonResponse({"error": ""}, status=400)
 
 
-class MasterSurveyDetailView(LoginRequiredMixin, View):
+class MasterSurveyDetailView(LoginRequiredMixin, RestrictionsAccess, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -165,7 +168,7 @@ class MasterSurveyDetailView(LoginRequiredMixin, View):
                 
         return JsonResponse({'status': 'Invalid request'}, status=400) 
 
-class MasterSurveyDeleteView(LoginRequiredMixin, View):
+class MasterSurveyDeleteView(LoginRequiredMixin, RestrictionsAccess, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -192,7 +195,7 @@ class MasterSurveyDeleteView(LoginRequiredMixin, View):
         return JsonResponse({'status': 'Invalid request'}, status=400)
 
 
-class MasterSurveyExportView(LoginRequiredMixin, View):
+class MasterSurveyExportView(LoginRequiredMixin, RestrictionsAccess, View):
 
     def get(self, request):
         resource = MasterSurveiResource()
@@ -202,7 +205,7 @@ class MasterSurveyExportView(LoginRequiredMixin, View):
         return response 
     
 
-class MasterSurveyTemplateClassView(LoginRequiredMixin, View):
+class MasterSurveyTemplateClassView(LoginRequiredMixin, RestrictionsAccess, View):
 
     def get(self, request,  *args, **kwargs): 
         if request.GET.get('rows') is None:
@@ -274,7 +277,7 @@ class MasterSurveyTemplateClassView(LoginRequiredMixin, View):
 
 
 
-class MasterSurveyUploadClassView(LoginRequiredMixin, View):
+class MasterSurveyUploadClassView(LoginRequiredMixin, RestrictionsAccess, View):
     
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -305,7 +308,7 @@ class MasterSurveyUploadClassView(LoginRequiredMixin, View):
         return JsonResponse({"error": ""}, status=403)  
 
 
-class MasterKegiatanSurveiClassView(LoginRequiredMixin, View):
+class MasterKegiatanSurveiClassView(LoginRequiredMixin, RestrictionsAccess, View):
     
     def get(self, request):
         context = {
@@ -328,7 +331,7 @@ class MasterKegiatanSurveiClassView(LoginRequiredMixin, View):
                 return JsonResponse({"error": form.errors}, status=400)
         return JsonResponse({"error": ""}, status=400)
     
-class MasterKegiatanSurveiDetailClassView(LoginRequiredMixin, View):
+class MasterKegiatanSurveiDetailClassView(LoginRequiredMixin, RestrictionsAccess, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -345,7 +348,7 @@ class MasterKegiatanSurveiDetailClassView(LoginRequiredMixin, View):
                 
         return JsonResponse({'status': 'Invalid request'}, status=400) 
 
-class MasterKegiatanSurveiUpdateClassView(LoginRequiredMixin, View):
+class MasterKegiatanSurveiUpdateClassView(LoginRequiredMixin, RestrictionsAccess, View):
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         if is_ajax:
@@ -360,7 +363,7 @@ class MasterKegiatanSurveiUpdateClassView(LoginRequiredMixin, View):
         return JsonResponse({"error": ""}, status=400)
 
 
-class MasterKegiatanSurveiDeleteClassView(LoginRequiredMixin, View):
+class MasterKegiatanSurveiDeleteClassView(LoginRequiredMixin, RestrictionsAccess, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -385,7 +388,7 @@ class MasterKegiatanSurveiDeleteClassView(LoginRequiredMixin, View):
         return JsonResponse({'status': 'Invalid request'}, status=400)
 
 
-class MasterKegiatanSurveiJsonClassView(LoginRequiredMixin, View):
+class MasterKegiatanSurveiJsonClassView(LoginRequiredMixin, RestrictionsAccess, View):
 
     def post(self, request):
         data_wilayah = self._datatables(request)

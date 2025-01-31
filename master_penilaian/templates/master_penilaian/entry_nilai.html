@@ -324,7 +324,7 @@
         },
         columns :[
             {"data": 'kegiatan_survey__nama_kegiatan'},
-            {"data": 'kegiatan_survey__kegiatan_survey__survey__nama'},
+            {"data": 'kegiatan_survey__survey__nama'},
             {"data" : 'tgl_penilaian'},
             {"data": 'status'},
             {"data" : 'status_penilaian'},
@@ -427,7 +427,6 @@
     }
 
     let entryPenilaian = (id1, id2) => {
-        
         $.ajax({
             url: '{% url 'master_penilaian:list-indicator-json' %}',
             type: "POST",   
@@ -457,11 +456,8 @@
     }
 
     $('#formPenilaianPetugas').on('submit', function(e){
-
         e.preventDefault()
-
         var serializedData = $(this).serialize();
-
         $.ajax({
             type: 'POST',
             url: $(this).attr('action'),

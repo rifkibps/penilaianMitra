@@ -7,7 +7,7 @@
         <title>{{ title }}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta content="A fully featured admin theme which can be used to build CRM, CMS, etc." name="description">
-        <meta content="Coderthemes" name="author">
+        <meta content="Coderthemes" name="Rifki Gustiawan">
         <!-- App favicon -->
         <link rel="shortcut icon" href="{% static 'app-design/assets/images/favicon.ico' %}">
 
@@ -181,22 +181,24 @@
                                 <span> Master Mitra </span>
                             </a>
                         </li>
-   
+                        
                         <li class="side-nav-title side-nav-item mt-2">Manajemen Organik</li>
 
-                        <li class="side-nav-item">
-                            <a href="{% url 'master_pegawai:jabatan' %}" class="side-nav-link">
-                                <i class="mdi mdi-sitemap"></i>
-                                <span> Jabatan </span>
-                            </a>
-                        </li>
+                        {% if user.is_staff or 'Administrator' in user.groups.all or user.is_superuser %}
+                            <li class="side-nav-item">
+                                <a href="{% url 'master_pegawai:jabatan' %}" class="side-nav-link">
+                                    <i class="mdi mdi-sitemap"></i>
+                                    <span> Jabatan </span>
+                                </a>
+                            </li>
 
-                        <li class="side-nav-item">
-                            <a href="{% url 'master_pegawai:pangkat' %}" class="side-nav-link">
-                                <i class="mdi mdi-human-capacity-increase"></i>
-                                <span> Pangkat/Gol. </span>
-                            </a>
-                        </li>
+                            <li class="side-nav-item">
+                                <a href="{% url 'master_pegawai:pangkat' %}" class="side-nav-link">
+                                    <i class="mdi mdi-human-capacity-increase"></i>
+                                    <span> Pangkat/Gol. </span>
+                                </a>
+                            </li>
+                        {% endif %}
                        
                         <li class="side-nav-item">
                             <a href="{% url 'master_pegawai:index' %}" class="side-nav-link">
@@ -204,91 +206,85 @@
                                 <span> Master Organik </span>
                             </a>
                         </li>
-
-                        <li class="side-nav-title side-nav-item  mt-2">Manajemen Survei</li>
-                        <li class="side-nav-item">
-                            <a href="{% url 'master_survei:index' %}" class="side-nav-link">
-                                <i class="mdi mdi-clipboard-account"></i>
-                                <span> Master Survei </span>
-                            </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a href="{% url 'master_survei:kegiatan-survey' %}" class="side-nav-link">
-                                <i class="mdi mdi-clipboard-account"></i>
-                                <span> Kegiatan Survei </span>
-                            </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a href="{% url 'master_petugas:role' %}" aria-expanded="false"  class="side-nav-link">
-                                <i class="mdi mdi-sitemap"></i>
-                                <span> Role Kegiatan </span>
-                            </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a href="{% url 'master_petugas:alokasi' %}" class="side-nav-link">
-                                <i class="mdi mdi-human-capacity-increase"></i>
-                                <span> Alokasi Penugasan </span>
-                            </a>
-                        </li>
-                        {% comment %} <li class="side-nav-item">
-                            <a href="{% url 'master_petugas:penugasan' %}"  class="side-nav-link">
-                                <i class="mdi mdi-human-capacity-increase"></i>
-                                <span> Alokasi Mitra </span>
-                            </a>
-                        </li> {% endcomment %}
-
-                        <li class="side-nav-title side-nav-item  mt-2">Manajemen Penilaian</li>
-                        <li class="side-nav-item">
-                            <a href="{% url 'master_penilaian:indikator-penilaian' %}"  class="side-nav-link">
-                                <i class="mdi mdi-clipboard-edit"></i>
-                                <span> Aspek Penilaian </span>
-                            </a>
-                        </li>
-
-                        <li class="side-nav-item">
-                            <a href="{% url 'master_penilaian:indikator-kegiatan' %}"  class="side-nav-link">
-                                <i class="mdi mdi-clipboard-text-multiple"></i>
-                                <span> Indikator Kegiatan </span>
-                            </a>
-                        </li>
                         
-                        <li class="side-nav-item">
-                            <a href="{% url 'master_penilaian:index' %}"  class="side-nav-link">
-                                <i class="mdi mdi-clipboard-list"></i>
-                                <span> Kegiatan Penilaian </span>
-                            </a>
-                        </li>
+                        {% if user.is_staff or 'Administrator' in user.groups.all or user.is_superuser %}
+                            <li class="side-nav-title side-nav-item  mt-2">Manajemen Survei</li>
+                            <li class="side-nav-item">
+                                <a href="{% url 'master_survei:index' %}" class="side-nav-link">
+                                    <i class="mdi mdi-clipboard-account"></i>
+                                    <span> Master Survei </span>
+                                </a>
+                            </li>
+                            <li class="side-nav-item">
+                                <a href="{% url 'master_survei:kegiatan-survey' %}" class="side-nav-link">
+                                    <i class="mdi mdi-clipboard-account"></i>
+                                    <span> Kegiatan Survei </span>
+                                </a>
+                            </li>
+                            <li class="side-nav-item">
+                                <a href="{% url 'master_petugas:role' %}" aria-expanded="false"  class="side-nav-link">
+                                    <i class="mdi mdi-sitemap"></i>
+                                    <span> Role Kegiatan </span>
+                                </a>
+                            </li>
+                            <li class="side-nav-item">
+                                <a href="{% url 'master_petugas:alokasi' %}" class="side-nav-link">
+                                    <i class="mdi mdi-human-capacity-increase"></i>
+                                    <span> Alokasi Penugasan </span>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% if user.is_staff or 'Administrator' in user.groups.all or user.is_superuser %}
+                            <li class="side-nav-title side-nav-item  mt-2">Manajemen Penilaian</li>
+                            <li class="side-nav-item">
+                                <a href="{% url 'master_penilaian:indikator-penilaian' %}"  class="side-nav-link">
+                                    <i class="mdi mdi-clipboard-edit"></i>
+                                    <span> Aspek Penilaian </span>
+                                </a>
+                            </li>
+
+                            <li class="side-nav-item">
+                                <a href="{% url 'master_penilaian:indikator-kegiatan' %}"  class="side-nav-link">
+                                    <i class="mdi mdi-clipboard-text-multiple"></i>
+                                    <span> Indikator Kegiatan </span>
+                                </a>
+                            </li>
+                            
+                            <li class="side-nav-item">
+                                <a href="{% url 'master_penilaian:index' %}"  class="side-nav-link">
+                                    <i class="mdi mdi-clipboard-list"></i>
+                                    <span> Kegiatan Penilaian </span>
+                                </a>
+                            </li>
+                        {% endif %}
 
                         <li class="side-nav-title side-nav-item  mt-2">Input Penilaian</li>
                         <li class="side-nav-item">
-                            <a href="{% url 'master_penilaian:nilai-mitra' %}"  class="side-nav-link">
+                            <a href="{% if user.is_staff or 'Administrator' in user.groups.all or user.is_superuser %}{% url 'master_penilaian:nilai-mitra' %} {% else %} {% url 'master_penilaian:penilaian' %} {% endif %}"  class="side-nav-link">
                                 <i class="mdi mdi-pencil-box-multiple"></i>
                                 <span> Nilai Petugas </span>
                             </a>
                         </li>
-
-                        <li class="side-nav-title side-nav-item  mt-2">Manajemen Honor</li>
-                        <li class="side-nav-item">
-                            <a href="{% url 'master_honor:honor-settings' %}"  class="side-nav-link">
-                                <i class="mdi mdi-google-spreadsheet"></i>
-                                <span> Pengaturan Honor Mitra </span>
-                            </a>
-                        </li>
-                        <li class="side-nav-item">
-                            <a href="{% url 'master_honor:index' %}"  class="side-nav-link">
-                                <i class="mdi mdi-currency-usd-circle-outline"></i>
-                                <span> Honor Mitra </span>
-                            </a>
-                        </li>
-
-
+                        
+                        {% if user.is_staff or 'Administrator' in user.groups.all or user.is_superuser %}
+                            <li class="side-nav-title side-nav-item  mt-2">Manajemen Honor</li>
+                            <li class="side-nav-item">
+                                <a href="{% url 'master_honor:honor-settings' %}"  class="side-nav-link">
+                                    <i class="mdi mdi-google-spreadsheet"></i>
+                                    <span> Pengaturan Honor Mitra </span>
+                                </a>
+                            </li>
+                            <li class="side-nav-item">
+                                <a href="{% url 'master_honor:index' %}"  class="side-nav-link">
+                                    <i class="mdi mdi-currency-usd-circle-outline"></i>
+                                    <span> Honor Mitra </span>
+                                </a>
+                            </li>
+                        {% endif %}
                     </ul>
 
-                    <!-- End Sidebar -->
-
                     <div class="clearfix"></div>
-                    <!-- Sidebar -left -->
-
                 </div>
                 <!-- Left Sidebar End -->
 

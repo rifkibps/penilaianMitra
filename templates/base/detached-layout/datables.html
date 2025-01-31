@@ -32,13 +32,11 @@
     <script src="{% static 'app-design/assets/js/vendor/responsive.bootstrap5.min.js' %}"></script>
     
     <script src="https://unpkg.com/read-excel-file@5.x/bundle/read-excel-file.min.js"></script>
-
+    
     <!-- Datatable Init js -->
-    {% comment %} <script src="{% static 'app-design/assets/js/pages/demo.datatable-init.js' %}"></script> {% endcomment %}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    {% comment %} <script src="{% static 'app-design/assets/js/pages/demo.dashboard-analytics.js' %}"></script> {% endcomment %}
+    <script src="{% static 'customs/js/helper.js' %}"></script>
     {% block tables-script-extend %}
-        {% comment %} Include your spesific style if youre need {% endcomment %}
     {% endblock tables-script-extend %}
 
 {% endblock js-extender %}

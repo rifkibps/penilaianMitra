@@ -12,10 +12,10 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 from . import models, forms
 from master_petugas.models import AlokasiPetugas
-import numpy as np
-from openpyxl import Workbook
-from django.contrib.auth.models import User
 from pprint import pprint
+from munapps.mixins import RestrictionsAccess, RestrictionsHttpRequestAccess
+from munapps.helpers import restrict_datatable_actions
+
 
 # Create your views here.
 
@@ -27,7 +27,6 @@ class MasterPegawaiJsonResponseClassView(LoginRequiredMixin, View):
 		
     def _datatables(self, request):
         datatables = request.POST
-
         # Get Draw
         draw = int(datatables.get('draw'))
         start = int(datatables.get('start'))
@@ -78,7 +77,7 @@ class MasterPegawaiJsonResponseClassView(LoginRequiredMixin, View):
             object_list = paginator.page(1).object_list
 
         data = []
-
+        restrict_actions = restrict_datatable_actions(request)
         for obj in object_list:
             data.append({
                         'nip': f'{obj.nip}',
@@ -88,7 +87,7 @@ class MasterPegawaiJsonResponseClassView(LoginRequiredMixin, View):
                         'pangkat__golongan': f'{obj.pangkat.golongan}/ {obj.pangkat.pangkat}',
                         'pendidikan': obj.pendidikan,
                         'user': '<span class="badge badge-primary-lighten font-12"> Created </span>' if obj.user else '-',
-                        'aksi': f'<a href="javascript:void(0);" onclick="editPegawai({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline font-15"></i></a> <a href="javascript:void(0);" onclick="hapusPegawai({obj.id});" class="action-icon"> <i class="mdi mdi-delete font-15"></i></a>'
+                        'aksi': '-' if restrict_actions else f'<a href="javascript:void(0);" onclick="editPegawai({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline font-15"></i></a> <a href="javascript:void(0);" onclick="hapusPegawai({obj.id});" class="action-icon"> <i class="mdi mdi-delete font-15"></i></a>'
                 })
             
         return {
@@ -97,10 +96,8 @@ class MasterPegawaiJsonResponseClassView(LoginRequiredMixin, View):
             'recordsFiltered': records_filtered,
             'data': data,
         }
-
-
+    
 class MasterPegawaiClassView(LoginRequiredMixin, View):
-
     def get(self, request):
         context = {
             'title' : 'Master Pegawai',
@@ -118,12 +115,10 @@ class MasterPegawaiClassView(LoginRequiredMixin, View):
                 instance = form.save()
                 return JsonResponse({'message': 'Data berhasil ditambahkan'}, status=200)
             else:
-                pprint(form.errors)
                 return JsonResponse({"error": form.errors}, status=400)
         return JsonResponse({"error": ""}, status=400)
-    
 
-class MasterPegawaiDetailClassView(LoginRequiredMixin, View):
+class MasterPegawaiDetailClassView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -132,7 +127,6 @@ class MasterPegawaiDetailClassView(LoginRequiredMixin, View):
             if request.method == 'POST':
                 id = request.POST.get('id')
                 data = models.MasterPegawaiModel.objects.filter(pk=id)
-                pprint(data)
                 if data.exists():
                     return JsonResponse({'status' : 'success', 'instance': list(data.values())[0]}, status=200)
                 else:
@@ -140,32 +134,25 @@ class MasterPegawaiDetailClassView(LoginRequiredMixin, View):
                 
         return JsonResponse({'status': 'Invalid request'}, status=400)
     
-
-class MasterPegawaiUpdateClassView(LoginRequiredMixin, View):
+class MasterPegawaiUpdateClassView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         if is_ajax:
-            
             data = get_object_or_404(models.MasterPegawaiModel, pk=request.POST.get('id'))
-
             form = forms.MasterPegawaiForm(request.POST, instance=data)
-
             if form.is_valid():
                 instance = form.save()
                 ser_instance = serializers.serialize('json', [ instance, ])
-                
-                # send to client side.
                 return JsonResponse({"instance": ser_instance, 'message': 'Data berhasil diubah'}, status=200)
             else:
                 return JsonResponse({"error": form.errors}, status=400)
         return JsonResponse({"error": ""}, status=400)
 
-class MasterPegawaiDeleteClassView(LoginRequiredMixin, View):
+class MasterPegawaiDeleteClassView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-
         if is_ajax:
             if request.method == 'POST':
                 data = models.MasterPegawaiModel.objects.filter(pk = request.POST.get('id'))
@@ -173,16 +160,14 @@ class MasterPegawaiDeleteClassView(LoginRequiredMixin, View):
                     safe_check = AlokasiPetugas.objects.filter(pegawai = data.first().pk)
                     if safe_check.exists():
                         return JsonResponse({'status': 'failed', 'message': 'Data pegawai saat ini telah terdaftar pada alokasi kegiatan'}, status=200)
-
-                    # data.delete()
+                    data.delete()
                     return JsonResponse({'status' : 'success', 'message': 'Data berhasil dihapus'}, status=200)
                 else:
                     return JsonResponse({'status': 'failed', 'message': 'Data tidak tersedia'}, status=200)
                 
         return JsonResponse({'status': 'Invalid request'}, status=400)
 
-
-class PositionsClassView(LoginRequiredMixin, View):
+class PositionsClassView(LoginRequiredMixin, RestrictionsAccess, View):
 
     def get(self, request):
         context = {
@@ -199,11 +184,10 @@ class PositionsClassView(LoginRequiredMixin, View):
                 form.save()
                 return JsonResponse({'message': 'Data berhasil ditambahkan'}, status=200)
             else:
-                pprint(form.errors)
                 return JsonResponse({"error": form.errors}, status=400)
         return JsonResponse({"error": ""}, status=400)
 
-class MasterPositionJsonResponseClassView(LoginRequiredMixin, View):
+class MasterPositionJsonResponseClassView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
 
     def post(self, request):
         data = self._datatables(request)
@@ -264,7 +248,7 @@ class MasterPositionJsonResponseClassView(LoginRequiredMixin, View):
         }
 
 
-class MasterPositionDetailClassView(LoginRequiredMixin, View):
+class MasterPositionDetailClassView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -281,7 +265,7 @@ class MasterPositionDetailClassView(LoginRequiredMixin, View):
         return JsonResponse({'status': 'Invalid request'}, status=400)
 
 
-class MasterPositionDeleteClassView(LoginRequiredMixin, View):
+class MasterPositionDeleteClassView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -301,7 +285,7 @@ class MasterPositionDeleteClassView(LoginRequiredMixin, View):
         return JsonResponse({'status': 'Invalid request'}, status=400)
 
 
-class MasterPositionUpdateClassView(LoginRequiredMixin, View):
+class MasterPositionUpdateClassView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -322,7 +306,7 @@ class MasterPositionUpdateClassView(LoginRequiredMixin, View):
         return JsonResponse({"error": ""}, status=400)
 
 
-class PangkatClassView(LoginRequiredMixin, View):
+class PangkatClassView(LoginRequiredMixin, RestrictionsAccess, View):
 
     def get(self, request):
         context = {
@@ -343,7 +327,7 @@ class PangkatClassView(LoginRequiredMixin, View):
         return JsonResponse({"error": ""}, status=400)
 
 
-class MasterPangkatJsonResponseClassView(LoginRequiredMixin, View):
+class MasterPangkatJsonResponseClassView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
 
     def post(self, request):
         data = self._datatables(request)
@@ -408,7 +392,7 @@ class MasterPangkatJsonResponseClassView(LoginRequiredMixin, View):
         }
 
 
-class MasterPangkatDetailClassView(LoginRequiredMixin, View):
+class MasterPangkatDetailClassView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -425,7 +409,7 @@ class MasterPangkatDetailClassView(LoginRequiredMixin, View):
         return JsonResponse({'status': 'Invalid request'}, status=400)
 
 
-class MasterPangkatUpdateClassView(LoginRequiredMixin, View):
+class MasterPangkatUpdateClassView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -446,7 +430,7 @@ class MasterPangkatUpdateClassView(LoginRequiredMixin, View):
         return JsonResponse({"error": ""}, status=400)
 
 
-class MasterPangkatDeleteClassView(LoginRequiredMixin, View):
+class MasterPangkatDeleteClassView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
 
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'

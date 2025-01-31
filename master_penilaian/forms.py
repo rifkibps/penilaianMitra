@@ -4,6 +4,8 @@ from master_petugas.models import AlokasiPetugas
 from django.core.validators import FileExtensionValidator
 from master_petugas import utils
 import pandas as pd
+from pprint import pprint
+from io import BytesIO
 
 from django.db.models import Q
 
@@ -159,10 +161,6 @@ class PenilaianMitraForm(forms.Form):
                 if len(check_exist) > 0:
                     df[check_exist[0]]['catatan'] = value
 
-
-            
-
-
         if len(base_errors) > 0:
             self._errors['nilai_petugas'] = self.error_class(base_errors)
             return self._errors['nilai_petugas'] 
@@ -176,25 +174,24 @@ class NilaiFormUpload(forms.Form):
                               attrs={'class': "form-control"}))
     
     def clean(self):
-
-        data = self.cleaned_data.get('import_file').read()
-        df = pd.read_excel(data, skiprows=1, dtype='str')
-
+        try:
+            data = self.cleaned_data.get('import_file').read()
+            df = pd.read_excel(BytesIO(data), skiprows=1, dtype='str')
+        except:
+            self._errors['import_file'] = self.error_class(['Format template tidak sesuai. Silahkan gunakan template yang telah disediakan.'])
+            return self._errors['import_file']
+        
         df.dropna(axis=0, how='all', inplace=True)
-
         base_errors = []
 
        ### PENGECEKAN FORMAT TEMPLATE ###
-
         headers = ['No', 'ID Alokasi Mitra', 'ID Kegiatan Penilaian', 'Kode Petugas', 'Nama Petugas', 'Survei', 'Jabatan', 'Kegiatan Penilaian']  
-      
         for header in headers:
             if header not in df.columns:
                 self._errors['import_file'] = self.error_class(['Format template tidak sesuai. Silahkan gunakan template yang telah disediakan.'])
                 return self._errors['import_file']
         
         ### VALIDASI NULL UNTUK COMMOM HEADER
-        
         df_id = df[['ID Alokasi Mitra', 'ID Kegiatan Penilaian']]
         df_null = df_id[df_id.isna().any(axis=1)]
         for idx, i in df_null.iterrows():
@@ -209,8 +206,7 @@ class NilaiFormUpload(forms.Form):
 
         for idx, dt in df['ID Kegiatan Penilaian'].items():
             check_db = models.KegiatanPenilaianModel.objects.filter(pk = dt)
-
-            if check_db.exists() == False:
+            if not check_db.exists():
                 self._errors['import_file'] = self.error_class([f'Kegiatan penilaian [{dt}] tidak tersedia pada database. Periksa kolom <b>ID Kegiatan Penilaian [KOLOM C] Baris {idx+1}</b>.'])
                 return self._errors['import_file']
 
@@ -234,12 +230,15 @@ class NilaiFormUpload(forms.Form):
         df.drop(columns=df.columns[0], axis=1, inplace=True)
         
         ### PENGECEKAN ISIAN ###
-
         df_null = df[df.isna().any(axis=1)]
         for idx, i in df_null.iterrows():
-            null_cols = ', '.join(str(e).capitalize() for e in i[i.isna()].index)
-            base_errors.append(f'Nilai kosong pada <b>Baris {idx+1}</b> ditemukan. Periksa kolom <b>({null_cols})</b>')
-
+            null_cols = []
+            for e in i[i.isna()].index:
+                if 'Catatan personal' in e:
+                    null_cols.append(str(e).capitalize())
+            base_errors.append(f'Nilai kosong pada <b>Baris {idx+1}</b> ditemukan. Periksa kolom <b>({", ".join(null_cols)})</b>')
+        pprint(base_errors)
+        
         # Cek ID Alokasi Mitra dengan data file upload sesuai atau tidak
         for idx, dt in df.iterrows():
             id_alokasi = dt['ID Alokasi Mitra']
@@ -297,9 +296,7 @@ class NilaiFormUpload(forms.Form):
             self._errors['import_file'] = self.error_class(base_errors)
             return self._errors['import_file'] 
         
-
         for idx, data in df[check_indikator].iterrows():
-
             for idx2, row in data.items():
                 if row.isnumeric() == False:
                     base_errors.append(f'Indikator penilaian <b>{idx2}</b> untuk petugas <b> [{df["Kode Petugas"][idx]}] {df["Nama Petugas"][idx]} </b> hanya dapat diisikan digit numerik. Harap periksa baris <b>{idx+1} kolom {idx2}</b>')

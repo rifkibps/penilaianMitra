@@ -46,17 +46,18 @@
                         Daftar Mitra/Petugas
                     </a>
                 </li>
+                {% if user.is_staff or 'Administrator' in user.groups.all or user.is_superuser %}
                 <li class="nav-item">
                     <a href="#input-tab" data-bs-toggle="tab" aria-expanded="true" class="nav-link">
                         Input
                     </a>
                 </li>
-
                 <li class="nav-item d-none" id="nav-item-import">
                     <a href="#import-tab" data-bs-toggle="tab" aria-expanded="true" class="nav-link">
                         Import
                     </a>
                 </li>
+                {% endif %}
 
               </ul> <!-- end nav-->
               <div class="tab-content">
@@ -68,6 +69,7 @@
                             </div>
                             <div class="col-sm-6">
                                 <div class="text-sm-end">
+                                    {% if user.is_staff or 'Administrator' in user.groups.all or user.is_superuser %}
                                     <div class="btn-group">
                                         <button type="button" class="btn btn-primary dropdown-toggle mb-2 me-1" data-bs-toggle="dropdown"><i class="mdi mdi-account-switch"></i> Akses <span class="caret"></span> </button>
                                         <div class="dropdown-menu">
@@ -75,6 +77,7 @@
                                         </div>
                                     </div>
                                     <button type="button" class="btn btn-primary mb-2 me-1" data-bs-toggle="modal" data-bs-target="#import-modal"><i class="mdi mdi-file-move"></i> Import</button>
+                                    {% endif %}
                                     <a href="{% url 'master_petugas:mitra-export' %}" class="btn btn-primary mb-2"><i class="mdi mdi-download"></i> Export</a>
                                 </div>
                             </div><!-- end col-->
@@ -100,7 +103,8 @@
                             </table>                                            
                         </div>
                     </div> <!-- end preview-->
-              
+                    
+                    {% if user.is_staff or 'Administrator' in user.groups.all or user.is_superuser %}
                     <div class="tab-pane" id="input-tab"> 
                         <form action="{% url 'master_petugas:index' %}" method="POST" id="formMasterPetugas" class="px-2" novalidate>
                             {% csrf_token %}
@@ -343,6 +347,7 @@
                         <div class="alert alert-danger mt-4 alert-dismissible d-none" role="alert" id="error-upload-files">
                         </div>
                     </div> <!-- end preview-->
+                    {% endif %}
 
                 </div> <!-- end tab-content-->
 
@@ -537,7 +542,6 @@
         </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
-    
 
 {% endblock table-content %}
 
@@ -547,12 +551,6 @@
     'use strict'
 
     let region_code = ''
-
-    var swalWithBootstrapButtons = Swal.mixin({
-        customClass: {
-          confirmButton: 'btn btn-primary'},
-        buttonsStyling: true
-    })
 
     var table = $("#basic-datatable").DataTable({
         processing: true,
@@ -614,150 +612,275 @@
         },
     });
 
-    openTabInput()
-    table.draw()
+    {% if user.is_staff or 'Administrator' in user.groups.all or user.is_superuser %}
 
-    function preview_excel(table_id, field_file_id){
-        var input = $('#'+field_file_id).get(0).files[0]
-        readXlsxFile(input).then(function(data){
-           
-            var i = 0
-            $('#'+table_id+' tbody').html('') 
-            data.map((row, index) =>{
-                if (i==1){
-                    var throws = '<tr>'
-                        
-                    for (var key of row.slice(0, 18)){
-                        throws += '<th>' + key + '</th>'
-                    }
-
-                    throws += '</tr>'
-                    $('#'+table_id+' thead').html(throws) 
-                }
-    
-                if (i>1){
-                    var tdrows = '<tr>'
-                    var isnull = 0
-                    for (var key of row.slice(0, 18)){
-                        if ( key == null ){
-                            isnull += 1
-                        }
-                        tdrows += '<td>' + key + '</td>'
-                    }
-                    tdrows += '</tr>'
-                    if (isnull < 18) {
-                        $('#'+table_id+' tbody').append(tdrows) 
-                    }
-                }
-                i++
-            })
-            return true
-        })
-    }
-
-    function editPetugas(e){
-        $('#formMasterPetugas')[0].reset();
-        $('#formMasterPetugas').attr('action', "{% url 'master_petugas:update' %}")
-        $('#submitFormPetugas').html('Update Data')
-    
-        $.ajax({
-            url: '{% url 'master_petugas:detail' %}',
-            type: "POST",
-            dataType: "json",
-            data : {
-                'id' : e
-            },
-            headers: {
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": '{{csrf_token}}',
-            },
-            success: (data) => {
-                for (const [key, value] of Object.entries(data.instance)) {
-                    $('#id_'+key).val(value)
-                }
-                $('.nav-tabs a[href="#input-tab"]').tab('show');
-            },
-            error: (error) => {
-                console.log(error);
-            }
-        });
+        function editPetugas(e){
+            $('#formMasterPetugas')[0].reset();
+            $('#formMasterPetugas').attr('action', "{% url 'master_petugas:update' %}")
+            $('#submitFormPetugas').html('Update Data')
         
-    }
-    
-    function hapusPetugas(e){
-        swalWithBootstrapButtons.fire({
-            title: 'Are you sure?',
-            text: "Apakah anda yakin ingin menghapus data mitra?",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'No, cancel!',
-            reverseButtons: false
-          }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    url: '{% url 'master_petugas:delete-petugas' %}',
-                    type: "POST",
-                    dataType: "json",
-                    data : {
-                        'id' : e
-                    },
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest",
-                        "X-CSRFToken": '{{csrf_token}}',
-                    },
-                    success: (data) => {
-                        if (data.status == 'success'){
-                            Swal.fire(
-                                'Deleted!',
-                                data.message,
-                                'success'
-                                )
-                            table.ajax.reload();
-                        }else{
-                            Swal.fire(
-                                'Terjadi Kesalahan!',
-                                 data.message,
-                                'info'
-                            )
-                        }
-                    },
-                    error: (error) => {
-                        console.log(error);
+            $.ajax({
+                url: '{% url 'master_petugas:detail' %}',
+                type: "POST",
+                dataType: "json",
+                data : {
+                    'id' : e
+                },
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRFToken": '{{csrf_token}}',
+                },
+                success: (data) => {
+                    for (const [key, value] of Object.entries(data.instance)) {
+                        $('#id_'+key).val(value)
                     }
-                });
-            }
-        }) 
-
-    }
-
-    function openTabInput(){
-        var url = $(location).attr('href')
-        if (url.search('#input-tab') > 0) {
-            return $('.nav-tabs a[href="#input-tab"]').tab('show');
+                    $('.nav-tabs a[href="#input-tab"]').tab('show');
+                },
+                error: (error) => {
+                    console.log(error);
+                }
+            });
+            
         }
-    }
-    
-    function clearFormValidation(form){
-        $('.form-control').each(function(i, obj) {
-            $(this).removeClass('is-invalid')
-        });
-
-        $('.form-select').each(function(j, obj) {
-            $(this).removeClass('is-invalid')
-        });
         
-        $('.invalid-feedback').each(function(i, obj) {
-            $(this).html('')
-        });
-    }
+        function hapusPetugas(e){
+            swalWithBootstrapButtons.fire({
+                title: 'Are you sure?',
+                text: "Apakah anda yakin ingin menghapus data mitra?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'No, cancel!',
+                reverseButtons: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '{% url 'master_petugas:delete-petugas' %}',
+                        type: "POST",
+                        dataType: "json",
+                        data : {
+                            'id' : e
+                        },
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest",
+                            "X-CSRFToken": '{{csrf_token}}',
+                        },
+                        success: (data) => {
+                            if (data.status == 'success'){
+                                Swal.fire(
+                                    'Deleted!',
+                                    data.message,
+                                    'success'
+                                    )
+                                table.ajax.reload();
+                            }else{
+                                Swal.fire(
+                                    'Terjadi Kesalahan!',
+                                    data.message,
+                                    'info'
+                                )
+                            }
+                        },
+                        error: (error) => {
+                            console.log(error);
+                        }
+                    });
+                }
+            }) 
 
-    function resetForm(){
-        $('#formMasterPetugas')[0].reset();
-        $('#formMasterPetugas').attr('action', "{% url 'master_petugas:index' %}")
-        $('#submitFormPetugas').html('Kirim Data')
-        clearFormValidation('#formMasterPetugas')
-    }
+        }
+        
+        function clearFormValidation(form){
+            $('.form-control').each(function(i, obj) {
+                $(this).removeClass('is-invalid')
+            });
+
+            $('.form-select').each(function(j, obj) {
+                $(this).removeClass('is-invalid')
+            });
+            
+            $('.invalid-feedback').each(function(i, obj) {
+                $(this).html('')
+            });
+        }
+
+        function resetForm(){
+            $('#formMasterPetugas')[0].reset();
+            $('#formMasterPetugas').attr('action', "{% url 'master_petugas:index' %}")
+            $('#submitFormPetugas').html('Kirim Data')
+            clearFormValidation('#formMasterPetugas')
+        }
+
+        function checkSubmit(){
+            clearFormValidation('#formMasterPetugas')
+            var serializedData = $('#formMasterPetugas').serialize();
+            
+            $.ajax({
+                type: 'POST',
+                url: $('#formMasterPetugas').attr('action'),
+                data: serializedData,
+                success: function (response) {
+                    $('#messages-content').html(response["message"])
+                    $('#msgs-upload').removeClass('alert-danger')
+                    $('#msgs-upload').addClass('alert-success')
+                    $('#msgs-upload').removeClass('d-none')
+                    table.ajax.reload();
+                    $('.nav-tabs a[href="#petugas-preview"]').tab('show');
+                    $('#formMasterPetugas')[0].reset();
+                    $('#formMasterPetugas').trigger("reset");
+                    clearFormValidation('#formMasterPetugas')
+                },
+                error: function (response) {
+                    var errors = response["responseJSON"]["error"]
+                    for (const [key, value] of Object.entries(errors)) {
+                        var msgs = '<ul>'
+                        value.forEach(function (item, index) {
+                        
+                            msgs += '<li>'+item+'</li>'
+                            });
+                        
+                        msgs += '</ul>'
+                        if (key == 'adm_id'){
+                            $('#id_'+ key +'_id').addClass('is-invalid');
+                            $('#msg-id_'+key+'_id').html(msgs)
+                        }else{
+                            $('#id_'+ key).addClass('is-invalid');
+                            $('#msg-id_'+key).html(msgs)
+                        }
+                    }    
+                }
+            })
+        }
+
+        $("#formMasterPetugas").on("submit", function (e){
+            e.preventDefault()
+        })
+    
+        $('#UploadExcelPetugas').on('click', function (e){
+            $('#upload-petugas-excel').modal('show')
+        })
+
+        $('#get-templates-upload').on('click', () =>{
+            var numrows = $('#number_rows').val()
+            return window.location.replace("http://127.0.0.1:8000/master-petugas/template/" + numrows);
+        })
+    
+        $('#{{form_upload.import_file.id_for_label}}').on('change', () =>{
+            preview_excel('preview-data-upload', '{{form_upload.import_file.id_for_label}}', 18)
+        })
+    
+        $('#btn-submit-file').on('click', (e) => {
+            $('#nav-item-import').removeClass('d-none')
+            $('.nav-tabs a[href="#import-tab"]').tab('show');
+            $(this).blur()
+            $('#import-modal').modal('toggle')
+        })
+       
+        $('#confirm-submit-file').on('click', () => {
+              swalWithBootstrapButtons.fire({
+                title: 'Are you sure?',
+                text: "Apakah anda yakin ingin mengupload data mitra?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, upload it!',
+                cancelButtonText: 'No, cancel!',
+                reverseButtons: true
+              }).then((result) => {
+                if (result.isConfirmed) {
+                    var data = new FormData();
+                    data.append("import_file", $('#{{form_upload.import_file.id_for_label}}').get(0).files[0])
+                    $.ajax({
+                        type: 'POST',
+                        url: '{% url 'master_petugas:upload-petugas' %}',
+                        data: data,
+                        processData: false,
+                        contentType: false,
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest",
+                            "X-CSRFToken": '{{csrf_token}}',
+                        },
+                        success: function (response) {
+                            
+                            if (response.status == 'error'){
+    
+                                var content_msgs = '<strong>Terjadi kesalahan</strong> saat import data: <ol class="px-3 font-12">'
+    
+                                for (let i = 0; i < response.messages.length; i++) {
+                                    content_msgs += '<li>'+ response.messages[i] +'</li>'
+                                }
+                                
+                                $('#messages-content').html(content_msgs)
+                                $('#msgs-upload').removeClass('alert-success')
+                                $('#msgs-upload').addClass('alert-danger')
+                                $('#msgs-upload').removeClass('d-none')
+                            }else{
+                                var content_msgs = response.messages
+                                
+                                $('#messages-content').html(content_msgs)
+                                $('#msgs-upload').removeClass('alert-danger')
+                                $('#msgs-upload').addClass('alert-success')
+                                $('#msgs-upload').removeClass('d-none')
+    
+                                $('#nav-item-import').addClass('d-none')
+                                $('.nav-tabs a[href="#petugas-preview"]').tab('show');
+                                table.ajax.reload();
+        
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            return console.log(xhr.responseText['messages'])
+                        }
+                    })
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                  swalWithBootstrapButtons.fire(
+                    'Cancelled',
+                    'Data successfully cancelled',
+                    'error'
+                  )
+                }
+            }) 
+        })
+    
+        $(document).on('change', '.form-control, .form-select', () => {
+            if ($(this).hasClass('is-invalid')){
+                $(this).removeClass('is-invalid')
+            }
+        });
+
+        $("#form-upload-petugas").on("submit", function (e){
+            e.preventDefault()
+            var formData = new FormData(this);
+            $.ajax({
+                type: 'POST',
+                url: $(this).attr('action'),
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRFToken": '{{csrf_token}}',
+                },
+                success: function (response) {
+                    if (response.status == 'error') {
+                        var error_list = '<ol>'
+                        for (let i = 0; i < response.message.length; i++) {
+                            error_list += '<li class="p-1">'+ response.message[i].error +'</li>'
+                        }
+                        error_list += '</ol>'
+    
+                        $("#error-upload-files").html(error_list)
+                        $("#error-upload-files").removeClass('d-none')
+                    } else{
+                        $("#ConfirmUploadExcelPetugas").removeClass('d-none')
+                        return alert('Success')
+                    }
+                },
+                error: function (response) {
+                    return console.log(response)
+                }
+            })
+        })
+    {% endif %}
     
     $('.region-adm').bind("keyup change", () => {
         region_code = $(this).val()
@@ -766,48 +889,6 @@
 
     $('#jk-select-filter, #agama-select-filter, #pendidikan-select-filter, #bank-select-filter, #status-select-filter').bind("keyup change", () => {
         table.draw()
-    })
-    
-    $("#formMasterPetugas").on("submit", function (e){
-        e.preventDefault()
-    })
-
-    $('#UploadExcelPetugas').on('click', function (e){
-        $('#upload-petugas-excel').modal('show')
-    })
-
-    $("#form-upload-petugas").on("submit", function (e){
-        e.preventDefault()
-        var formData = new FormData(this);
-        $.ajax({
-            type: 'POST',
-            url: $(this).attr('action'),
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: {
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": '{{csrf_token}}',
-            },
-            success: function (response) {
-                if (response.status == 'error') {
-                    var error_list = '<ol>'
-                    for (let i = 0; i < response.message.length; i++) {
-                        error_list += '<li class="p-1">'+ response.message[i].error +'</li>'
-                    }
-                    error_list += '</ol>'
-
-                    $("#error-upload-files").html(error_list)
-                    $("#error-upload-files").removeClass('d-none')
-                } else{
-                    $("#ConfirmUploadExcelPetugas").removeClass('d-none')
-                    return alert('Success')
-                }
-            },
-            error: function (response) {
-                return console.log(response)
-            }
-        })
     })
 
     $('#reset-filter').on('click', () => {
@@ -819,135 +900,6 @@
     $('#redraw-table').on('click', () => {
         table.draw();
     })
-    
-    $('#get-templates-upload').on('click', () =>{
-        var numrows = $('#number_rows').val()
-        return window.location.replace("http://127.0.0.1:8000/master-petugas/template/" + numrows);
-    })
-
-    $('#{{form_upload.import_file.id_for_label}}').on('change', () =>{
-        preview_excel('preview-data-upload', '{{form_upload.import_file.id_for_label}}')
-    })
-
-    $('#btn-submit-file').on('click', (e) => {
-        $('#nav-item-import').removeClass('d-none')
-        $('.nav-tabs a[href="#import-tab"]').tab('show');
-        $(this).blur()
-        $('#import-modal').modal('toggle')
-    })
-   
-    $('#confirm-submit-file').on('click', () => {
-          swalWithBootstrapButtons.fire({
-            title: 'Are you sure?',
-            text: "Apakah anda yakin ingin mengupload data mitra?",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, upload it!',
-            cancelButtonText: 'No, cancel!',
-            reverseButtons: true
-          }).then((result) => {
-            if (result.isConfirmed) {
-                var data = new FormData();
-                data.append("import_file", $('#{{form_upload.import_file.id_for_label}}').get(0).files[0])
-                $.ajax({
-                    type: 'POST',
-                    url: '{% url 'master_petugas:upload-petugas' %}',
-                    data: data,
-                    processData: false,
-                    contentType: false,
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest",
-                        "X-CSRFToken": '{{csrf_token}}',
-                    },
-                    success: function (response) {
-                        
-                        if (response.status == 'error'){
-
-                            var content_msgs = '<strong>Terjadi kesalahan</strong> saat import data: <ol class="px-3 font-12">'
-
-                            for (let i = 0; i < response.messages.length; i++) {
-                                content_msgs += '<li>'+ response.messages[i] +'</li>'
-                            }
-                            
-                            $('#messages-content').html(content_msgs)
-                            $('#msgs-upload').removeClass('alert-success')
-                            $('#msgs-upload').addClass('alert-danger')
-                            $('#msgs-upload').removeClass('d-none')
-                        }else{
-                            var content_msgs = response.messages
-                            
-                            $('#messages-content').html(content_msgs)
-                            $('#msgs-upload').removeClass('alert-danger')
-                            $('#msgs-upload').addClass('alert-success')
-                            $('#msgs-upload').removeClass('d-none')
-
-                            $('#nav-item-import').addClass('d-none')
-                            $('.nav-tabs a[href="#petugas-preview"]').tab('show');
-                            table.ajax.reload();
-    
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        return console.log(xhr.responseText['messages'])
-                    }
-                })
-            } else if (result.dismiss === Swal.DismissReason.cancel) {
-              swalWithBootstrapButtons.fire(
-                'Cancelled',
-                'Data successfully cancelled',
-                'error'
-              )
-            }
-        }) 
-    })
-
-    $(document).on('change', '.form-control, .form-select', () => {
-        if ($(this).hasClass('is-invalid')){
-            $(this).removeClass('is-invalid')
-        }
-    });
-
-    function checkSubmit(){
-        clearFormValidation('#formMasterPetugas')
-        var serializedData = $('#formMasterPetugas').serialize();
-        
-        $.ajax({
-            type: 'POST',
-            url: $('#formMasterPetugas').attr('action'),
-            data: serializedData,
-            success: function (response) {
-                $('#messages-content').html(response["message"])
-                $('#msgs-upload').removeClass('alert-danger')
-                $('#msgs-upload').addClass('alert-success')
-                $('#msgs-upload').removeClass('d-none')
-                table.ajax.reload();
-                $('.nav-tabs a[href="#petugas-preview"]').tab('show');
-                $('#formMasterPetugas')[0].reset();
-                $('#formMasterPetugas').trigger("reset");
-                clearFormValidation('#formMasterPetugas')
-            },
-            error: function (response) {
-                var errors = response["responseJSON"]["error"]
-                for (const [key, value] of Object.entries(errors)) {
-                    var msgs = '<ul>'
-                    value.forEach(function (item, index) {
-                    
-                        msgs += '<li>'+item+'</li>'
-                        });
-                    
-                    msgs += '</ul>'
-                    if (key == 'adm_id'){
-                        $('#id_'+ key +'_id').addClass('is-invalid');
-                        $('#msg-id_'+key+'_id').html(msgs)
-                    }else{
-                        $('#id_'+ key).addClass('is-invalid');
-                        $('#msg-id_'+key).html(msgs)
-                    }
-                }    
-            }
-        })
-    }
-
 </script>
 
 {% endblock tables-script-extend %}

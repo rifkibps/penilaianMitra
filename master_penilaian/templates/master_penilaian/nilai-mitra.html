@@ -273,21 +273,25 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header modal-colored-header bg-primary">
-                <h4 class="modal-title" id="compose-header-modalLabel">Import Master Petugas</h4>
+                <h4 class="modal-title" id="compose-header-modalLabel">Import Penilaian</h4>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="p-1">
                 <div class="modal-body px-3 pt-3 pb-0">
-                    <h5>Upload Berkas Mitra</h5>
+                    <h5>Upload Penilaian Mitra</h5>
                     <div class="mb-3">
                         <ol>
-                            <li>Unduh template petugas: <br>
+                            <li>Unduh template Penilaian: <br>
                                 <div class="mt-1 d-flex justify-content-start">
-                                    <select class="form-select form-control-sm d-inline" style="width:250px;"  id="filter-kegiatan-template">
+                                    <select class="form-select d-inline" style="width:200px;"  id="filter-kegiatan-template">
                                         <option selected="" value="">-- Pilih Kegiatan Penilaian --</option>
                                         {% for dt in data_kegiatan_penilaian %}
-                                        <option value="{{dt.id}}">{{dt.kegiatan_survey.nama_kegiatan}}</option>
+                                        <option value="{{dt.id}}" data-subkegiatan="{{dt.kegiatan_survey.pk}}">{{forloop.counter}}. {{dt.kegiatan_survey.nama_kegiatan}}</option>
                                         {% endfor %}
+                                    </select>&ensp;
+                                    <br>
+                                    <select class="form-select d-inline" style="width:100px;"  id="filter-penilai-template">
+                                        <option selected="" value="">-- Pilih Penilai --</option>
                                     </select>&ensp;
                                      <button class="btn btn-primary btn-sm d-inline" id="get-templates-upload">Unduh</button>
                                 </div>
@@ -589,25 +593,20 @@
         $('#form-indikator-nilai tbody').html('')
     }
 
-    function preview_excel(table_id, field_file_id){
+    function preview_excel1(table_id, field_file_id){
         var input = $('#'+field_file_id).get(0).files[0]
         readXlsxFile(input).then(function(data){
-           
             var i = 0
             $('#'+table_id+' tbody').html('') 
-            console.log(data)
             data.map((row, index) =>{
                 if (i==1){
                     var throws = '<tr>'
-                        
                     for (var key of row){
                         throws += '<th>' + key + '</th>'
                     }
-
                     throws += '</tr>'
                     $('#'+table_id+' thead').html(throws) 
                 }
-    
                 if (i>1){
                     var tdrows = '<tr>'
                     var isnull = 0
@@ -618,7 +617,6 @@
                         tdrows += '<td>' + key + '</td>'
                     }
                     tdrows += '</tr>'
-                 
                     if (isnull < data[1].length) {
                         $('#'+table_id+' tbody').append(tdrows) 
                     }
@@ -706,7 +704,7 @@
                     $('#field_kegiatan').html(opt_kegiatan)
                     $('#field_survey').val(data.data_mitra.sub_kegiatan__survey__id)
                     
-                    var tbody_rows = ''
+                    {% comment %} var tbody_rows = ''
                     if(data.nilai_mitra.length > 0){
                         for (let i = 0; i < data.nilai_mitra.length; i++) {
                             tbody_rows += `<tr>
@@ -722,8 +720,8 @@
                         }
                     }else{
                         tbody_rows = '<tr><td colspan="4" class="text-center">Kegiatan Penilaian Belum Memiliki Indiktor Penilaian/ Kegiatan sedang Tidak Aktif</td></tr>'
-                    }
-                    $('#form-indikator-nilai tbody').html(tbody_rows)
+                    } {% endcomment %}
+                    $('#form-indikator-nilai tbody').html(data.opt)
                     $('.nav-tabs a[href="#input-tab"]').tab('show');
                 }
             },
@@ -791,12 +789,14 @@
     })
 
     $('#get-templates-upload').on('click', function(){
+        if ($('#filter-kegiatan-template').val().length == 0 || $('#filter-penilai-template').val().length == 0) return false
         var kegiatan = $('#filter-kegiatan-template').val()
-        return window.location.replace("{% url 'master_penilaian:template-nilai-mitra' %}?kegiatan=" + kegiatan);
+        var penilai = $('#filter-penilai-template').val()
+        return window.location.replace("{% url 'master_penilaian:template-nilai-mitra' %}?kegiatan=" + kegiatan + "&penilai=" + penilai);
     })
 
     $('#{{form_upload.import_file.id_for_label}}').on('change', function(){
-        preview_excel('preview-data-upload', '{{form_upload.import_file.id_for_label}}')
+        preview_excel1('preview-data-upload', '{{form_upload.import_file.id_for_label}}')
     })
 
     $('#btn-submit-file').on('click', function(){
@@ -805,6 +805,32 @@
         $('.nav-tabs a[href="#import-tab"]').tab('show');
     })
     
+    $('#filter-kegiatan-template').on('change', function(){
+        if ($(this).val().length == 0) return false
+        $('#filter-penilai-template').html('')
+        $.ajax({
+            url: '{% url 'master_penilaian:get-penilai' %}',
+            type: "POST",   
+            dataType: "json",
+            data :  {
+                'sub_kegiatan' : $(this).find(':selected').attr('data-subkegiatan'),
+                'kegiatan_penilaian' : $(this).val(),
+            },
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": '{{csrf_token}}',
+            },
+            success: (response) => {
+                if (response.status == 'success'){
+                    $('#filter-penilai-template').html(response.data)
+                }
+            },
+            error: (error) => {
+                console.log(error);
+            }
+        });
+    })
+
     $('#confirm-submit-file').on('click', function(){
         const swalWithBootstrapButtons = Swal.mixin({
             customClass: {
@@ -1029,7 +1055,7 @@
         var id_penilai = $('#field_penilai').val()
         var id_kegiatan = $('#field_kegiatan').val()
         if (id_petugas.length == 0 || id_penilai.length == 0 || id_kegiatan.length == 0) return false
-        
+
         $.ajax({
             url: '{% url 'master_penilaian:get-nilai-mitra' %}',
             type: "POST",   
@@ -1040,7 +1066,7 @@
                 "X-CSRFToken": '{{csrf_token}}',
             },
             success: (data) => {
-                var tbody_rows = ''
+                {% comment %} var tbody_rows = ''
                 if(data.nilai_mitra.length > 0){
                     for (let i = 0; i < data.nilai_mitra.length; i++) {
                         tbody_rows += `<tr>
@@ -1056,8 +1082,8 @@
                     }
                 }else{
                     tbody_rows = '<tr><td colspan="4" class="text-center">Kegiatan Penilaian Belum Memiliki Indiktor Penilaian/ Kegiatan sedang Tidak Aktif</td></tr>'
-                }
-                $('#form-indikator-nilai tbody').html(tbody_rows)
+                } {% endcomment %}
+                $('#form-indikator-nilai tbody').html(data.opt)
             },
             error: (error) => {
                 console.log(error);

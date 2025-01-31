@@ -23,6 +23,7 @@ urlpatterns = [
     path('nilai-mitra/upload', views.NilaiMitraUploadClassView.as_view(), name='upload-nilai-mitra'),
     path('nilai-mitra/table', views.GenerateTableNilaiClassView.as_view(), name='generate-table-nilai'),
     path('nilai-mitra/get-nilai-mitra', views.GetNilaiMitraClassView.as_view(), name='get-nilai-mitra'),
+    path('nilai-mitra/get-penilai', views.GetPenilaiClassView.as_view(), name='get-penilai'),
     
 
     path('indikator-penilaian', views.IndikatorPenilaianClassView.as_view(), name='indikator-penilaian'),
