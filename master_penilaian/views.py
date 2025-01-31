@@ -965,51 +965,55 @@ class NilaiMitraUploadClassView(LoginRequiredMixin, RestrictionsHttpRequestAcces
 
         if is_ajax:
             form = forms.NilaiFormUpload(request.POST, request.FILES)
-            model = models.MasterNilaiPetugas
+            model = models.MasterPenilaianPetugas
+            modelNilai = models.MasterNilaiPetugas  
 
             if form.is_valid():
                 df = form.cleaned_data
 
-            #     objs_create = []
-            #     objs_update = []
-            #     for dt in df:
-            #         petugas = AlokasiPetugas.objects.get(pk = dt['petugas'])
-            #         penilaian = models.IndikatorKegiatanPenilaian.objects.get(pk = dt['penilaian'])
-            #         role_permitted = list(penilaian.kegiatan_penilaian.role_permitted.values_list('id', flat=True))
-            #         if petugas.role.id not in role_permitted:
-            #             continue
+                objs_create = 0
+                objs_update = 0
+                for dt in df:
+                    petugas = AlokasiPetugas.objects.get(pk = dt['petugas'])
+                    penilai = AlokasiPetugas.objects.get(pk = dt['penilai'])
+                    penilaian = dt['penilaian']
+                    nilai = dt['nilai']
+                    catatan = dt['catatan']
+                    
+                    db_check = model.objects.filter(petugas = petugas, penilai = penilai, detail_nilai__indikator_penilaian = penilaian.pk).values('id', 'petugas', 'penilai').distinct()
+                    if db_check.exists():
+                        db_check2 = models.MasterNilaiPetugas.objects.filter(penilaian = db_check.first()['id'], indikator_penilaian = penilaian.pk)
+                        if db_check2.exists():
+                            nilai_mitra_update = db_check2.first()
+                            nilai_mitra_update.nilai = nilai
+                            nilai_mitra_update.catatan = catatan
+                            nilai_mitra_update.save()
+                            objs_update += 1
+                        else:
+                            modelNilai(
+                                penilaian = db_check.first(),
+                                indikator_penilaian = penilaian,
+                                nilai = nilai,
+                                catatan = catatan,
+                            ).save()
+                            objs_create += 1
+                    else:
+                        row_affected = model.objects.create(petugas = petugas, penilai = penilai, state = '2')
+                        modelNilai(
+                            penilaian = row_affected,
+                            indikator_penilaian = penilaian,
+                            nilai = nilai,
+                            catatan = catatan,
+                        ).save()
+                        objs_create += 1
 
-            #         nilai = dt['nilai']
-            #         catatan = dt['catatan']
+                msg = ''
+                if objs_create > 0:
+                    msg += f"Data <strong>berhasil</strong> ditambahkan.<br>"
+                if objs_update > 0:
+                    msg += f"Data <strong>berhasil</strong> diperbarui.<br>"
 
-            #         db_check = model.objects.filter(petugas = petugas, penilaian = penilaian)
-            #         if db_check.exists():
-            #             nilai_mitra_update = db_check.first()
-            #             nilai_mitra_update.nilai = nilai
-            #             nilai_mitra_update.catatan = catatan
-            #             objs_update.append(nilai_mitra_update)
-            #         else:
-            #             objs_create.append(
-            #                 model(
-            #                     petugas = petugas,
-            #                     penilaian = penilaian,
-            #                     nilai = nilai,
-            #                     catatan = catatan,
-            #                 )
-            #             )
-            #     msg = ''
-            #     if len(objs_create) > 0:
-            #         model.objects.bulk_create(objs_create)
-            #         msg += f"<strong>{len(objs_create)}</strong> Data berhasil diupload.<br>"
-
-            #     if len(objs_update) > 0:
-            #         model.objects.bulk_update(objs_update, ['nilai', 'catatan'])
-            #         msg += f"<strong>{len(objs_update)}</strong> Data berhasil diperbarui."
-
-            #     return JsonResponse({"status": "success", "messages":  msg})
-            # else:
-            #     error_messages = list(itertools.chain.from_iterable(form.errors['import_file'].as_data()))
-            #     return JsonResponse({"status": "error", "messages": error_messages})
+                return JsonResponse({"status": "success", "messages":  msg})
 
         return JsonResponse({"error": ""}, status=403)  
 

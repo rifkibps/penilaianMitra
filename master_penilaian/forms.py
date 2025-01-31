@@ -6,6 +6,7 @@ from master_petugas import utils
 import pandas as pd
 from pprint import pprint
 from io import BytesIO
+import numpy as np
 
 from django.db.models import Q
 
@@ -211,6 +212,7 @@ class NilaiFormUpload(forms.Form):
                 return self._errors['import_file']
 
         kegiatan_penilaian = models.KegiatanPenilaianModel.objects.filter(pk = df['ID Kegiatan Penilaian'][0]).first()
+        role_permitted = list(kegiatan_penilaian.role_permitted.values_list('id', flat=True))
 
         check_indikator = list(models.IndikatorKegiatanPenilaian.objects.filter(kegiatan_penilaian = kegiatan_penilaian.id).values_list('indikator_penilaian__nama_indikator', flat=True))
         data_indikator = check_indikator
@@ -234,39 +236,38 @@ class NilaiFormUpload(forms.Form):
         for idx, i in df_null.iterrows():
             null_cols = []
             for e in i[i.isna()].index:
-                if 'Catatan personal' in e:
+                if 'Catatan Personal' not in e:
                     null_cols.append(str(e).capitalize())
-            base_errors.append(f'Nilai kosong pada <b>Baris {idx+1}</b> ditemukan. Periksa kolom <b>({", ".join(null_cols)})</b>')
-        pprint(base_errors)
+
+            if len(null_cols) > 0:
+                base_errors.append(f'Nilai kosong pada <b>Baris {idx+1}</b> ditemukan. Periksa kolom <b>({", ".join(null_cols)})</b>')
         
         # Cek ID Alokasi Mitra dengan data file upload sesuai atau tidak
         for idx, dt in df.iterrows():
             id_alokasi = dt['ID Alokasi Mitra']
             kode_petugas = dt['Kode Petugas']
             nama_petugas = dt['Nama Petugas']
-            survei = dt['Survei']
             jabatan = dt['Jabatan']
 
             db_check = AlokasiPetugas.objects.filter(
                 petugas__kode_petugas = kode_petugas,
-                survey__nama = survei,
+                petugas__nama_petugas = nama_petugas,
                 role__jabatan = jabatan,
+                sub_kegiatan = kegiatan_penilaian.kegiatan_survey.pk,
             )
             
-            if db_check.exists() == False :
-                base_errors.append(f'Data alokasi petugas: <b>[{kode_petugas}] {nama_petugas} - {survei} - {jabatan}</b> tidak tersedia pada Database. Harap periksa baris <b>{idx+1}</b>')
+            if not db_check.exists():
+                base_errors.append(f'Data alokasi petugas: <b>[{kode_petugas}] {nama_petugas} - {kegiatan_penilaian.kegiatan_survey.nama_kegiatan} - {jabatan}</b> tidak tersedia pada Database. Harap periksa baris <b>{idx+1}</b>')
                 continue
             else:
                 db_check_data = db_check.first()
-                role_permitted = list(kegiatan_penilaian.role_permitted.values_list('id', flat=True))
-
                 if db_check_data.role.id not in role_permitted:
-                    base_errors.append(f'Role petugas <b>[{kode_petugas}] {nama_petugas} - {jabatan}</b> tidak sesuai dengan <b>role permitted</b> untuk kegiatan penilaian {kegiatan_penilaian.nama_kegiatan} <b>(Role yang diizinkan hanya {", ".join(role_permitted)})</b>. Harap periksa baris <b>{idx+1}</b>')
+                    base_errors.append(f'Role petugas <b>[{kode_petugas}] {nama_petugas} - {jabatan}</b> tidak sesuai dengan <b>role permitted</b> untuk kegiatan penilaian {kegiatan_penilaian.kegiatan_survey.nama_kegiatan} <b>(Role yang diizinkan hanya {", ".join(role_permitted)})</b>. Harap periksa baris <b>{idx+1}</b>')
                     continue
-
+            
             if str(db_check.first().id) != str(id_alokasi) :
-                base_errors.append(f'Data alokasi petugas: <b>[{kode_petugas}] {nama_petugas} - {survei} - {jabatan}</b> tidak sesuai dengan ID Alokasi Petugas. Harap periksa baris <b>{idx+1}</b>')
-               
+                base_errors.append(f'Data alokasi petugas: <b>[{kode_petugas}] {nama_petugas} - {kegiatan_penilaian.kegiatan_survey.nama_kegiatan} - {jabatan}</b> tidak sesuai dengan ID Alokasi Petugas. Harap periksa baris <b>{idx+1}</b>')
+            
 
         # Cek ID Kegiatan Penilaian Mitra dengan data file upload sesuai atau tidak
         for idx, dt in df.iterrows():
@@ -275,14 +276,12 @@ class NilaiFormUpload(forms.Form):
 
             db_check = models.KegiatanPenilaianModel.objects.filter(
                             pk = id_alokasi,
-                            nama_kegiatan = dt_kegiatan
+                            kegiatan_survey__nama_kegiatan = dt_kegiatan
                         )
-            
             if db_check.exists() == False :
                 base_errors.append(f'Data Kegiatan Penilaian: <b>[{dt_kegiatan}]</b> tidak tersedia pada Database. Harap periksa baris <b>{idx+1}</b>')
                 continue
-     
-
+        
         # Cek duplikasi Data pada master file
         df_data_mitra = df[headers[2:]]
         duplicated_petugas = df_data_mitra[df_data_mitra.duplicated()]['Nama Petugas']
@@ -291,25 +290,26 @@ class NilaiFormUpload(forms.Form):
 
         # Pengecekan tipe data dari nilai pada master file
         # Numerik Value
-
         if len(base_errors) > 0:
             self._errors['import_file'] = self.error_class(base_errors)
             return self._errors['import_file'] 
         
         for idx, data in df[check_indikator].iterrows():
             for idx2, row in data.items():
-                if row.isnumeric() == False:
+                if not row.isnumeric():
                     base_errors.append(f'Indikator penilaian <b>{idx2}</b> untuk petugas <b> [{df["Kode Petugas"][idx]}] {df["Nama Petugas"][idx]} </b> hanya dapat diisikan digit numerik. Harap periksa baris <b>{idx+1} kolom {idx2}</b>')
                 else:
-                    if (int(row) > 100) or (int(row) < 0) :
-                        base_errors.append(f'Indikator penilaian <b>{idx2}</b> untuk petugas <b> [{df["Kode Petugas"][idx]}] {df["Nama Petugas"][idx]} </b> hanya dapat diisikan <b>nilai 0-100</b>. Harap periksa baris <b>{idx+1} kolom {idx2}</b>')
+                    check_requirement = models.IndikatorKegiatanPenilaian.objects.filter(kegiatan_penilaian = kegiatan_penilaian.pk, indikator_penilaian__nama_indikator = idx2.replace("Penilaian Indikator ", "")).first()
+                    n_max = check_requirement.n_max
+                    n_min = check_requirement.n_min
+                    if (int(row) > n_max) or (int(row) < n_min):
+                        base_errors.append(f'Indikator penilaian <b>{idx2}</b> untuk petugas <b> [{df["Kode Petugas"][idx]}] {df["Nama Petugas"][idx]} </b> hanya dapat diisikan <b>nilai {n_min}-{n_max}</b>. Harap periksa baris <b>{idx+1} kolom {idx2}</b>')
 
         if len(base_errors) > 0:
             self._errors['import_file'] = self.error_class(base_errors)
             return self._errors['import_file'] 
-    
-        # FORMATING DICTIONARY
 
+        # FORMATING DICTIONARY
         id_indikator = []
         for col_new, col_old in zip(data_indikator, check_indikator):
             db_query = models.IndikatorPenilaian.objects.filter(nama_indikator = col_new ).first()
@@ -318,21 +318,22 @@ class NilaiFormUpload(forms.Form):
             df.rename(columns = {f"Catatan Personal {col_new}": f"catatan_{db_query.id}"}, inplace = True)
 
         df_dict = []
-
         for idx, data in df.iterrows():
-
             for id in id_indikator:
                 row_db =  {}
-
                 penilaian = models.IndikatorKegiatanPenilaian.objects.filter(kegiatan_penilaian = kegiatan_penilaian.id, indikator_penilaian = id).first()
                 row_db['petugas'] = data['ID Alokasi Mitra']
-                row_db['penilaian'] = penilaian.id
+                row_db['penilai'] = 1
+                row_db['penilaian'] = penilaian
                 row_db['nilai'] = data[id]
-                row_db['catatan'] = data[f'catatan_{id}']
-                
+
+                if not type(data[f'catatan_{id}']) is str:
+                    row_db['catatan'] = None
+                else:
+                    row_db['catatan'] = data[f'catatan_{id}']
                 df_dict.append(row_db)
 
-        
+        pprint(df_dict)
         self.cleaned_data = df_dict
         return self.cleaned_data
     
