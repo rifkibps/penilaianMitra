@@ -370,10 +370,10 @@
             </div>
             <div class="col-8">
                 <div class="d-flex align-items-center">
-                     <select class="form-select font-13 region-adm">
+                     <select class="form-select font-13 region-adm" id="filter_prov" onchange="get_administrative(this)">
                         <option value="">-- Pilih Provinsi --</option>
-                       {% for dt in adm.prov %}
-                            <option value="{{ dt.code }}">{{ dt.region }} [{{ dt.code }}]</option>
+                        {% for dt in adm_prov %}
+                            <option value="{{ dt.code }}">[{{ dt.code }}] {{ dt.region }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -385,11 +385,8 @@
             </div>
             <div class="col-8">
                 <div class="d-flex align-items-center">
-                     <select class="form-select font-13 region-adm">
+                    <select class="form-select font-13 region-adm" id="filter_kabkot" onchange="get_administrative(this)">
                         <option value="">-- Pilih Kab/Kota --</option>
-                       {% for dt in adm.kabkot %}
-                            <option value="{{ dt.code }}">{{ dt.region }} [{{ dt.code }}]</option>
-                        {% endfor %}
                     </select>
                 </div>
             </div>
@@ -400,11 +397,8 @@
             </div>
             <div class="col-8">
                 <div class="d-flex align-items-center">
-                     <select class="form-select font-13 region-adm">
+                     <select class="form-select font-13 region-adm" id="filter_kec" onchange="get_administrative(this)">
                         <option value="">-- Pilih Kecamatan --</option>
-                        {% for dt in adm.kec %}
-                            <option value="{{ dt.code }}">{{ dt.region }} [{{ dt.code }}]</option>
-                        {% endfor %}
                     </select>
                 </div>
             </div>
@@ -415,11 +409,8 @@
             </div>
             <div class="col-8">
                 <div class="d-flex align-items-center">
-                    <select class="form-select font-13 region-adm">
+                    <select class="form-select font-13 region-adm" id="filter_keldes" onchange="get_administrative(this)">
                         <option value="">-- Pilih Desa --</option>
-                        {% for dt in adm.desa %}
-                            <option value="{{ dt.code }}">{{ dt.region }} [{{ dt.code }}]</option>
-                        {% endfor %}
                     </select>
                 </div>
             </div>
@@ -882,10 +873,37 @@
         })
     {% endif %}
     
-    $('.region-adm').bind("keyup change", () => {
-        region_code = $(this).val()
-        table.draw()
-    })
+    function get_administrative(e){
+        var code = $(e).val()
+        if (code.length == 0) return false
+        region_code = code
+        if ($(e).attr('id') == 'filter_keldes') return table.draw()
+        $.ajax({
+            url: '{% url 'master_petugas:adm-fetch' %}',
+            type: "POST",   
+            dataType: "json",
+            data :  {'code' : code},
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": '{{csrf_token}}',
+            },
+            success: (data) => {
+                if (data.status == 'success'){
+                    if (code.length == 2){
+                        $('#filter_kabkot').html(data.adm)
+                    } else if (code.length == 4){
+                        $('#filter_kec').html(data.adm)
+                    } else {
+                        $('#filter_keldes').html(data.adm)
+                    }
+                    table.draw()
+                }
+            },
+            error: (error) => {
+                console.log(error);
+            }
+        }); 
+    }
 
     $('#jk-select-filter, #agama-select-filter, #pendidikan-select-filter, #bank-select-filter, #status-select-filter').bind("keyup change", () => {
         table.draw()
@@ -894,6 +912,9 @@
     $('#reset-filter').on('click', () => {
         region_code = ''
         $('.region-adm, #jk-select-filter, #agama-select-filter, #pendidikan-select-filter, #bank-select-filter, #status-select-filter').prop('selectedIndex',0);
+        $('#filter_kabkot').html('<option value="">-- Pilih Kab/Kota --</option>')
+        $('#filter_kec').html('<option value="">-- Pilih Kecamatan --</option>')
+        $('#filter_keldes').html('<option value="">-- Pilih Desa --</option>')
         table.draw();
     })
 

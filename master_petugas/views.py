@@ -37,6 +37,7 @@ from master_honor.models import HonorModel
 from master_pegawai.models import MasterPegawaiModel
 
 from munapps.mixins import RestrictionsAccess, RestrictionsHttpRequestAccess
+from munapps.helpers import get_adm_levels
 
 class MasterPetugasJsonResponseClassView(LoginRequiredMixin, View):
 
@@ -148,18 +149,10 @@ class MasterPetugasClassView(LoginRequiredMixin, View):
 
     def get(self, request):
         form = forms.MasterPetugasForm()
-        adm = models.AdministrativeModel.objects.annotate(text_len=Length('code'))
-        adm = {
-                'prov' : adm.filter(text_len=2).order_by('region'),
-                'kabkot' : adm.filter(text_len=4).order_by('region'),
-                'kec' : adm.filter(text_len=7).order_by('region'),
-                'desa' : adm.filter(text_len=10).order_by('region'),
-            }
-
         context = {
             'title' : 'Master Mitra',
             'data_petugas' : models.MasterPetugas.objects.all(),
-            'adm' :adm ,
+            'adm_prov' : models.AdministrativeModel.objects.annotate(text_len=Length('code')).filter(text_len=2).order_by('region'),
             'form': form,
             'form_upload': forms.MasterPetugasFormUpload()
             }
@@ -521,6 +514,62 @@ class MasterPetugasSearchClassView(LoginRequiredMixin, View):
             return JsonResponse({'status' : 'success', 'search_result': {'row_count' : row_counts , 'search_result' : search_result }}, status=200)
                 
         return JsonResponse({'status': 'Invalid request'}, status=400) 
+
+
+class MasterPetugasSearchClassView(LoginRequiredMixin, View):
+    
+    def post(self, request):
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+        if is_ajax:
+
+            if request.method == 'POST':
+                
+                search_by = request.POST.get('search_by')
+                data_petugas = models.MasterPetugas.objects.filter(
+                    Q(kode_petugas__icontains=search_by)|
+                    Q(nama_petugas__icontains=search_by)|
+                    Q(nik__icontains=search_by)|
+                    Q(email__icontains=search_by)|
+                    Q(no_telp__icontains=search_by)
+                ).exclude(Q(nama_petugas=None)|Q(nik=None)|Q(email=None)|Q(no_telp=None)|Q(status=None))
+
+            row_counts = data_petugas.count()
+            search_result = ''
+            for dt in data_petugas[:5]:
+                search_result += f'<a href="{reverse_lazy("master_petugas:mitra-view-detail", kwargs={"mitra_id": dt.id})}" class="dropdown-item notify-item"><i class="mdi mdi-account-circle-outline me-1"></i><span>{dt.nama_petugas} ({dt.kode_petugas})</span></a>'
+          
+            return JsonResponse({'status' : 'success', 'search_result': {'row_count' : row_counts , 'search_result' : search_result }}, status=200)
+                
+        return JsonResponse({'status': 'Invalid request'}, status=400) 
+
+class GetAdministratifLocClassView(LoginRequiredMixin, View):
+    
+    def post(self, request):
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+        if is_ajax:
+            if request.method == 'POST':
+                next_code_level = 2
+                code = request.POST.get('code')
+                if len(code) == 2:
+                    opts = '<option value="">-- Pilih Kab/Kota --</option>'
+                    next_code_level = 4 
+                elif len(code) == 4:
+                    opts = '<option value="">-- Pilih Kecamatan --</option>'
+                    next_code_level = 7 
+                else:
+                    opts = '<option value="">-- Pilih Desa --</option>'
+                    next_code_level = 10 
+
+                adm = models.AdministrativeModel.objects.annotate(text_len=Length('code')).filter(Q(code__icontains=code)).filter(text_len=next_code_level).order_by('code')
+                for dt in adm:
+                    opts += f'<option value="{dt.code}">[{dt.code}] {dt.region}</option>'
+        
+                return JsonResponse({'status' : 'success', 'adm' : opts}, status=200)
+                
+        return JsonResponse({'status': 'Invalid request'}, status=400) 
+
 
 
 ### Alokasi Petugas
@@ -1057,7 +1106,6 @@ class MasterRoleExportClassView(LoginRequiredMixin, RestrictionsAccess, View):
         response['Content-Disposition'] = 'attachment; filename="Jabatan Petugas.xls"'
         return response
 
-
 class PetugasClassView(LoginRequiredMixin, View):
     
     def get(self, request):
@@ -1216,7 +1264,7 @@ class ListPetugasClassView(LoginRequiredMixin, View):
         start = int(datatables.get('start'))
         length = int(datatables.get('length'))
         page_number = int(start / length + 1)
-        search = datatables.get('search[value]')
+        search = request.POST.get('search_mitra')
 
         order_idx = int(datatables.get('order[0][column]')) # Default 1st index for 
         order_dir = datatables.get('order[0][dir]') # Descending or Ascending
@@ -1300,7 +1348,7 @@ class ListPetugasClassView(LoginRequiredMixin, View):
                 'jml_kegiatan' : obj['jml_kegiatan'],
                 'jml_penilai' : obj['jml_penilai'],
                 'status' : obj['status'],
-                'aksi': f'<a href="{reverse_lazy("master_petugas:detail-petugas", kwargs={"mitra_id": obj["id"]})}" target="_blank" class="btn btn-primary"><i class="mdi mdi-square-edit-outline"></i></a>',
+                'aksi': f'<a href="{reverse_lazy("master_petugas:detail-petugas", kwargs={"mitra_id": obj["id"]})}" target="_blank" class="action-icon"><i class="mdi mdi-square-edit-outline font-15"></i></a>',
             } for obj in object_list
         ]
         return {

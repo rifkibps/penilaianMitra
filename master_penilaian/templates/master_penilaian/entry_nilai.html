@@ -92,12 +92,12 @@
                         <div class="input-group">
                             <input type="text" class="form-control form-control-light" placeholder="Cari Mitra" id="search-mitra">
                         </div>
-                        <a href="javascript: void(0);" class="btn btn-primary ms-2">
+                        <a href="javascript: void(0);" class="btn btn-primary ms-2" id="refresh-rank">
                             <i class="mdi mdi-autorenew"></i>
                         </a>
                     </form>
                     <div class="table-responsive" style="max-height: 250px; overflow-y: schroll; display:block">
-                        <table class="table table-centered table-hover dt-responsive nowrap w-100" id="ranking-global">
+                        <table class="table table-centered table-hover dt-responsive w-100" id="ranking-global">
                             <thead>
                                 <tr>
                                     <th>Wilayah (Kecamatan)</th>
@@ -123,6 +123,7 @@
             <div class="card">
                 <div class="card-body">
                     <h4 class="header-title mt-2 mb-3">Kegiatan Penilaian Mitra</h4>
+                    
                     <div class="table-responsive-sm">
                         <table class="table table-centered table-striped dt-responsive nowrap w-100" id="list_kegiatan_penilaian">
                             <thead>
@@ -151,6 +152,9 @@
             <div class="card">
                 <div class="card-body">
                     <h4 class="header-title mt-2 mb-3">Penilaian Mitra</h4>
+                    <div class="input-group float-end">
+                        <input type="text" class="form-control form-control-light" placeholder="Cari Data Mitra" id="search-mitra-datatable">
+                    </div>
                     <input type="hidden" id="kegiatan_penilaian">
                     <div class="table-responsive-sm">
                         <table class="table table-centered table-striped dt-responsive nowrap w-100" id="list-penilaian">
@@ -311,7 +315,12 @@
             'targets': [5], /* column index */
             'orderable': false, /* true or false */
             'className': "text-center"
-        }],
+        },
+        {
+            'targets': [2, 3, 4], /* column index */
+            'className': "text-center"
+        }
+        ],
         bLengthChange: false,
         bFilter: false,
         keys: !0,
@@ -338,6 +347,7 @@
             "data": function (d){
                 return $.extend({}, d, {
                     "kegiatan_penilaian": $('#kegiatan_penilaian').val(),
+                    "search_mitra": $('#search-mitra-datatable').val(),
                 })
             },
             "type": "POST"
@@ -356,7 +366,12 @@
             'targets': [6], /* column index */
             'orderable': false, /* true or false */
             'className': "text-center"
-        }],
+        },
+        {
+            'targets': [3, 4, 5], /* column index */
+            'className': "text-center"
+        }
+        ],
         bLengthChange: false,
         bFilter: false,
         keys: !0,
@@ -437,6 +452,14 @@
     }
 
     $('#search-mitra').on("keyup", () => {
+        table3.draw()
+    })
+
+    $('#search-mitra-datatable').on("keyup", () => {
+        table2.draw()
+    })
+
+    $('#refresh-rank').on("click", () => {
         table3.draw()
     })
 

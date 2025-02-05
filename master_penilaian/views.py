@@ -36,6 +36,7 @@ from . import helpers
 
 from django.db.models import Avg
 from munapps.mixins import RestrictionsAccess, RestrictionsHttpRequestAccess
+from django.db.models.functions import Length
 
 class PenilaianPetugasClassView(LoginRequiredMixin, RestrictionsAccess, View):
     
@@ -615,11 +616,13 @@ class NilaiMitraClassView(LoginRequiredMixin, RestrictionsAccess, View):
         context = {
             'title' : 'Nilai Mitra',
             'data_mitra' : AlokasiPetugas.objects.filter(pegawai = None).all().order_by('petugas__nama_petugas'),
+            'adm_prov' : AdministrativeModel.objects.annotate(text_len=Length('code')).filter(text_len=2).order_by('region'),
             'data_role' : RoleMitra.objects.all().order_by('jabatan'),
             'data_survei' : SurveyModel.objects.all().order_by('nama'),
             'data_kegiatan' : SubKegiatanSurvei.objects.all().order_by('nama_kegiatan'),
             'data_indikator_penilaian' : models.IndikatorPenilaian.objects.all(),
             'data_kegiatan_penilaian' : models.KegiatanPenilaianModel.objects.filter(status = '1').order_by('-tgl_penilaian'),
+            'data_pegawai' : model_pegawai.MasterPegawaiModel.objects.all().order_by('name'),
             'form' : forms.PenilaianMitraForm(),
             'form_upload' : forms.NilaiFormUpload()
             }
@@ -717,17 +720,23 @@ class NilaiMitraJsonResponseClassView(LoginRequiredMixin, RestrictionsHttpReques
 
         data = models.MasterPenilaianPetugas.objects
 
+        if datatables.get('region_code'):
+            data = data.filter(petugas__petugas__adm_id__code__icontains = datatables.get('region_code'))
+            
         if datatables.get('mitra_filter'):
             data = data.filter(petugas__petugas = datatables.get('mitra_filter'))
+            
+        if datatables.get('pegawai_filter'):
+            data = data.filter(penilai__pegawai = datatables.get('pegawai_filter'))
         
         if datatables.get('role_filter'):
             data = data.filter(petugas__role = datatables.get('role_filter'))
 
         if datatables.get('survei_filter'):
-            data = data.filter(detail_nilai__indikator_penilaian__kegiatan_penilaian__survey = datatables.get('survei_filter'))
+            data = data.filter(detail_nilai__indikator_penilaian__kegiatan_penilaian__kegiatan_survey__survey = datatables.get('survei_filter'))
 
         if datatables.get('kegiatan_filter'):
-            data = data.filter(detail_nilai__indikator_penilaian__kegiatan_penilaian = datatables.get('kegiatan_filter'))
+            data = data.filter(detail_nilai__indikator_penilaian__kegiatan_penilaian__kegiatan_survey = datatables.get('kegiatan_filter'))
     
         if search:
             data = data.filter(
@@ -1099,8 +1108,10 @@ class GenerateTableNilaiClassView(LoginRequiredMixin, RestrictionsHttpRequestAcc
                         button_action = f'<td class="text-center"><button class="btn btn-primary" onclick="updateNilaiMitra({dt})" >Edit</button> <button class="btn btn-danger" onclick="deleteNilaiMitra({dt})">Hapus</button></td>'
                     elif idx == 1:
                         continue
-                    elif idx == 3:
-                        tbody += f'<td class="text-center"><a href="{reverse_lazy("master_petugas:mitra-view-detail", kwargs={"mitra_id": data[1]})}" class="text-body" target="_blank">{data[3]}</a></td>'
+                    elif idx in [2, 3, 6]:
+                        tbody += f'<td>{dt}</td>'
+                    elif idx == 4:
+                        tbody += f'<td><a href="{reverse_lazy("master_petugas:mitra-view-detail", kwargs={"mitra_id": data[1]})}" class="text-body" target="_blank">{data[4]}</a></td>'
                     else:
                         txt_style = '' if (idx+1) == len(data) or (idx+1) == (len(data) - 1) or (idx+1) == (len(data) - 1) else 'text-center'
                         tbody += f'<td class="{txt_style}">{dt}</td>'
@@ -1335,7 +1346,7 @@ class KegiatanPenilaianJsonResponseClassView(LoginRequiredMixin, View):
                             'tgl_penilaian': obj.tgl_penilaian.strftime('%d %b %Y'),
                             'status' :  f'<span class="badge {state} p-1"> {obj.get_status_display()} </span>',
                             'status_penilaian' : state_penilaian,
-                            'aksi': f'<a href="javascript:void(0);" class="action-icon" onclick="pushValuePenilaian({obj.id})"><i class="mdi mdi-square-edit-outline"></i></a>'
+                            'aksi': f'<a href="javascript:void(0);" class="action-icon" onclick="pushValuePenilaian({obj.id})"><i class="mdi mdi-square-edit-outline font-15"></i></a>'
                         }
                     )
                 continue
@@ -1365,14 +1376,13 @@ class MasterNilaiPetugasClassView(LoginRequiredMixin, View):
 		
     def _datatables(self, request):
         datatables = request.POST
-        
         # Get Draw
         draw = int(datatables.get('draw'))
         start = int(datatables.get('start'))
         length = int(datatables.get('length'))
         page_number = int(start / length + 1)
 
-        search = datatables.get('search[value]')
+        search = datatables.get('search_mitra')
 
         order_idx = int(datatables.get('order[0][column]')) # Default 1st index for
         order_dir = datatables.get('order[0][dir]') # Descending or Ascending
@@ -1394,11 +1404,6 @@ class MasterNilaiPetugasClassView(LoginRequiredMixin, View):
             if datatables.get('kegiatan_penilaian'):
                 dataKegiatan = dataKegiatan.filter(pk = datatables.get('kegiatan_penilaian'))
 
-            if search:
-                dataKegiatan = dataKegiatan.filter(
-                    Q(kegiatan_survey__nama_kegiatan__icontains=search)
-                )
-
             dataset = []
             for dt_kegiatan in dataKegiatan:
                 role_penilai_permitted = dt_kegiatan.role_penilai_permitted.values_list('id', flat=True)
@@ -1408,14 +1413,13 @@ class MasterNilaiPetugasClassView(LoginRequiredMixin, View):
                 if aloc_pegawai.exists():
                     if aloc_pegawai.first().role.pk not in role_penilai_permitted:
                         continue
-
+                        
                     aloc = aloc.filter(pegawai=None)
-
-                    if search:
+                    if datatables.get('search_mitra'):
                         aloc = aloc.filter(
-                            Q(petugas__petugas__adm_id__region__icontains=search)|
-                            Q(petugas__petugas__nama_petugas__icontains=search)|
-                            Q(petugas__role__jabatan__icontains=search)
+                            Q(petugas__adm_id__region__icontains=search)|
+                            Q(petugas__nama_petugas__icontains=search)|
+                            Q(role__jabatan__icontains=search)
                         )
 
                     for dt in aloc:
@@ -1445,14 +1449,14 @@ class MasterNilaiPetugasClassView(LoginRequiredMixin, View):
                             dataset.append({ **nilai_mitra, **{
                                 'rerata' : f'{round(qry['avg'], 2)}',
                                 'state' : '<span class="badge bg-success p-1"> Sudah Menilai </span>',
-                                'aksi' : f'<a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a>'
+                                'aksi' : f'<a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline font-15"></i></a>'
                             }})
                             continue
                         
                         dataset.append({ **nilai_mitra, **{
                             'rerata' : '0',
-                            'state' : '<span class="badge bg-warning p-1"> Belum Menilai </span>',
-                            'aksi' : f'<a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline"></i></a>'
+                            'state' : '<span class="badge bg-info p-1"> Belum Menilai </span>',
+                            'aksi' : f'<a href="javascript:void(0);" class="action-icon"><i class="mdi mdi-square-edit-outline font-15"></i></a>'
                         }})
 
                     records_total = len(dataset)
@@ -1476,7 +1480,7 @@ class MasterNilaiPetugasClassView(LoginRequiredMixin, View):
                         'role' :  obj['role'],
                         'rerata' : obj['rerata'],
                         'state' : obj['state'],
-                        'aksi': f'<a href="javascript:void(0);" class="action-icon" onclick="entryPenilaian({obj["id_kegiatan_penilaian"]}, {obj["id_alokasi"]})"><i class="mdi mdi-square-edit-outline"></i></a>'
+                        'aksi': f'<a href="javascript:void(0);" class="action-icon" onclick="entryPenilaian({obj["id_kegiatan_penilaian"]}, {obj["id_alokasi"]})"><i class="mdi mdi-square-edit-outline font-15"></i></a>'
                     }
                 )
         

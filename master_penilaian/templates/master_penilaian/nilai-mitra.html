@@ -80,7 +80,7 @@
                             </div>
 
                             <div class="table-responsive">
-                                <table id="basic-datatable" class="table table-centered table-striped w-100 dt-responsive nowrap">
+                                <table id="basic-datatable" class="table table-centered table-striped w-100 dt-responsive">
                                     <thead>
                                         <tr>
                                             <th width="4%">No</th>
@@ -355,10 +355,10 @@
             </div>
             <div class="col-8">
                 <div class="d-flex align-items-center">
-                     <select class="form-select font-13 region-adm">
+                     <select class="form-select font-13 region-adm" id="filter_prov" onchange="get_administrative(this)">
                         <option value="">-- Pilih Provinsi --</option>
-                       {% for dt in adm.prov %}
-                            <option value="{{ dt.code }}">{{ dt.region }} [{{ dt.code }}]</option>
+                       {% for dt in adm_prov %}
+                            <option value="{{ dt.code }}">[{{ dt.code }}] {{ dt.region }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -370,11 +370,8 @@
             </div>
             <div class="col-8">
                 <div class="d-flex align-items-center">
-                     <select class="form-select font-13 region-adm">
+                     <select class="form-select font-13 region-adm" id="filter_kabkot" onchange="get_administrative(this)">
                         <option value="">-- Pilih Kab/Kota --</option>
-                       {% for dt in adm.kabkot %}
-                            <option value="{{ dt.code }}">{{ dt.region }} [{{ dt.code }}]</option>
-                        {% endfor %}
                     </select>
                 </div>
             </div>
@@ -385,11 +382,8 @@
             </div>
             <div class="col-8">
                 <div class="d-flex align-items-center">
-                     <select class="form-select font-13 region-adm">
+                     <select class="form-select font-13 region-adm" id="filter_kec" onchange="get_administrative(this)">
                         <option value="">-- Pilih Kecamatan --</option>
-                        {% for dt in adm.kec %}
-                            <option value="{{ dt.code }}">{{ dt.region }} [{{ dt.code }}]</option>
-                        {% endfor %}
                     </select>
                 </div>
             </div>
@@ -400,11 +394,8 @@
             </div>
             <div class="col-8">
                 <div class="d-flex align-items-center">
-                    <select class="form-select font-13 region-adm">
+                    <select class="form-select font-13 region-adm" id="filter_keldes" onchange="get_administrative(this)">
                         <option value="">-- Pilih Desa --</option>
-                        {% for dt in adm.desa %}
-                            <option value="{{ dt.code }}">{{ dt.region }} [{{ dt.code }}]</option>
-                        {% endfor %}
                     </select>
                 </div>
             </div>
@@ -433,10 +424,10 @@
             </div>
             <div class="col-8">
                 <div class="d-flex align-items-center">
-                    <select class="form-select" id="mitra-select-filter">
+                    <select class="form-select" id="pegawai-select-filter">
                         <option selected="" value="">-- Pilih Pegawai --</option>
                         {% for dt in data_pegawai %}
-                        <option value="{{dt.id}}" data-tokens="{{dt.pegawai.kode_petugas}} {{dt.pegawai.name}}">[{{dt.pegawai.nip}}] {{dt.pegawai.name}}</option>
+                        <option value="{{dt.id}}" data-tokens="{{dt.kode_petugas}} {{dt.name}}">[{{dt.nip}}] {{dt.name}}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -504,11 +495,9 @@
 <script type="text/javascript" src="https://unpkg.com/xlsx@0.15.1/dist/xlsx.full.min.js"></script>
 
 <script>
-    var swalWithBootstrapButtons = Swal.mixin({
-        customClass: {
-          confirmButton: 'btn btn-primary'},
-        buttonsStyling: true
-    })
+    'use strict'
+    
+    var region_code = ''
 
     function ExportToExcel(type, fn, dl) {
         var elt = document.getElementById('basic-datatable-2');
@@ -532,7 +521,9 @@
                     "role_filter": $('#role-select-filter').val(),
                     "survei_filter": $('#survei-select-filter').val(),
                     "kegiatan_filter": $('#kegiatan-select-filter').val(),
-                    "mitra_filter": $('#mitra-select-filter').val()
+                    "mitra_filter": $('#mitra-select-filter').val(),
+                    "pegawai_filter": $('#pegawai-select-filter').val(),
+                    "region_code" : region_code
                 })
             },
             "type": "POST"
@@ -571,19 +562,7 @@
         },
     });
 
-    $('#role-select-filter').bind("keyup change", function (){
-        table.draw()
-    })
-
-    $('#survei-select-filter').bind("keyup change", function (){
-        table.draw()
-    })
-    
-    $('#kegiatan-select-filter').bind("keyup change", function (){
-        table.draw()
-    })
-
-    $('#mitra-select-filter').bind("keyup change", function (){
+    $('#mitra-select-filter, #pegawai-select-filter, #kegiatan-select-filter, #survei-select-filter, #role-select-filter').bind("keyup change", function (){
         table.draw()
     })
 
@@ -732,6 +711,136 @@
         });
     }
 
+    function get_data_penilaian_by_survei(data, field_target, url){
+        $.ajax({
+            url: url,
+            type: "POST",   
+            dataType: "json",
+            data : data,
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": '{{csrf_token}}',
+            },
+            success: (data) => {
+                var option = '<option value="">-- Pilih Penilaian --</option>'
+                for (let i = 0; i < data.instance.length; i++) {
+                    option += '<option value="'+ data.instance[i]['id'] +'">'+ data.instance[i]['kegiatan_survey__nama_kegiatan'] +'</option>'
+                }
+                $(field_target).html(option)
+            },
+            error: (error) => {
+                console.log(error);
+            }
+        });
+    }
+
+    function get_data_tables_nilai(data){
+        if ( $.fn.DataTable.isDataTable('#basic-datatable-2') ) {
+            $('#basic-datatable-2').DataTable().destroy();
+        }
+          
+        var thead_def = `<tr>
+                <th>ID Mitra</th>
+                <th>Kec.</th>
+                <th>Mitra</th>
+                <th>Jabatan</th>
+                <th>Kegiatan Penilaian</th>
+                <th>Penilaian Indikator</th>
+            </tr>`
+          
+        var tbody_def = `<tr class="text-center">
+                <td colspan="6">Silahkan Pilih Kegiatan Survei dan Penilaian</td>
+            </tr>`
+
+        $('#basic-datatable-2 thead').html(thead_def);
+        $('#basic-datatable-2 tbody').html(tbody_def);
+
+        $.ajax({
+            url: '{% url 'master_penilaian:generate-table-nilai' %}',
+            type: "POST",   
+            dataType: "json",
+            data : data,
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": '{{csrf_token}}',
+            },
+            success: (data) => {
+                
+                if (data.status == 'success'){
+                    $('#basic-datatable-2 thead').html(data.data['thead'] )
+                    $('#basic-datatable-2 tbody').html(data.data['tbody'] )
+                    $("#basic-datatable-2").DataTable(
+                        {
+                            language: {
+                                paginate: {
+                                previous: "<i class='mdi mdi-chevron-left'>",
+                                next: "<i class='mdi mdi-chevron-right'>",
+                                },
+                                lengthMenu : "Menampilkan _MENU_",
+                                search: "Cari Nilai Mitra ",
+                            },
+                            drawCallback: function () {
+                                $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
+                            },
+                        }
+                    )
+                }
+            },
+            error: (error) => {
+                console.log(error);
+            }
+        });
+    }
+
+    function get_administrative(e){
+        var code = $(e).val()
+        var id = $(e).attr('id')
+        # CEK LAGI PLIS
+        reset_administrative(id)
+        if (code.length == 0) return false
+        region_code = code
+        if (id == 'filter_keldes') return table.draw()
+
+        $.ajax({
+            url: '{% url 'master_petugas:adm-fetch' %}',
+            type: "POST",   
+            dataType: "json",
+            data :  {'code' : code},
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": '{{csrf_token}}',
+            },
+            success: (data) => {
+                if (data.status == 'success'){
+                    if (code.length == 2){
+                        $('#filter_kabkot').html(data.adm)
+                    } else if (code.length == 4){
+                        $('#filter_kec').html(data.adm)
+                    } else {
+                        $('#filter_keldes').html(data.adm)
+                    }
+                    table.draw()
+                }
+            },
+            error: (error) => {
+                console.log(error);
+            }
+        }); 
+    }
+
+    function reset_administrative(level){
+        if (level == 'filter_prov'){
+            $('#filter_kabkot').html('<option value="">-- Pilih Kab/Kota --</option>')
+            $('#filter_kec').html('<option value="">-- Pilih Kecamatan --</option>')
+            $('#filter_keldes').html('<option value="">-- Pilih Desa --</option>')
+        }else if (level == 'filter_kabkot'){
+            $('#filter_kec').html('<option value="">-- Pilih Kecamatan --</option>')
+            $('#filter_keldes').html('<option value="">-- Pilih Desa --</option>')
+        }else{
+            $('#filter_keldes').html('<option value="">-- Pilih Desa --</option>')
+        }
+    }
+
     $('#formPenilaianPetugas').on('submit', function(e){
         e.preventDefault()
         var serializedData = $(this).serialize();
@@ -775,10 +884,10 @@
         })
     })
 
-    $('#reset-filter').on('click', function (){
-        $('#role-select-filter').prop('selectedIndex',0);
-        $('#survei-select-filter').prop('selectedIndex',0);
-        $('#kegiatan-select-filter').prop('selectedIndex',0);
+    $('#reset-filter').on('click', () => {
+        region_code = ''
+        $('#mitra-select-filter, #pegawai-select-filter, #kegiatan-select-filter, #survei-select-filter, #role-select-filter, .region-adm').prop('selectedIndex',0);
+        reset_administrative()
         table.draw();
     })
 
@@ -905,87 +1014,6 @@
         }) 
     })
 
-    function get_data_penilaian_by_survei(data, field_target, url){
-        $.ajax({
-            url: url,
-            type: "POST",   
-            dataType: "json",
-            data : data,
-            headers: {
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": '{{csrf_token}}',
-            },
-            success: (data) => {
-                var option = '<option value="">-- Pilih Penilaian --</option>'
-                for (let i = 0; i < data.instance.length; i++) {
-                    option += '<option value="'+ data.instance[i]['id'] +'">'+ data.instance[i]['kegiatan_survey__nama_kegiatan'] +'</option>'
-                }
-                $(field_target).html(option)
-            },
-            error: (error) => {
-                console.log(error);
-            }
-        });
-    }
-
-    function get_data_tables_nilai(data){
-        if ( $.fn.DataTable.isDataTable('#basic-datatable-2') ) {
-            $('#basic-datatable-2').DataTable().destroy();
-        }
-          
-        var thead_def = `<tr>
-                <th>ID Mitra</th>
-                <th>Kec.</th>
-                <th>Mitra</th>
-                <th>Jabatan</th>
-                <th>Kegiatan Penilaian</th>
-                <th>Penilaian Indikator</th>
-            </tr>`
-          
-        var tbody_def = `<tr class="text-center">
-                <td colspan="6">Silahkan Pilih Kegiatan Survei dan Penilaian</td>
-            </tr>`
-
-        $('#basic-datatable-2 thead').html(thead_def);
-        $('#basic-datatable-2 tbody').html(tbody_def);
-
-        $.ajax({
-            url: '{% url 'master_penilaian:generate-table-nilai' %}',
-            type: "POST",   
-            dataType: "json",
-            data : data,
-            headers: {
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": '{{csrf_token}}',
-            },
-            success: (data) => {
-                
-                if (data.status == 'success'){
-                    $('#basic-datatable-2 thead').html(data.data['thead'] )
-                    $('#basic-datatable-2 tbody').html(data.data['tbody'] )
-                    $("#basic-datatable-2").DataTable(
-                        {
-                            language: {
-                                paginate: {
-                                previous: "<i class='mdi mdi-chevron-left'>",
-                                next: "<i class='mdi mdi-chevron-right'>",
-                                },
-                                lengthMenu : "Menampilkan _MENU_",
-                                search: "Cari Nilai Mitra ",
-                            },
-                            drawCallback: function () {
-                                $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
-                            },
-                        }
-                    )
-                }
-            },
-            error: (error) => {
-                console.log(error);
-            }
-        });
-    }
-
     $('#nilai-mitra-filter-survey').on('change', function(){
         var thead_def = `<tr>
             <th>ID Mitra</th>
@@ -1067,7 +1095,7 @@
                 "X-CSRFToken": '{{csrf_token}}',
             },
             success: (data) => {
-                {% comment %} var tbody_rows = ''
+                var tbody_rows = ''
                 if(data.nilai_mitra.length > 0){
                     for (let i = 0; i < data.nilai_mitra.length; i++) {
                         tbody_rows += `<tr>
@@ -1083,7 +1111,7 @@
                     }
                 }else{
                     tbody_rows = '<tr><td colspan="4" class="text-center">Kegiatan Penilaian Belum Memiliki Indiktor Penilaian/ Kegiatan sedang Tidak Aktif</td></tr>'
-                } {% endcomment %}
+                }
                 $('#form-indikator-nilai tbody').html(data.opt)
             },
             error: (error) => {

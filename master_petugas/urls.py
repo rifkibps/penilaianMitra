@@ -14,6 +14,8 @@ urlpatterns = [
     path('master-petugas/template/<int:rows>', views.MasterPetugasTemplateClassView.as_view(), name="mitra-template"),
     path('master-petugas/view-petugas/<int:mitra_id>', views.MasterPetugasDetailViewClassView.as_view(), name="mitra-view-detail"),
     path('master-petugas/search', views.MasterPetugasSearchClassView.as_view(), name="mitra-search"),
+    path('master-petugas/adm-fetch', views.GetAdministratifLocClassView.as_view(), name="adm-fetch"),
+
 
     path('alokasi-petugas', views.AlokasiPetugasClassView.as_view(), name='alokasi'),
     path('alokasi-petugas/json-response', views.MasterAlokasiJsonResponseClassView.as_view(), name='datatable-json-alok'),

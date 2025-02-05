@@ -130,7 +130,7 @@
                     <div class="dropdown-menu dropdown-menu-animated dropdown-lg" id="search-dropdown">
                         <!-- item-->
                         <div class="dropdown-header noti-title">
-                            <h5 class="text-overflow mb-2">Found <span class="text-danger" id="count-search"></span> results Mitra</h5>
+                            <h5 class="text-overflow mb-2"><span id="count-search"></span> data mitra ditemukan</h5>
                         </div>
     
                         <!-- item-->
@@ -260,10 +260,19 @@
                         {% endif %}
 
                         <li class="side-nav-title side-nav-item  mt-2">Input Penilaian</li>
+                        {% if user.is_staff or 'Administrator' in user.groups.all or user.is_superuser %}
                         <li class="side-nav-item">
-                            <a href="{% if user.is_staff or 'Administrator' in user.groups.all or user.is_superuser %}{% url 'master_penilaian:nilai-mitra' %} {% else %} {% url 'master_penilaian:penilaian' %} {% endif %}"  class="side-nav-link">
+                            <a href="{% url 'master_penilaian:nilai-mitra' %}"  class="side-nav-link">
                                 <i class="mdi mdi-pencil-box-multiple"></i>
                                 <span> Nilai Petugas </span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        <li class="side-nav-item">
+                            <a href="{% url 'master_penilaian:penilaian' %}"  class="side-nav-link">
+                                <i class="mdi mdi-clipboard-edit"></i>
+                                <span> Input Penilaian </span>
                             </a>
                         </li>
                         
