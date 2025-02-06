@@ -492,20 +492,12 @@
 
 {% block tables-script-extend %}
 
+<script src="{% static 'pages/js/nilai_mitra.js' %}"></script>
 <script type="text/javascript" src="https://unpkg.com/xlsx@0.15.1/dist/xlsx.full.min.js"></script>
-
 <script>
     'use strict'
     
     var region_code = ''
-
-    function ExportToExcel(type, fn, dl) {
-        var elt = document.getElementById('basic-datatable-2');
-        var wb = XLSX.utils.table_to_book(elt, { sheet: "Nilai Mitra" });
-        return dl ?
-            XLSX.write(wb, { bookType: type, bookSST: true, type: 'base64' }):
-            XLSX.writeFile(wb, fn || ('Data Nilai Mitra per Indikator.' + (type || 'xlsx')));
-        }
 
     var table = $("#basic-datatable").DataTable({
         processing: true,
@@ -561,17 +553,6 @@
             $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
         },
     });
-
-    $('#mitra-select-filter, #pegawai-select-filter, #kegiatan-select-filter, #survei-select-filter, #role-select-filter').bind("keyup change", function (){
-        table.draw()
-    })
-
-    function resetForm(){
-        $('#formPenilaianPetugas')[0].reset();
-        $('.was-validated').removeClass('was-validated')
-        $('#submitformPenilaianPetugas').html('Kirim Data')
-        $('#form-indikator-nilai tbody').html('')
-    }
 
     function preview_excel1(table_id, field_file_id){
         var input = $('#'+field_file_id).get(0).files[0]
@@ -795,8 +776,8 @@
     function get_administrative(e){
         var code = $(e).val()
         var id = $(e).attr('id')
-        # CEK LAGI PLIS
-        reset_administrative(id)
+        
+        reset_administrative(false, id, true)
         if (code.length == 0) return false
         region_code = code
         if (id == 'filter_keldes') return table.draw()
@@ -828,76 +809,6 @@
         }); 
     }
 
-    function reset_administrative(level){
-        if (level == 'filter_prov'){
-            $('#filter_kabkot').html('<option value="">-- Pilih Kab/Kota --</option>')
-            $('#filter_kec').html('<option value="">-- Pilih Kecamatan --</option>')
-            $('#filter_keldes').html('<option value="">-- Pilih Desa --</option>')
-        }else if (level == 'filter_kabkot'){
-            $('#filter_kec').html('<option value="">-- Pilih Kecamatan --</option>')
-            $('#filter_keldes').html('<option value="">-- Pilih Desa --</option>')
-        }else{
-            $('#filter_keldes').html('<option value="">-- Pilih Desa --</option>')
-        }
-    }
-
-    $('#formPenilaianPetugas').on('submit', function(e){
-        e.preventDefault()
-        var serializedData = $(this).serialize();
-        $.ajax({
-            type: 'POST',
-            url: $(this).attr('action'),
-            data: serializedData,
-            success: function (response) {
-
-                if (response.status == 'success'){
-                        
-                    $('#messages-content').html(response.messages)
-                    $('#msgs-upload').removeClass('alert-danger')
-                    $('#msgs-upload').addClass('alert-success')
-                    $('#msgs-upload').removeClass('d-none')
-
-                }else{
-                    Swal.fire(
-                        'Terjadi Kesalahan!',
-                         response.messages,
-                        'info'
-                    )
-                }
-                
-                table.ajax.reload();
-            },
-            error: function (response) {
-                var errors = response["responseJSON"]["error"]
-                var msgs = '<ul>'
-                for (const [key, value] of Object.entries(errors)) {
-                    value.forEach(function (item, index) {
-                        msgs += '<li>'+item+'</li>'
-                        });
-                    }   
-                msgs += '</ul>'
-                $('#messages-content').html(msgs)
-                $('#msgs-upload').addClass('alert-danger')
-                $('#msgs-upload').removeClass('alert-success')
-                $('#msgs-upload').removeClass('d-none')
-            }
-        })
-    })
-
-    $('#reset-filter').on('click', () => {
-        region_code = ''
-        $('#mitra-select-filter, #pegawai-select-filter, #kegiatan-select-filter, #survei-select-filter, #role-select-filter, .region-adm').prop('selectedIndex',0);
-        reset_administrative()
-        table.draw();
-    })
-
-    $('#reset-filter-2').on('click', function (){
-        $('#role-select-filter-2').prop('selectedIndex',0);
-        get_data_tables_nilai({
-            'kegiatan_penilaian' : $('#nilai-mitra-filter-kegiatan').val()
-        })
-    })
-
     $('#get-templates-upload').on('click', function(){
         if ($('#filter-kegiatan-template').val().length == 0 || $('#filter-penilai-template').val().length == 0) return false
         var kegiatan = $('#filter-kegiatan-template').val()
@@ -907,12 +818,6 @@
 
     $('#{{form_upload.import_file.id_for_label}}').on('change', function(){
         preview_excel1('preview-data-upload', '{{form_upload.import_file.id_for_label}}')
-    })
-
-    $('#btn-submit-file').on('click', function(){
-        $('#nav-item-import').removeClass('d-none')
-        $('#import-modal').modal('toggle')
-        $('.nav-tabs a[href="#import-tab"]').tab('show');
     })
     
     $('#filter-kegiatan-template').on('change', function(){
@@ -942,12 +847,6 @@
     })
 
     $('#confirm-submit-file').on('click', function(){
-        const swalWithBootstrapButtons = Swal.mixin({
-            customClass: {
-              confirmButton: 'btn btn-primary'},
-            buttonsStyling: true
-          })
-          
           swalWithBootstrapButtons.fire({
             title: 'Are you sure?',
             text: "Apakah anda yakin ingin mengupload data mitra?",
@@ -1040,12 +939,6 @@
         get_data_penilaian_by_survei(data, '#nilai-mitra-filter-kegiatan',  '{% url 'master_penilaian:get-penilaian-by-survei' %}')
     })
 
-    $('#nilai-mitra-filter-kegiatan').on("change", function(){
-        get_data_tables_nilai({
-            'kegiatan_penilaian' : $('#nilai-mitra-filter-kegiatan').val()
-        })
-    })
-
     $('#field_survey').on('change', function(){
         var data_survei = {'survey_id' : $(this).val()}
         get_data_penilaian_by_survei(data_survei, '#field_kegiatan',  '{% url 'master_penilaian:get-penilaian-by-survei' %}')
@@ -1119,30 +1012,6 @@
             }
         });
 
-    })
-
-    $('#redraw-table').on('click', function (){
-        table.draw();
-    })
-
-    $('#redraw-table-2').on('click', function (){
-        get_data_tables_nilai({
-            'kegiatan_penilaian' : $('#nilai-mitra-filter-kegiatan').val()
-        })
-    })
-
-    $('#ResetformPenilaianPetugas').on('click', function(e){
-        resetForm()
-        $('#field_mitra').val('')
-        $('#field_penilai').val('')
-        $('#field_kegiatan').val('')
-    })
-
-    $('#role-select-filter-2').on('change', function(){
-        get_data_tables_nilai({
-            'kegiatan_penilaian' : $('#nilai-mitra-filter-kegiatan').val(),
-            'filter_role_nilai_mitra' : $(this).val()
-        })
     })
 
 </script>

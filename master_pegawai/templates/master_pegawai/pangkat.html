@@ -131,12 +131,6 @@
 
     let region_code = ''
 
-    var swalWithBootstrapButtons = Swal.mixin({
-        customClass: {
-          confirmButton: 'btn btn-primary'},
-        buttonsStyling: true
-    })
-
     var table = $("#basic-datatable").DataTable({
         processing: true,
         serverSide: true,
@@ -182,7 +176,6 @@
         },
     });
 
-    openTabInput()
     table.draw()
 
     function editPangkat(e){
@@ -260,55 +253,12 @@
         }) 
     }
 
-    function openTabInput(){
-        var url = $(location).attr('href')
-        if (url.search('#input-tab') > 0) {
-            return $('.nav-tabs a[href="#input-tab"]').tab('show');
-        }
-    }
-    
-    function clearFormValidation(form){
-        $(form + ' .form-control').each(function(i, obj) {
-            $(obj).removeClass('is-invalid')
-            $(obj).trigger('change')
-        });
-
-        $(form + ' .form-select').each(function(j, objs) {
-            $(objs).removeClass('is-invalid')
-            $(objs).trigger('change')
-        });
-        
-        $('.invalid-feedback').each(function(i, obj) {
-            $(obj).html('')
-        });
-    }
-
     function resetForm(){
         $('#formMasterPangkat')[0].reset();
         $('#formMasterPangkat').attr('action', "{% url 'master_pegawai:pangkat' %}")
         $('#submitFormPegawai').html('Kirim Data')
         clearFormValidation('#formMasterPangkat')
     }
-    
-    $("#formMasterPangkat").on("submit", function (e){
-        e.preventDefault()
-    })
-
-    $('#reset-filter').on('click', () => {
-        region_code = ''
-        $('.region-adm, #jk-select-filter, #agama-select-filter, #pendidikan-select-filter, #bank-select-filter, #status-select-filter').prop('selectedIndex',0);
-        table.draw();
-    })
-
-    $('#redraw-table').on('click', () => {
-        table.draw();
-    })
-
-    $(document).on('change', '.form-control, .form-select', () => {
-        if ($(this).hasClass('is-invalid')){
-            $(this).removeClass('is-invalid')
-        }
-    });
     
     function checkSubmit(){
         var serializedData = $('#formMasterPangkat').serialize();
@@ -349,7 +299,6 @@
             }
         })
     }
-
 
 </script>
 

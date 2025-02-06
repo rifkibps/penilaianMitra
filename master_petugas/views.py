@@ -8,7 +8,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.shortcuts import render
 from django.views import View
 from django.core import serializers
-from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin
 from . import models, forms, utils
@@ -22,7 +22,7 @@ from master_pegawai.models import MasterPegawaiModel
 
 import numpy as np
 from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill, Alignment
+from openpyxl.styles import Font, Alignment
 from . import utils
 from pprint import pprint
 
@@ -83,6 +83,9 @@ class MasterPetugasJsonResponseClassView(LoginRequiredMixin, View):
 
         if search:
             data = data.filter(
+                Q(adm_id__code=search)|
+                Q(adm_id__region=search)|
+                Q(kode_petugas__icontains=search)|
                 Q(kode_petugas__icontains=search)|
                 Q(nama_petugas__icontains=search)|
                 Q(nik__icontains=search)|
@@ -115,8 +118,10 @@ class MasterPetugasJsonResponseClassView(LoginRequiredMixin, View):
                 class_badge = 'badge badge-danger-lighten'
             else:
                 class_badge = 'badge badge-primary-lighten'
-
+            kec = models.AdministrativeModel.objects.filter(code=obj.adm_id.code[:7]).first()
+            adm = f'Kec. {kec.region}, {obj.adm_id.region}'
             data.append({
+                        'adm_id__region': adm,
                         'kode_petugas': obj.kode_petugas,
                         'nama_petugas': f'<a href="{reverse_lazy("master_petugas:mitra-view-detail", kwargs={"mitra_id": obj.id})}" class="text-body">{obj.nama_petugas}</a>',
                         'nik': obj.nik,
@@ -125,7 +130,7 @@ class MasterPetugasJsonResponseClassView(LoginRequiredMixin, View):
                         'status': f'<span class="badge {class_badge}"> {obj.get_status_display()} </span>',
                         'aksi': '-' if restrict_actions else f'<a href="javascript:void(0);" onclick="editPetugas({obj.id})" class="action-icon"><i class="mdi mdi-square-edit-outline font-15"></i></a> <a href="javascript:void(0);" onclick="hapusPetugas({obj.id});" class="action-icon"> <i class="mdi mdi-delete font-15"></i></a>'
             })
-            
+        
         return {
             'draw': draw,
             'recordsTotal': records_total,
@@ -134,6 +139,19 @@ class MasterPetugasJsonResponseClassView(LoginRequiredMixin, View):
         }
 
 class MasterPetugasClassView(LoginRequiredMixin, View):
+
+    def get(self, request):
+        form = forms.MasterPetugasForm()
+        context = {
+            'title' : 'Master Mitra',
+            'data_petugas' : models.MasterPetugas.objects.all(),
+            'adm_prov' : models.AdministrativeModel.objects.annotate(text_len=Length('code')).filter(text_len=2).order_by('region'),
+            'adm' : get_adm_levels(models.AdministrativeModel),
+            'form': form,
+            'form_upload': forms.MasterPetugasFormUpload()
+            }
+       
+        return render(request, 'master_petugas/index.html', context)
     
     def post(self, request):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -146,19 +164,6 @@ class MasterPetugasClassView(LoginRequiredMixin, View):
             else:
                 return JsonResponse({"error": form.errors}, status=400)
         return JsonResponse({"error": ""}, status=400)
-
-    def get(self, request):
-        form = forms.MasterPetugasForm()
-        context = {
-            'title' : 'Master Mitra',
-            'data_petugas' : models.MasterPetugas.objects.all(),
-            'adm_prov' : models.AdministrativeModel.objects.annotate(text_len=Length('code')).filter(text_len=2).order_by('region'),
-            'form': form,
-            'form_upload': forms.MasterPetugasFormUpload()
-            }
-       
-        return render(request, 'master_petugas/index.html', context)
-
 
 class MasterPetugasDeleteView(LoginRequiredMixin, RestrictionsHttpRequestAccess, View):
 
@@ -569,7 +574,6 @@ class GetAdministratifLocClassView(LoginRequiredMixin, View):
                 return JsonResponse({'status' : 'success', 'adm' : opts}, status=200)
                 
         return JsonResponse({'status': 'Invalid request'}, status=400) 
-
 
 
 ### Alokasi Petugas

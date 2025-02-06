@@ -236,16 +236,11 @@
 {% endblock table-content %}
 
 {% block tables-script-extend %}
-
+<script src="{% static 'pages/js/kegiatan_penilaian.js' %}"></script>
 <script>
 
-    var swalWithBootstrapButtons = Swal.mixin({
-        customClass: {
-          confirmButton: 'btn btn-primary'},
-        buttonsStyling: true
-    })
-
-
+    'use strict'
+    
     var table = $("#basic-datatable").DataTable({
         processing: true,
         serverSide: true,
@@ -300,18 +295,6 @@
             $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
         },
     });
-
-    $('#survei-select-filter').bind("keyup change", function (){
-        table.draw()
-    })
-
-    $('#status-select-filter').bind("keyup change", function (){
-        table.draw()
-    })
-
-    $('#role-select-filter').bind("keyup change", function (){
-        table.draw()
-    })
 
     function resetForm(){
         $('#formKegiatanPenilaianPetugas')[0].reset();
@@ -402,22 +385,6 @@
 
     }
 
-    function clearFormValidation(form){
-        $(form + ' .form-control').each(function(i, obj) {
-            $(obj).removeClass('is-invalid')
-            $(obj).trigger('change')
-        });
-
-        $(form + ' .form-select').each(function(j, objs) {
-            $(objs).removeClass('is-invalid')
-            $(objs).trigger('change')
-        });
-        
-        $('.invalid-feedback').each(function(i, obj) {
-            $(obj).html('')
-        });
-    }
-
     $('#formKegiatanPenilaianPetugas').on('submit', function(e){
         e.preventDefault()
         clearFormValidation('#formKegiatanPenilaianPetugas')
@@ -460,22 +427,6 @@
                 }    
             }
         })
-    })
-
-    
-    $('#reset-filter').on('click', function (){
-        $('#survei-select-filter').prop('selectedIndex',0);
-        $('#status-select-filter').prop('selectedIndex',0);
-        $('#role-select-filter').prop('selectedIndex',0);
-        table.draw();
-    })
-    
-    $('#redraw-table').on('click', function (){
-        table.draw();
-    })
-
-    $('#ResetformKegiatanPenilaianPetugas').on('click', function(e){
-        resetForm()
     })
 </script>
 

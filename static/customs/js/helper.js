@@ -4,6 +4,26 @@ var swalWithBootstrapButtons = Swal.mixin({
     buttonsStyling: true
 })
 
+function reset_administrative(all, level=null, except_keldes = null){
+    if (all){
+        $('#filter_kabkot').html('<option value="">-- Pilih Kab/Kota --</option>')
+        $('#filter_kec').html('<option value="">-- Pilih Kecamatan --</option>')
+        $('#filter_keldes').html('<option value="">-- Pilih Desa --</option>')
+    }else{
+        if (level == 'filter_prov'){
+            $('#filter_kabkot').html('<option value="">-- Pilih Kab/Kota --</option>')
+            $('#filter_kec').html('<option value="">-- Pilih Kecamatan --</option>')
+            $('#filter_keldes').html('<option value="">-- Pilih Desa --</option>')
+        }else if (level == 'filter_kabkot'){
+            $('#filter_kec').html('<option value="">-- Pilih Kecamatan --</option>')
+            $('#filter_keldes').html('<option value="">-- Pilih Desa --</option>')
+        }else if (level == 'filter_kec'){
+            if (!except_keldes) return false
+            $('#filter_keldes').html('<option value="">-- Pilih Desa --</option>')
+        }
+    }
+}
+
 function preview_excel(table_id, field_file_id, len_coloumn){
     var input = $('#'+field_file_id).get(0).files[0]
     readXlsxFile(input).then(function(data){
@@ -37,4 +57,20 @@ function preview_excel(table_id, field_file_id, len_coloumn){
         })
         return true
     })
+}
+
+function clearFormValidation(form){
+    $(form + ' .form-control').each(function(i, obj) {
+        $(obj).removeClass('is-invalid')
+        $(obj).trigger('change')
+    });
+
+    $(form + ' .form-select').each(function(j, objs) {
+        $(objs).removeClass('is-invalid')
+        $(objs).trigger('change')
+    });
+    
+    $('.invalid-feedback').each(function(i, obj) {
+        $(obj).html('')
+    });
 }

@@ -81,7 +81,7 @@
                             </div><!-- end col-->
                         </div>
                         <div class="table-responsive">
-                            <table id="basic-datatable" class="table table-centered w-100 dt-responsive nowrap">
+                            <table id="basic-datatable" class="table table-centered w-100 dt-responsive nowrap table-striped">
                                 <thead>
                                     <tr>
                                         <th width="5%">No</th>
@@ -225,8 +225,9 @@
 {% endblock table-content %}
 
 {% block tables-script-extend %}
-
+<script src="{% static 'pages/js/master_pegawai.js' %}"></script>
 <script>
+
     'use strict'
 
     var table = $("#basic-datatable").DataTable({
@@ -264,6 +265,7 @@
         {
             "targets": 0,
             "data": null,
+            "className": "text-center",
             "defaultContent": "",
             "render": function (data, type, row, meta) {
                 return meta.row + 1;
@@ -283,19 +285,6 @@
             $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
         },
     });
-
-    $('#jabatan-filter, #pangkat-filter').bind("change", () => {
-        table.draw()
-    })
-
-    $('#redraw-table').on('click', () => {
-        table.draw();
-    })
-
-    $('#reset-filter').on('click', () => {
-        $('#jabatan-filter, #pangkat-filter').prop('selectedIndex',0);
-        table.draw();
-    })
 
     {% if user.is_staff or 'Administrator' in user.groups.all or user.is_superuser %}
         function editPegawai(e){
@@ -372,22 +361,6 @@
                 }
             }) 
         }
-        
-        function clearFormValidation(form){
-            $(form + ' .form-control').each(function(i, obj) {
-                $(obj).removeClass('is-invalid')
-                $(obj).trigger('change')
-            });
-
-            $(form + ' .form-select').each(function(j, objs) {
-                $(objs).removeClass('is-invalid')
-                $(objs).trigger('change')
-            });
-            
-            $('.invalid-feedback').each(function(i, obj) {
-                $(obj).html('')
-            });
-        }
 
         function resetForm(){
             $('#formMasterPegawai')[0].reset();
@@ -435,16 +408,6 @@
                 }
             })
         }
-
-        $("#formMasterPegawai").on("submit", function (e){
-            e.preventDefault()
-        })
-
-        $(document).on('change', '.form-control, .form-select', () => {
-            if ($(this).hasClass('is-invalid')){
-                $(this).removeClass('is-invalid')
-            }
-        });
     {% endif %}
 </script>
 

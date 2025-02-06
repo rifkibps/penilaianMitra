@@ -293,23 +293,8 @@
 {% endblock table-content %}
 
 {% block tables-script-extend %}
-
+<script src="{% static 'pages/js/alokasi_petugas.js' %}"></script>
 <script>
-
-    let input_mitra_tab = () => {
-        $('#form_id_petugas_id').removeClass('d-none')
-        $('#form_id_pegawai_id').addClass('d-none')
-        $('#id_pegawai_id').val('')
-        $('#input-mitra').addClass('active')
-        
-    }
-    
-    let input_pegawai_tab = () => {
-        $('#form_id_petugas_id').addClass('d-none')
-        $('#id_petugas_id').val('')
-        $('#form_id_pegawai_id').removeClass('d-none')
-        $('#input-pegawai').addClass('active')
-    }
     
     var table = $("#basic-datatable").DataTable({
         processing: true,
@@ -363,12 +348,6 @@
             $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
         },
     });
-
-    var swalWithBootstrapButtons = Swal.mixin({
-        customClass: {
-          confirmButton: 'btn btn-primary'},
-        buttonsStyling: true
-    })
 
     function editAlokPetugas(id, state){
         $('#formAlokPetugas').attr('action', "{% url 'master_petugas:update-alokasi' %}")
@@ -467,45 +446,6 @@
     
     }
 
-    function preview_excel(table_id, field_file_id){
-        var input = $('#'+field_file_id).get(0).files[0]
-        readXlsxFile(input).then(function(data){
-           
-            var i = 0
-            $('#'+table_id+' tbody').html('') 
-            data.map((row, index) =>{
-                if (i==1){
-                    var throws = '<tr>'
-                        
-                    for (var key of row.slice(0, 5)){
-                        throws += '<th>' + key + '</th>'
-                    }
-
-                    throws += '</tr>'
-                    $('#'+table_id+' thead').html(throws) 
-                }
-    
-                if (i>1){
-                    var tdrows = '<tr>'
-                    var isnull = 0
-                    for (var key of row.slice(0, 5)){
-                        if ( key == null ){
-                            isnull += 1
-                        }
-                        tdrows += '<td>' + key + '</td>'
-                    }
-                    tdrows += '</tr>'
-                    if (isnull < 5) {
-                        $('#'+table_id+' tbody').append(tdrows) 
-                    }
-                }
-                i++
-            })
-            return true
-    
-        })
-    }
-
     function resetForm(){
         $('#formAlokPetugas')[0].reset();
         $('.was-validated').removeClass('was-validated')
@@ -528,18 +468,6 @@
             $(obj).html('')
         });
     }
-
-    $('#survei-select-filter').bind("keyup change", () => {
-        table.draw()
-    })
-
-    $('#jabatan-select-filter').bind("keyup change", () => {
-        table.draw()
-    })
-
-    $('#ResetformAlokPetugas').on('click', (e) => {
-        resetForm()
-    })
 
     function checkSubmit(){
         var serializedData = $('#formAlokPetugas').serialize();
@@ -590,44 +518,16 @@
         })
     }
 
-    $('#formAlokPetugas').on('submit', (e) => {
-        e.preventDefault()
-    })
-
-    $('#reset-filter').on('click', () => {
-        $('#survei-select-filter').prop('selectedIndex',0);
-        $('#jabatan-select-filter').prop('selectedIndex',0);
-        table.draw();
-    })
-
-    $('#redraw-table').on('click', () => {
-        table.draw();
-    })
-
     $('#get-templates-upload').on('click', () => {
         var numrows = $('#number_rows').val()
         return window.location.replace("{% url 'master_petugas:template-alokasi' %}?rows=" + numrows);
     })
 
     $('#{{form_upload.import_file.id_for_label}}').on('change', () => {
-        preview_excel('preview-data-upload', '{{form_upload.import_file.id_for_label}}')
-    })
-
-    $('#btn-submit-file').on('click', (e) => {
-        $('#nav-item-import').removeClass('d-none')
-        $('.nav-tabs a[href="#import-tab"]').tab('show');
-        $(this).blur()
-        $('#import-modal').modal('toggle')
+        preview_excel('preview-data-upload', '{{form_upload.import_file.id_for_label}}', 5)
     })
     
     $('#confirm-submit-file').on('click', () => {
-
-        const swalWithBootstrapButtons = Swal.mixin({
-            customClass: {
-              confirmButton: 'btn btn-primary'},
-            buttonsStyling: true
-          })
-          
           swalWithBootstrapButtons.fire({
             title: 'Are you sure?',
             text: "Apakah anda yakin ingin mengupload data mitra?",
@@ -696,7 +596,6 @@
             }
         }) 
     })
-
 
 </script>
 

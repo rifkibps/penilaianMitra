@@ -75,7 +75,7 @@
                         </div>
 
                         <div class="table-responsive">
-                            <table id="basic-datatable" class="table dt-responsive nowrap w-100">
+                            <table id="basic-datatable" class="table table-striped dt-responsive w-100">
                                 <thead>
                                     <tr>
                                         <th width="4%">No</th>
@@ -203,14 +203,10 @@
 {% endblock table-content %}
 
 {% block tables-script-extend %}
-
+<script src="{% static 'pages/js/kegiatan_penilaian.js' %}"></script>
 <script>
 
-    var swalWithBootstrapButtons = Swal.mixin({
-        customClass: {
-          confirmButton: 'btn btn-primary'},
-        buttonsStyling: true
-    })
+    'use strict'
 
     var table = $("#basic-datatable").DataTable({
         processing: true,
@@ -264,23 +260,12 @@
         },
     });
 
-    $('#kegiatan-select-filter').bind("keyup change", function (){
-        table.draw()
-    })
-
-    $('#indikator-select-filter').bind("keyup change", function (){
-        table.draw()
-    })
-
     function resetForm(){
         $('#formKegiatanIndikatorPenilaianPetugas')[0].reset();
         $('.was-validated').removeClass('was-validated')
         $('#submitformIndikatorKegiatanPenilaianPetugas').html('Kirim Data')
         $('#formKegiatanIndikatorPenilaianPetugas').attr('action', "{% url 'master_penilaian:index' %}")
     }
-    $('#ResetformIndikatorKegiatanPenilaianPetugas').on('click', function(e){
-        resetForm()
-    })
 
     function editIndikatorKegiatan(e){
         $('#formKegiatanIndikatorPenilaianPetugas').attr('action', "{% url 'master_penilaian:update-indikator-kegiatan' %}")
@@ -319,7 +304,6 @@
     }
 
     function deleteIndikatorKegiatan(e){
-
         swalWithBootstrapButtons.fire({
             title: 'Are you sure?',
             text: "Apakah anda yakin ingin menghapus indikator penilaian mitra?",
@@ -366,79 +350,7 @@
 
             }
         }) 
-
-
     }
-
-    function clearFormValidation(form){
-        $(form + ' .form-control').each(function(i, obj) {
-            $(obj).removeClass('is-invalid')
-            $(obj).trigger('change')
-        });
-
-        $(form + ' .form-select').each(function(j, objs) {
-            $(objs).removeClass('is-invalid')
-            $(objs).trigger('change')
-        });
-        
-        $('.invalid-feedback').each(function(i, obj) {
-            $(obj).html('')
-        });
-    }
-
-    $('#formKegiatanIndikatorPenilaianPetugas').on('submit', function(e){
-        e.preventDefault()
-        clearFormValidation('#formKegiatanIndikatorPenilaianPetugas')
-
-        var serializedData = $(this).serialize();
-        $('.invalid-feedback').html('')
-        $('.is_invalid').removeClass('is_invalid')
-        $.ajax({
-            type: 'POST',
-            url: $(this).attr('action'),
-            data: serializedData,
-            success: function (response) {
-                if (response.status == 'failed'){
-                    Swal.fire(
-                        'Terjadi Kesalahan!',
-                        response.message,
-                        'info'
-                    )
-                }else{
-                    $('#messages-content').html(response.message)
-                    $('#msgs-upload').removeClass('alert-danger')
-                    $('#msgs-upload').addClass('alert-success')
-                    $('#msgs-upload').removeClass('d-none')
-                    table.ajax.reload();
-                    $('.nav-tabs a[href="#indikator-penilaian-preview"]').tab('show');
-                    $('#formKegiatanIndikatorPenilaianPetugas')[0].reset();
-                    clearFormValidation('#formKegiatanIndikatorPenilaianPetugas')
-                }
-            },
-            error: function (response) {
-                var errors = response["responseJSON"]["error"]
-                for (const [key, value] of Object.entries(errors)) {
-                    var msgs = '<ul>'
-                    value.forEach(function (item, index) {
-                        msgs += '<li>'+item+'</li>'
-                        });
-                    msgs += '</ul>'
-                    $('#id_'+ key).addClass('is-invalid');
-                    $('#msg-id_'+key).html(msgs)
-                }    
-            }
-        })
-    })
-
-    $('#reset-filter').on('click', function (){
-        $('#kegiatan-select-filter').prop('selectedIndex',0);
-        $('#indikator-select-filter').prop('selectedIndex',0);
-        table.draw();
-    })
-    
-    $('#redraw-table').on('click', function (){
-        table.draw();
-    })
 
 </script>
 

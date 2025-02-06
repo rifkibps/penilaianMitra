@@ -83,10 +83,11 @@
                             </div><!-- end col-->
                         </div>
                         <div class="table-responsive">
-                            <table id="basic-datatable" class="table table-centered w-100 dt-responsive nowrap">
+                            <table id="basic-datatable" class="table table-striped table-centered w-100 dt-responsive">
                                 <thead>
                                     <tr>
                                         <th>No</th>
+                                        <th>Kec.</th>
                                         <th>Kode Petugas</th>
                                         <th>Nama Petugas</th>
                                         <th>NIK</th>
@@ -537,11 +538,9 @@
 {% endblock table-content %}
 
 {% block tables-script-extend %}
-
+<script src="{% static 'pages/js/master_petugas.js' %}"></script>
 <script>
     'use strict'
-
-    let region_code = ''
 
     var table = $("#basic-datatable").DataTable({
         processing: true,
@@ -565,7 +564,8 @@
             },
         },
         columns :[
-            {"data": 'kode_petugas'},
+            {"data": 'adm_id__region'},
+            {"data": 'adm_id__region'},
             {"data": 'kode_petugas'},
             {"data": 'nama_petugas'},
             {"data": 'nik'},
@@ -574,10 +574,10 @@
             {"data" : 'status'},
             {"data" : 'aksi'},
         ],
-        lengthMenu: [10, 25, 50, 100],
+        lengthMenu: [7, 10, 25, 50, 100],
         columnDefs: [
             {
-            'targets': [6], /* column index */
+            'targets': [8], /* column index */
             'orderable': false, /* true or false */
             },
             {
@@ -602,6 +602,42 @@
             $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
         },
     });
+ 
+    function get_administrative(e){
+        var code = $(e).val()
+        var id = $(e).attr('id')
+        
+        reset_administrative(false, id, true)
+        if (code.length == 0) return false
+        region_code = code
+        if (id == 'filter_keldes') return table.draw()
+
+        $.ajax({
+            url: '{% url 'master_petugas:adm-fetch' %}',
+            type: "POST",   
+            dataType: "json",
+            data :  {'code' : code},
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": '{{csrf_token}}',
+            },
+            success: (data) => {
+                if (data.status == 'success'){
+                    if (code.length == 2){
+                        $('#filter_kabkot').html(data.adm)
+                    } else if (code.length == 4){
+                        $('#filter_kec').html(data.adm)
+                    } else {
+                        $('#filter_keldes').html(data.adm)
+                    }
+                    table.draw()
+                }
+            },
+            error: (error) => {
+                console.log(error);
+            }
+        }); 
+    }
 
     {% if user.is_staff or 'Administrator' in user.groups.all or user.is_superuser %}
 
@@ -872,55 +908,7 @@
             })
         })
     {% endif %}
-    
-    function get_administrative(e){
-        var code = $(e).val()
-        if (code.length == 0) return false
-        region_code = code
-        if ($(e).attr('id') == 'filter_keldes') return table.draw()
-        $.ajax({
-            url: '{% url 'master_petugas:adm-fetch' %}',
-            type: "POST",   
-            dataType: "json",
-            data :  {'code' : code},
-            headers: {
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": '{{csrf_token}}',
-            },
-            success: (data) => {
-                if (data.status == 'success'){
-                    if (code.length == 2){
-                        $('#filter_kabkot').html(data.adm)
-                    } else if (code.length == 4){
-                        $('#filter_kec').html(data.adm)
-                    } else {
-                        $('#filter_keldes').html(data.adm)
-                    }
-                    table.draw()
-                }
-            },
-            error: (error) => {
-                console.log(error);
-            }
-        }); 
-    }
 
-    $('#jk-select-filter, #agama-select-filter, #pendidikan-select-filter, #bank-select-filter, #status-select-filter').bind("keyup change", () => {
-        table.draw()
-    })
-
-    $('#reset-filter').on('click', () => {
-        region_code = ''
-        $('.region-adm, #jk-select-filter, #agama-select-filter, #pendidikan-select-filter, #bank-select-filter, #status-select-filter').prop('selectedIndex',0);
-        $('#filter_kabkot').html('<option value="">-- Pilih Kab/Kota --</option>')
-        $('#filter_kec').html('<option value="">-- Pilih Kecamatan --</option>')
-        $('#filter_keldes').html('<option value="">-- Pilih Desa --</option>')
-        table.draw();
-    })
-
-    $('#redraw-table').on('click', () => {
-        table.draw();
-    })
 </script>
 
 {% endblock tables-script-extend %}
