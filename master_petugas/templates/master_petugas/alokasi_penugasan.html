@@ -301,203 +301,22 @@
 {% endblock table-content %}
 
 {% block tables-script-extend %}
-
+<script src="{% static 'pages/js/alokasi_petugas.js' %}"></script>
 <script>
 
-    var table = $("#basic-datatable").DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            "url": "{% url 'master_petugas:datatable-json-alok' %}",
-            "headers": {
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": '{{csrf_token}}',
-            },
-            "type": "POST",
-            "data": function (d){
-                return $.extend({}, d, {
-                    "survei_filter": $('#survei-select-filter').val(),
-                    "jabatan_filter": $('#jabatan-select-filter').val(),
-                })
-            },
-        },
-        lengthMenu: [5, 25, 50, 100,'All'],
-        columns :[
-            {"data": 'petugas__kode_petugas'},
-            {"data": 'petugas__nama_petugas'},
-            {"data": 'survey__nama'},
-            {"data" : 'role__jabatan'},
-            {"data" : 'aksi'},
-        ],
-        columnDefs: [ {
-            'targets': [4], /* column index */
-            'orderable': false, /* true or false */
-        }],
-        keys: !0,
-        language: {
-            paginate: {
-            previous: "<i class='mdi mdi-chevron-left'>",
-            next: "<i class='mdi mdi-chevron-right'>",
-            },
-        },
-        drawCallback: function () {
-            $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
-        },
-    });
+    let table = generate_alokasi_petugas("{% url 'master_petugas:datatable-json-alok' %}", '{{csrf_token}}')
 
-    var swalWithBootstrapButtons = Swal.mixin({
-        customClass: {
-          confirmButton: 'btn btn-primary'},
-        buttonsStyling: true
-    })
-
-    function editAlokPetugas(e){
-        $('#formAlokPetugas').attr('action', "{% url 'master_petugas:update-alokasi' %}")
-        $('#submitformAlokPetugas').html('Update Data')
-    
-        $.ajax({
-            url: '{% url 'master_petugas:detail-alokasi' %}',
-            type: "POST",
-            dataType: "json",
-            data : {
-                'id' : e
-            },
-            headers: {
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": '{{csrf_token}}',
-            },
-            success: (data) => {
-
-                if (data.status == 'failed'){
-                    Swal.fire(
-                        'Terjadi Kesalahan!',
-                         data.message,
-                        'info'
-                        )
-                }else{
-                    for (const [key, value] of Object.entries(data.instance)) {
-                        $('#id_'+key).val(value)
-                        console.log(key)
-                    }
-                    $('.nav-tabs a[href="#input-tab"]').tab('show');
-                    table.ajax.reload();
-                }
-            },
-            error: (error) => {
-                console.log(error);
-            }
-        });
+    let editAlokPetugas = (e) => {
+        editAlokasiPetugas("{% url 'master_petugas:detail-alokasi' %}", '{{csrf_token}}', "{% url 'master_petugas:update-alokasi' %}", e)
     }
 
-    function deleteAlokasi(e){
-
-        swalWithBootstrapButtons.fire({
-            title: 'Are you sure?',
-            text: "Apakah anda yakin ingin menghapus data mitra?",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'No, cancel!',
-            reverseButtons: false
-          }).then((result) => {
-            if (result.isConfirmed) {
-
-                $.ajax({
-                    url: '{% url 'master_petugas:delete-alokasi' %}',
-                    type: "POST",
-                    dataType: "json",
-                    data : {
-                        'id' : e
-                    },
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest",
-                        "X-CSRFToken": '{{csrf_token}}',
-                    },
-                    success: (data) => {
-
-                        if (data.status == 'success'){
-                            Swal.fire(
-                                'Deleted!',
-                                data.message,
-                                'success'
-                                )
-                            table.ajax.reload();
-                        }else{
-                            Swal.fire(
-                                'Terjadi Kesalahan!',
-                                 data.message,
-                                'info'
-                            )
-                        }
-
-                    },
-                    error: (error) => {
-                        console.log(error);
-                    }
-                });
-
-            }
-        }) 
-    
+    let deleteAlokasi = (e) => {
+        delete_general_request("Apakah anda yakin ingin menghapus data alokasi mitra?", "{% url 'master_petugas:delete-alokasi' %}", '{{csrf_token}}', e, table)
     }
 
-    function preview_excel(table_id, field_file_id){
-        var input = $('#'+field_file_id).get(0).files[0]
-        readXlsxFile(input).then(function(data){
-           
-            var i = 0
-            $('#'+table_id+' tbody').html('') 
-            data.map((row, index) =>{
-                if (i==1){
-                    var throws = '<tr>'
-                        
-                    for (var key of row.slice(0, 4)){
-                        throws += '<th>' + key + '</th>'
-                    }
-
-                    throws += '</tr>'
-                    $('#'+table_id+' thead').html(throws) 
-                }
-    
-                if (i>1){
-                    var tdrows = '<tr>'
-                    var isnull = 0
-                    for (var key of row.slice(0, 4)){
-                        if ( key == null ){
-                            isnull += 1
-                        }
-                        tdrows += '<td>' + key + '</td>'
-                    }
-                    tdrows += '</tr>'
-                    if (isnull < 4) {
-                        $('#'+table_id+' tbody').append(tdrows) 
-                    }
-                }
-                i++
-            })
-            return true
-    
-        })
+    let resetForm = () => {
+        resetFormAlokasiPetugas("{% url 'master_petugas:alokasi' %}")
     }
-
-    function resetForm(){
-        $('#formAlokPetugas')[0].reset();
-        $('.was-validated').removeClass('was-validated')
-        $('#submitformAlokPetugas').html('Kirim Data')
-        $('#formAlokPetugas').attr('action', "{% url 'master_petugas:alokasi' %}")
-    }
-
-    $('#survei-select-filter').bind("keyup change", () => {
-        table.draw()
-    })
-
-    $('#jabatan-select-filter').bind("keyup change", () => {
-        table.draw()
-    })
-
-    $('#ResetformAlokPetugas').on('click', (e) => {
-        resetForm()
-    })
 
     $('#formAlokPetugas').on('submit', (e) => {
 
@@ -545,24 +364,8 @@
         })
     })
 
-    $('#reset-filter').on('click', () => {
-        $('#survei-select-filter').prop('selectedIndex',0);
-        $('#jabatan-select-filter').prop('selectedIndex',0);
-        table.draw();
-    })
-
-    $('#redraw-table').on('click', () => {
-        table.draw();
-    })
-
-    $('#get-templates-upload').on('click', () => {
-
-        var numrows = $('#number_rows').val()
-        return window.location.replace("http://127.0.0.1:8000/alokasi-petugas/template/" + numrows);
-    })
-
     $('#{{form_upload.import_file.id_for_label}}').on('change', () => {
-        preview_excel('preview-data-upload', '{{form_upload.import_file.id_for_label}}')
+        preview_excel('preview-data-upload', '{{form_upload.import_file.id_for_label}}', 4)
     })
 
     $('#btn-submit-file').on('click', (e) => {
@@ -573,80 +376,7 @@
     })
     
     $('#confirm-submit-file').on('click', () => {
-
-        const swalWithBootstrapButtons = Swal.mixin({
-            customClass: {
-              confirmButton: 'btn btn-primary'},
-            buttonsStyling: true
-          })
-          
-          swalWithBootstrapButtons.fire({
-            title: 'Are you sure?',
-            text: "Apakah anda yakin ingin mengupload data mitra?",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, upload it!',
-            cancelButtonText: 'No, cancel!',
-            reverseButtons: true
-          }).then((result) => {
-            if (result.isConfirmed) {
-
-                var data = new FormData();
-                data.append("import_file", $('#{{form_upload.import_file.id_for_label}}').get(0).files[0])
-             
-                $.ajax({
-                    type: 'POST',
-                    url: '{% url 'master_petugas:upload-alokasi' %}',
-                    data: data,
-                    processData: false,
-                    contentType: false,
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest",
-                        "X-CSRFToken": '{{csrf_token}}',
-                    },
-                    success: function (response) {
-                        
-                        if (response.status == 'error'){
-
-                            var content_msgs = '<strong>Terjadi kesalahan</strong> saat import data: <ol class="px-3 font-12">'
-
-                            for (let i = 0; i < response.messages.length; i++) {
-                                content_msgs += '<li>'+ response.messages[i] +'</li>'
-                            }
-                            
-                            $('#messages-content').html(content_msgs)
-                            $('#msgs-upload').removeClass('alert-success')
-                            $('#msgs-upload').addClass('alert-danger')
-                            $('#msgs-upload').removeClass('d-none')
-                        }else{
-                            var content_msgs = response.messages
-                            
-                            $('#messages-content').html(content_msgs)
-                            $('#msgs-upload').removeClass('alert-danger')
-                            $('#msgs-upload').addClass('alert-success')
-                            $('#msgs-upload').removeClass('d-none')
-
-                            $('#nav-item-import').addClass('d-none')
-                            $('.nav-tabs a[href="#alokasi-preview"]').tab('show');
-
-                            table.ajax.reload();
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        return console.log(xhr.responseText['messages'])
-                    }
-                })
-            } else if (
-             
-              result.dismiss === Swal.DismissReason.cancel
-            ) {
-              swalWithBootstrapButtons.fire(
-                'Cancelled',
-                'Data successfully cancelled',
-                'error'
-              )
-            }
-        }) 
+        confirmSubmitFile("{% url 'master_petugas:upload-alokasi' %}", "{{csrf_token}}", $('#{{form_upload.import_file.id_for_label}}').get(0).files[0])
     })
 
 </script>

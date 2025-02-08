@@ -116,181 +116,28 @@
 {% endblock table-content %}
 
 {% block tables-script-extend %}
-
+<script src="{% static 'pages/js/master_pegawai.js' %}"></script>
 <script>
     'use strict'
 
-    let region_code = ''
+    let table = generate_position("{% url 'master_pegawai:position-datatable-json' %}", '{{csrf_token}}')
 
-    var table = $("#basic-datatable").DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            "url": "{% url 'master_pegawai:position-datatable-json' %}",
-            "headers": {
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": '{{csrf_token}}',
-            },
-            "type": "POST",
-        },
-        columns :[
-            {"data": 'jabatan'},
-            {"data": 'jabatan'},
-            {"data" : 'aksi'},
-        ],
-        lengthMenu: [5, 10, 25, 50, 100],
-        columnDefs: [
-        {
-            'targets': [2], 
-            'orderable': false,
-            'className': "text-center"
-        },
-        {
-            "targets": 0,
-            "data": null,
-            "defaultContent": "",
-            "render": function (data, type, row, meta) {
-                return meta.row + 1;
-            }
-        }
-        ],
-        keys: !0,
-        language: {
-            paginate: {
-            previous: "<i class='mdi mdi-chevron-left'>",
-            next: "<i class='mdi mdi-chevron-right'>",
-            },
-            lengthMenu : "Menampilkan _MENU_",
-            search: "Cari Jabatan",
-        },
-        drawCallback: function () {
-            $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
-        },
-    });
+    let editJabatan = (e) => {
+        edit_position_request("{% url 'master_pegawai:position-detail' %}", '{{csrf_token}}', "{% url 'master_pegawai:position-update' %}", e)
+    }
+ 
+    let hapusJabatan = (e) => {
+        delete_general_request("Apakah anda yakin ingin menghapus data jabatan?", "{% url 'master_pegawai:position-delete' %}", "{{csrf_token}}", e, table)
+    }
+     
+    let checkSubmit = () => {
+        checkSubmitPosition('{{csrf_token}}')
+    }
 
-    table.draw()
-
-    function editJabatan(e){
-        $('#formMasterPosition')[0].reset();
-        $('#formMasterPosition').attr('action', "{% url 'master_pegawai:position-update' %}")
-        $('#submitFormPegawai').html('Update Data')
-    
-        $.ajax({
-            url: '{% url 'master_pegawai:position-detail' %}',
-            type: "POST",
-            dataType: "json",
-            data : {
-                'id' : e
-            },
-            headers: {
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": '{{csrf_token}}',
-            },
-            success: (data) => {
-                for (const [key, value] of Object.entries(data.instance)) {
-                    $('#id_'+key).val(value)
-                }
-                $('.nav-tabs a[href="#input-tab"]').tab('show');
-            },
-            error: (error) => {
-                console.log(error);
-            }
-        });
-        
+    let resetForm = () => {
+        resetFormPosition("{% url 'master_petugas:index' %}")
     }
     
-    function hapusJabatan(e){
-        swalWithBootstrapButtons.fire({
-            title: 'Are you sure?',
-            text: "Apakah anda yakin ingin menghapus data pegawai?",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'No, cancel!',
-            reverseButtons: false
-          }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    url: '{% url 'master_pegawai:position-delete' %}',
-                    type: "POST",
-                    dataType: "json",
-                    data : {
-                        'id' : e
-                    },
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest",
-                        "X-CSRFToken": '{{csrf_token}}',
-                    },
-                    success: (data) => {
-                        if (data.status == 'success'){
-                            Swal.fire(
-                                'Deleted!',
-                                data.message,
-                                'success'
-                                )
-                            table.ajax.reload();
-                        }else{
-                            Swal.fire(
-                                'Terjadi Kesalahan!',
-                                 data.message,
-                                'info'
-                            )
-                        }
-                    },
-                    error: (error) => {
-                        console.log(error);
-                    }
-                });
-            }
-        }) 
-    }
-
-    function resetForm(){
-        $('#formMasterPosition')[0].reset();
-        $('#formMasterPosition').attr('action', "{% url 'master_petugas:index' %}")
-        $('#submitFormPegawai').html('Kirim Data')
-        clearFormValidation('#formMasterPosition')
-    }
-    
-    function checkSubmit(){
-        var serializedData = $('#formMasterPosition').serialize();
-        clearFormValidation('#formMasterPosition')
-        
-        $.ajax({
-            type: 'POST',
-            url: $('#formMasterPosition').attr('action'),
-            data: serializedData,
-            success: function (response) {
-                $('#messages-content').html(response["message"])
-                $('#msgs-feedback').removeClass('alert-danger')
-                $('#msgs-feedback').addClass('alert-success')
-                $('#msgs-feedback').removeClass('d-none')
-                table.ajax.reload();
-                $('.nav-tabs a[href="#position-preview"]').tab('show');
-                $('#formMasterPosition')[0].reset();
-            },
-            error: function (response) {
-                var errors = response["responseJSON"]["error"]
-                console.log(errors)
-                for (const [key, value] of Object.entries(errors)) {
-                    var msgs = '<ul>'
-                    value.forEach(function (item, index) {
-                    
-                        msgs += '<li>'+item+'</li>'
-                        });
-                    
-                    msgs += '</ul>'
-                    if (key == 'adm_id'){
-                        $('#id_'+ key +'_id').addClass('is-invalid');
-                        $('#msg-id_'+key+'_id').html(msgs)
-                    }else{
-                        $('#id_'+ key).addClass('is-invalid');
-                        $('#msg-id_'+key).html(msgs)
-                    }
-                }    
-            }
-        })
-    }
 </script>
 
 {% endblock tables-script-extend %}

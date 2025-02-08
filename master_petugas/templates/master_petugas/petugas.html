@@ -155,98 +155,10 @@
 <!-- container -->
 {% endblock content %}
 {% block js-extender %}
-    <script>
-        let table = $('#ranking-global').DataTable({
-            processing: true,
-            serverSide: true,
-            ajax: {
-                "url": "{% url 'master_penilaian:rank-petugas-json' %}",
-                "headers": {
-                    "X-Requested-With": "XMLHttpRequest",
-                    "X-CSRFToken": '{{csrf_token}}',
-                },
-                "type": "POST",
-                "data": function (d){
-                    return $.extend({}, d, {
-                        "search_mitra": $('#search-mitra').val(),
-                    })
-                },
-            },
-            columns :[
-                {"data": 'wilayah'},
-                {"data" : 'petugas'},
-                {"data" : 'rerata'},
-                {"data" : 'rank'},
-            ],
-            columnDefs: [ {
-                'targets': [2,3], /* column index */
-                'className': "text-center"
-            }],
-            bLengthChange: false,
-            bPaginate: false,
-            bFilter: false,
-        });
-
-        let table2 = $("#list-petugas").DataTable({
-            processing: true,
-            serverSide: true,
-            ajax: {
-                "url": "{% url 'master_petugas:list-petugas-json' %}",
-                "headers": {
-                    "X-Requested-With": "XMLHttpRequest",
-                    "X-CSRFToken": '{{csrf_token}}',
-                },
-                "type": "POST",
-                "data": function (d){
-                    return $.extend({}, d, {
-                        "search_mitra": $('#search-mitra-datatable').val(),
-                    })
-                },
-            },
-            columns :[
-                {"data": 'kode_petugas'},
-                {"data" : 'adm_id__region'},
-                {"data": 'nama_petugas'},
-                {"data": 'no_telp'},
-                {"data" : 'email'},
-                {"data" : 'jml_kegiatan'},
-                {"data" : 'jml_penilai'},
-                {"data" : 'status'},
-                {"data" : 'aksi'},
-            ],
-            lengthMenu: [5, 25, 50, 100,'All'],
-            columnDefs: [ {
-                'targets': [8], /* column index */
-                'orderable': false, /* true or false */
-                'className': "text-center"
-            },
-            {
-                'targets': [3, 5,6,7], /* column index */
-                'className': "text-center"
-            }
-            ],
-            bLengthChange: false,
-            bFilter: false,
-            keys: !0,
-            language: {
-                paginate: {
-                previous: "<i class='mdi mdi-chevron-left'>",
-                next: "<i class='mdi mdi-chevron-right'>",
-                },
-            },
-            drawCallback: function () {
-                $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
-            },
-        });
-
-        $('#search-mitra').on("keyup", () => {
-            table.draw()
-        })
-        $('#search-mitra-datatable').on("keyup", () => {
-            table2.draw()
-        })
-        $('#refresh-rank').on("click", () => {
-            table.draw()
-        })
-    </script>
+<script src="{% static 'pages/js/master_petugas.js' %}"></script>
+<script>
+    let table = global_rank("{% url 'master_penilaian:rank-petugas-json' %}", '{{csrf_token}}')
+    let table2 = list_nilai_petugas("{% url 'master_petugas:list-petugas-json' %}", '{{csrf_token}}')
+    
+</script>
 {% endblock js-extender %}
