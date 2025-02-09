@@ -115,201 +115,22 @@
 {% endblock table-content %}
 
 {% block tables-script-extend %}
+<script src="{% static 'pages/js/master_petugas.js' %}"></script>
+
 <script>
-    var swalWithBootstrapButtons = Swal.mixin({
-        customClass: {
-          confirmButton: 'btn btn-primary'},
-        buttonsStyling: true
-    })
+    'use strict'
+    
+    let table = generate_role_petugas("{% url 'master_petugas:datatable-json-role' %}", '{{csrf_token}}')
+    let resetForm = () => resetFormTarget("{% url 'master_petugas:role' %}") 
 
-    var table = $("#basic-datatable").DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            "url": "{% url 'master_petugas:datatable-json-role' %}",
-            "headers": {
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": '{{csrf_token}}',
-            },
-            "type": "POST"
-        },
-        lengthMenu: [5, 25, 50, 100,'All'],
-        columns :[
-            {"data": 'jabatan'},
-            {"data": 'jabatan'},
-            {"data" : 'aksi'},
-        ], 
-        columnDefs: [
-            {
-            'targets': [2], /* column index */
-            'orderable': false, /* true or false */
-            'className': "text-center"
-            },
-            {
-                "targets": 0,
-                "data": null,
-                "defaultContent": "",
-                "render": function (data, type, row, meta) {
-                    return meta.row + 1;
-                }
-            }
-        ],
-        keys: !0,
-        language: {
-            paginate: {
-                previous: "<i class='mdi mdi-chevron-left'>",
-                next: "<i class='mdi mdi-chevron-right'>",
-            },
-            lengthMenu : "Menampilkan _MENU_",
-            search: "Cari Role",
-        },
-        drawCallback: function () {
-            $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
-        },
-    });
+    let editRole = (e) => edit_role("{% url 'master_petugas:detail-role' %}", "{{csrf_token}}", "{% url 'master_petugas:update-role' %}", e) 
 
-    function resetForm(){
-        $('#formRolePetugas')[0].reset();
-        $('.was-validated').removeClass('was-validated')
-        $('#submitformRolePetugas').html('Kirim Data')
-        $('#formRolePetugas').attr('action', "{% url 'master_petugas:role' %}")
-    }
-
-    function editRole(e){
-        $('#formRolePetugas').attr('action', "{% url 'master_petugas:update-role' %}")
-        $('#submitformRolePetugas').html('Update Data')
-        
-        $.ajax({
-            url: '{% url 'master_petugas:detail-role' %}',
-            type: "POST",
-            dataType: "json",
-            data : {
-                'id' : e
-            },
-            headers: {
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": '{{csrf_token}}',
-            },
-            success: (data) => {
-
-                if (data.status == 'failed'){
-                    Swal.fire(
-                        'Terjadi Kesalahan!',
-                         data.message,
-                        'info'
-                    )
-                }else{
-                    for (const [key, value] of Object.entries(data.instance)) {
-                        $('#id_'+key).val(value)
-                    }
-                    $('.nav-tabs a[href="#input-tab"]').tab('show');
-                    table.ajax.reload();
-                }
-
-            },
-            error: (error) => {
-                console.log(error);
-            }
-        });
-    }
-
-    function deleteRole(e){
-        swalWithBootstrapButtons.fire({
-            title: 'Are you sure?',
-            text: "Apakah anda yakin ingin menghapus data role mitra?",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'No, cancel!',
-            reverseButtons: false
-          }).then((result) => {
-            if (result.isConfirmed) {
-
-                $.ajax({
-                    url: '{% url 'master_petugas:delete-role' %}',
-                    type: "POST",
-                    dataType: "json",
-                    data : {
-                        'id' : e
-                    },
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest",
-                        "X-CSRFToken": '{{csrf_token}}',
-                    },
-                    success: (data) => {
-
-                        if (data.status == 'success'){
-                            Swal.fire(
-                                'Deleted!',
-                                data.message,
-                                'success'
-                                )
-                            table.ajax.reload();
-                        }else{
-                            Swal.fire(
-                                'Terjadi Kesalahan!',
-                                 data.message,
-                                'info'
-                            )
-                        }
-                    },
-                    error: (error) => {
-                        console.log(error);
-                    }
-                });
-            }
-        }) 
-    }
+    let deleteRole = (e) => delete_general_request("Apakah anda yakin ingin menghapus data role mitra?", "{% url 'master_petugas:delete-role' %}", '{{csrf_token}}', e, table)
 
     $('#formRolePetugas').on('submit', function(e){
-
         e.preventDefault()
-        
-        var serializedData = $(this).serialize();
-        $('.invalid-feedback').html('')
-        $('.is_invalid').removeClass('is_invalid')
-        
-        $.ajax({
-            type: 'POST',
-            url: $(this).attr('action'),
-            data: serializedData,
-            success: function (response) {
-
-                $('#messages-content').html(response["message"])
-                $('#msgs-upload').removeClass('alert-danger')
-                $('#msgs-upload').addClass('alert-success')
-                $('#msgs-upload').removeClass('d-none')
-                resetForm()
-                table.ajax.reload();
-
-                $('.nav-tabs a[href="#rolepetugas-preview"]').tab('show');
-            },
-            error: function (response) {
-                var errors = response["responseJSON"]["error"]
-                for (const [key, value] of Object.entries(errors)) {
-                    var msgs = '<ul>'
-                    value.forEach(function (item, index) {
-                    
-                        msgs += '<li>'+item+'</li>'
-                        });
-                    
-                    msgs += '</ul>'
-                    $('#id_'+ key).addClass('is-invalid');
-                    $('#msg-id_'+key).html(msgs)
-                }    
-                
-            }
-        })
+        form_submit("{{csrf_token}}")
     })
-
-    $('#redraw-table').on('click', function (){
-        table.draw();
-    })
-
-    $('#ResetformRolePetugas').on('click', function(e){
-        resetForm()
-    })
-
 
 </script>
 

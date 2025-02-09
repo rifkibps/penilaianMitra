@@ -155,10 +155,9 @@
 <!-- container -->
 {% endblock content %}
 {% block js-extender %}
-<script src="{% static 'pages/js/master_petugas.js' %}"></script>
+<script src="{% static 'pages/js/petugas.js' %}"></script>
 <script>
     let table = global_rank("{% url 'master_penilaian:rank-petugas-json' %}", '{{csrf_token}}')
     let table2 = list_nilai_petugas("{% url 'master_petugas:list-petugas-json' %}", '{{csrf_token}}')
-    
 </script>
 {% endblock js-extender %}

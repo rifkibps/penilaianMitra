@@ -292,158 +292,16 @@
 <script src="{% static 'pages/js/entry_nilai.js' %}"></script>
 <script>
 
-    let table = $("#list_kegiatan_penilaian").DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            "url": "{% url 'master_penilaian:list-penilaian-json' %}",
-            "headers": {
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": '{{csrf_token}}',
-            },
-            "type": "POST"
-        },
-        columns :[
-            {"data": 'kegiatan_survey__nama_kegiatan'},
-            {"data": 'kegiatan_survey__survey__nama'},
-            {"data" : 'tgl_penilaian'},
-            {"data": 'status'},
-            {"data" : 'status_penilaian'},
-            {"data" : 'aksi'},
-        ],
-        lengthMenu: [5, 25, 50, 100,'All'],
-        columnDefs: [ {
-            'targets': [5], /* column index */
-            'orderable': false, /* true or false */
-            'className': "text-center"
-        },
-        {
-            'targets': [2, 3, 4], /* column index */
-            'className': "text-center"
-        }
-        ],
-        bLengthChange: false,
-        bFilter: false,
-        keys: !0,
-        language: {
-            paginate: {
-            previous: "<i class='mdi mdi-chevron-left'>",
-            next: "<i class='mdi mdi-chevron-right'>",
-            },
-        },
-        drawCallback: function () {
-            $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
-        },
-    });
+    let table = generate_kegiatan_penilaian("{% url 'master_penilaian:list-penilaian-json' %}", "{{csrf_token}}")
+    let table2 = generate_penilaian("{% url 'master_penilaian:list-nilai-json' %}", "{{csrf_token}}") 
+    let table3 = generate_ranking_global("{% url 'master_penilaian:rank-petugas-json' %}", "{{csrf_token}}") 
 
-    let table2 = $("#list-penilaian").DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            "url": "{% url 'master_penilaian:list-nilai-json' %}",
-            "headers": {
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": '{{csrf_token}}',
-            },
-            "data": function (d){
-                return $.extend({}, d, {
-                    "kegiatan_penilaian": $('#kegiatan_penilaian').val(),
-                    "search_mitra": $('#search-mitra-datatable').val(),
-                })
-            },
-            "type": "POST"
-        },
-        columns :[
-            {"data": 'kegiatan_penilaian'},
-            {"data": 'wilayah'},
-            {"data" : 'nama'},
-            {"data": 'role'},
-            {"data" : 'rerata'},
-            {"data" : 'state'},
-            {"data" : 'aksi'},
-        ],
-        lengthMenu: [5, 25, 50, 100,'All'],
-        columnDefs: [ {
-            'targets': [6], /* column index */
-            'orderable': false, /* true or false */
-            'className': "text-center"
-        },
-        {
-            'targets': [3, 4, 5], /* column index */
-            'className': "text-center"
-        }
-        ],
-        bLengthChange: false,
-        bFilter: false,
-        keys: !0,
-        language: {
-            paginate: {
-            previous: "<i class='mdi mdi-chevron-left'>",
-            next: "<i class='mdi mdi-chevron-right'>",
-            },
-        },
-        drawCallback: function () {
-            $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
-        },
-    });
+    let entryPenilaian = (id1, id2) => entryPenilaianRequest("{% url 'master_penilaian:list-indicator-json' %}", "{{csrf_token}}", id1, id2)
 
-    let table3 = $('#ranking-global').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            "url": "{% url 'master_penilaian:rank-petugas-json' %}",
-            "headers": {
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": '{{csrf_token}}',
-            },
-            "type": "POST",
-            "data": function (d){
-                return $.extend({}, d, {
-                    "search_mitra": $('#search-mitra').val(),
-                })
-            },
-        },
-        columns :[
-            {"data": 'wilayah'},
-            {"data" : 'petugas'},
-            {"data" : 'rerata'},
-            {"data" : 'rank'},
-        ],
-        columnDefs: [ {
-            'targets': [2,3], /* column index */
-            'className': "text-center"
-        }],
-        bLengthChange: false,
-        bPaginate: false,
-        bFilter: false,
-    });
+    $('#formPenilaianPetugas').on('submit', (e) => {
+        e.preventDefault()
+        check_submit_penilaian("{{csrf_token}}")
+    })
 
-    let entryPenilaian = (id1, id2) => {
-        $.ajax({
-            url: '{% url 'master_penilaian:list-indicator-json' %}',
-            type: "POST",   
-            dataType: "json",
-            data :  {'id_kegiatan' : id1, 'id_alokasi' : id2},
-            headers: {
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": '{{csrf_token}}',
-            },
-            success: (response) => {
-                $('#field_id_penilai').html(response.data.penilai_opts)
-                $('#field_role_penilai').html(response.data.role_penilai_opts)
-                $('#field_kegiatan_penilaian').html(response.data.kegiatan_opts)
-                $('#field_survey').html(response.data.survei_opts)
-                $('#field_mitra').html(response.data.petugas_opts)
-                $('#field_role_petugas').html(response.data.role_petugas_opts)
-
-                $('#table_form_penilaian tbody').html(response.data.tbody)
-                $('#card-form-penilaian').removeClass('d-none')
-                
-            },
-            error: (error) => {
-                console.log(error);
-            }
-        });
-    }
 </script>
 {% endblock js-extender %}

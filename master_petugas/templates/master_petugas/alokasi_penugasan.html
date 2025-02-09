@@ -319,62 +319,14 @@
     }
 
     $('#formAlokPetugas').on('submit', (e) => {
-
         e.preventDefault()
-        
-        var serializedData = $(this).serialize();
-        $('.invalid-feedback').html('')
-        $('.is_invalid').removeClass('is_invalid')
-        
-        $.ajax({
-            type: 'POST',
-            url: $(this).attr('action'),
-            data: serializedData,
-            success: (response) =>  {
-                if (response.status == 'success'){
-                    $('#messages-content').html(response["message"])
-                    $('#msgs-upload').removeClass('alert-danger')
-                    $('#msgs-upload').addClass('alert-success')
-                    $('#msgs-upload').removeClass('d-none')
-                    table.ajax.reload();
-                    resetForm()
-                    $('.nav-tabs a[href="#alokasi-preview"]').tab('show');
-                }else{
-                    Swal.fire(
-                        'Terjadi Kesalahan!',
-                        response.message,
-                        'info'
-                    )
-                }
-            },
-            error: (response) => {
-                var errors = response["responseJSON"]["error"]
-                for (const [key, value] of Object.entries(errors)) {
-                    var msgs = '<ul>'
-                    value.forEach((item, index) => {
-                    
-                        msgs += '<li>'+item+'</li>'
-                        });
-                    
-                    msgs += '</ul>'
-                    $('#id_'+ key).addClass('is-invalid');
-                    $('#msg-id_'+key).html(msgs)
-                }    
-            }
-        })
+        form_submit('{{csrf_token}}')
     })
 
     $('#{{form_upload.import_file.id_for_label}}').on('change', () => {
         preview_excel('preview-data-upload', '{{form_upload.import_file.id_for_label}}', 4)
     })
 
-    $('#btn-submit-file').on('click', (e) => {
-        $('#nav-item-import').removeClass('d-none')
-        $('.nav-tabs a[href="#import-tab"]').tab('show');
-        $(this).blur()
-        $('#import-modal').modal('toggle')
-    })
-    
     $('#confirm-submit-file').on('click', () => {
         confirmSubmitFile("{% url 'master_petugas:upload-alokasi' %}", "{{csrf_token}}", $('#{{form_upload.import_file.id_for_label}}').get(0).files[0])
     })

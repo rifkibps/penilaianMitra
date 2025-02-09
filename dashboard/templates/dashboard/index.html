@@ -122,7 +122,7 @@
                     <div class="col-sm-8">
                         <div class="text-sm-end d-flex justify-content-end">
                             <select class="form-select mb-1" id="kegiatan_filter" name="kegiatan_filter" style="width:200px; height:40px">
-                                <option value="">Kegiatan Penilaian</option>
+                                <option value="">Kegiatan Penilaian ...</option>
                                 {% for dt in data_penilaian  %}
                                     <option value="{{dt.id}}">{{dt.kegiatan_survey.nama_kegiatan}}</option>
                                 {% endfor %}
@@ -171,100 +171,46 @@
 <script src="{% static 'app-design/assets/js/ui/component.todo.js' %}"></script>
 
 <script type="text/javascript" src="https://unpkg.com/xlsx@0.15.1/dist/xlsx.full.min.js"></script>
-
+<script src="{% static 'pages/js/dashboard.js' %}"></script>
 <script>
-
-function ExportToExcel(type, fn, dl) {
-    var elt = document.getElementById('ranking-mitra');
-    var wb = XLSX.utils.table_to_book(elt, { sheet: "Ranking Mitra" });
-    return dl ?
-        XLSX.write(wb, { bookType: type, bookSST: true, type: 'base64' }):
-        XLSX.writeFile(wb, fn || ('Data Ranking Mitra.' + (type || 'xlsx')));
-    }
-
-{% for dt in summarize  %}
-    colors = ["#727cf5", "#0acf97", "#fa5c7c", "#ffbc00"];
-    (dataColors = $("#campaign-sent-chart-{{ forloop.counter }}").data("colors")) &&
-    (colors = dataColors.split(","));
-
-    var series = [{data: []}]
-    var labels = []
-
-    {% for dt_series in dt.data_series %}
-        series[0].data.push({{dt_series}})
-        labels.push({{forloop.counter}})
-    {% endfor %}
-
-    var options = {
-    chart: { type: "bar", height: 60, sparkline: { enabled: !0 } },
-    plotOptions: { bar: { columnWidth: "60%" } },
-    colors: colors,
-    series: series,
-    labels:labels,
-    xaxis: { crosshairs: { width: 1 } },
-    tooltip: {
-        fixed: { enabled: !1 },
-        x: { show: !1 },
-        y: {
-        title: {
-            formatter: function (o) {
-            return "";
+    {% for dt in summarize  %}
+        var colors = ["#727cf5", "#0acf97", "#fa5c7c", "#ffbc00"];
+        (dataColors = $("#campaign-sent-chart-{{ forloop.counter }}").data("colors")) &&
+        (colors = dataColors.split(","));
+    
+        var series = [{data: []}]
+        var labels = []
+    
+        {% for dt_series in dt.data_series %}
+            series[0].data.push({{dt_series}})
+            labels.push({{forloop.counter}})
+        {% endfor %}
+    
+        var options = {
+        chart: { type: "bar", height: 60, sparkline: { enabled: !0 } },
+        plotOptions: { bar: { columnWidth: "60%" } },
+        colors: colors,
+        series: series,
+        labels:labels,
+        xaxis: { crosshairs: { width: 1 } },
+        tooltip: {
+            fixed: { enabled: !1 },
+            x: { show: !1 },
+            y: {
+            title: {
+                formatter: function (o) {
+                return "";
+                },
             },
+            },
+            marker: { show: !1 },
         },
-        },
-        marker: { show: !1 },
-    },
-    };
-    new ApexCharts(document.querySelector("#campaign-sent-chart-{{ forloop.counter }}"), options).render();
-{% endfor %}
-
-var table = $("#ranking-mitra").DataTable({
-    processing: true,
-    serverSide: true,
-    ajax: {
-        "url": "{% url 'dashboard:rank' %}",
-        "headers": {
-            "X-Requested-With": "XMLHttpRequest",
-            "X-CSRFToken": '{{csrf_token}}',
-        },
-        "data": function (d){
-            return $.extend({}, d, {
-                "kegiatan_filter": $('#kegiatan_filter').val(),
-            })
-        },
-        "type": "POST"
-    },
-
-    lengthMenu: [5, 25, 50, 100],
-    columns :[
-        {"data": 'petugas__petugas__nama_petugas'},
-        {"data": 'petugas__role__jabatan'},
-        {"data" : 'detail_nilai__indikator_penilaian__kegiatan_penilaian__kegiatan_survey__nama_kegiatan'},
-        {"data" : 'rerata'},
-        {"data" : 'rerata_final'},
-        {"data" : 'ranking'},
-        {"data" : 'ranking_final'},
-    ], 
-    keys: !0,
-    language: {
-        paginate: {
-        previous: "<i class='mdi mdi-chevron-left'>",
-        next: "<i class='mdi mdi-chevron-right'>",
-        },
-    },
-    drawCallback: function () {
-        $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
-    },
-});
-
-$('#kegiatan_filter').bind("keyup change", function (){
-    table.draw()
-})
-
-$('#redraw-table').on('click', function (){
-    table.draw();
-})
-
+        };
+        new ApexCharts(document.querySelector("#campaign-sent-chart-{{ forloop.counter }}"), options).render();
+    {% endfor %}
+    
+    let table = generate_ranked("{% url 'dashboard:rank' %}", "{{csrf_token}}")
+    
 </script>
 
 {% endblock tables-script-extend %}

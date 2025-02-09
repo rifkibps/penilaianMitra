@@ -144,7 +144,8 @@ class DashboardRankClassView(LoginRequiredMixin, View):
                 Q(petugas__petugas__kode_petugas__icontains=search)|
                 Q(petugas__petugas__nama_petugas__icontains=search)|
                 Q(petugas__role__jabatan__icontains=search)|
-                Q(penilaian__kegiatan_penilaian__nama_kegiatan__icontains=search)
+                Q(detail_nilai__indikator_penilaian__kegiatan_penilaian__kegiatan_survey__nama_kegiatan__icontains=search)|
+                Q(detail_nilai__nilai__icontains=search)
             )
         
         data = data.values('petugas__petugas__id', 'petugas__petugas__kode_petugas', 'petugas__petugas__nama_petugas', 'petugas__sub_kegiatan__survey__nama', 'petugas__role__jabatan', 'detail_nilai__indikator_penilaian__kegiatan_penilaian__kegiatan_survey__nama_kegiatan', 'detail_nilai__nilai').exclude(Q(petugas=None)|Q(penilai=None)|Q(state=None)|Q(detail_nilai=None))
@@ -166,7 +167,7 @@ class DashboardRankClassView(LoginRequiredMixin, View):
                 'petugas__petugas__nama_petugas' : dt['petugas__petugas__nama_petugas'],
                 'petugas__survey__nama': dt['petugas__sub_kegiatan__survey__nama'],
                 'petugas__role__jabatan' : dt['petugas__role__jabatan'],
-                'penilaian__kegiatan_penilaian__nama_kegiatan': dt['detail_nilai__indikator_penilaian__kegiatan_penilaian__kegiatan_survey__nama_kegiatan'],
+                'detail_nilai__indikator_penilaian__kegiatan_penilaian__kegiatan_survey__nama_kegiatan': dt['detail_nilai__indikator_penilaian__kegiatan_penilaian__kegiatan_survey__nama_kegiatan'],
                 'rerata' : [dt['detail_nilai__nilai'],],
                 'ranking': 0
             })
@@ -174,9 +175,9 @@ class DashboardRankClassView(LoginRequiredMixin, View):
         for dt in data_df:
             dt['rerata'] = round(mean(dt['rerata']), 2)
 
-        data_df = sorted(data_df, key = itemgetter('penilaian__kegiatan_penilaian__nama_kegiatan'))
+        data_df = sorted(data_df, key = itemgetter('detail_nilai__indikator_penilaian__kegiatan_penilaian__kegiatan_survey__nama_kegiatan'))
 
-        for key, value in groupby(data_df, key = itemgetter('penilaian__kegiatan_penilaian__nama_kegiatan')):
+        for key, value in groupby(data_df, key = itemgetter('detail_nilai__indikator_penilaian__kegiatan_penilaian__kegiatan_survey__nama_kegiatan')):
 
             dt_nilai = sorted(value, key=itemgetter('rerata'), reverse=True)
             for rank, k in enumerate(dt_nilai):
@@ -225,7 +226,7 @@ class DashboardRankClassView(LoginRequiredMixin, View):
                 'petugas__petugas__nama_petugas': f'<a href="{reverse_lazy("master_petugas:mitra-view-detail", kwargs={"mitra_id": obj["petugas__petugas__id"]})}" class="text-body" target="_blank">{obj["petugas__petugas__nama_petugas"]}</a>',
                 'petugas__sub_kegiatan__survey__nama': obj['petugas__survey__nama'],
                 'petugas__role__jabatan': obj['petugas__role__jabatan'],
-                'detail_nilai__indikator_penilaian__kegiatan_penilaian__kegiatan_survey__nama_kegiatan': obj['penilaian__kegiatan_penilaian__nama_kegiatan'],
+                'detail_nilai__indikator_penilaian__kegiatan_penilaian__kegiatan_survey__nama_kegiatan': obj['detail_nilai__indikator_penilaian__kegiatan_penilaian__kegiatan_survey__nama_kegiatan'],
                 'rerata': obj['rerata'],
                 'ranking': obj['ranking'],
                 'rerata_final': obj['rerata_final'],

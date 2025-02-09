@@ -4,6 +4,23 @@ let swalWithBootstrapButtons = Swal.mixin({
     buttonsStyling: true
 })
 
+let settingDatatables = () => {
+    return {
+        keys: !0,
+        language: {
+            paginate: {
+            previous: "<i class='mdi mdi-chevron-left'>",
+            next: "<i class='mdi mdi-chevron-right'>",
+            },
+            lengthMenu : "Menampilkan _MENU_",
+            search: "Cari Nilai Mitra ",
+        },
+        drawCallback: () => {
+            $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
+        },
+    }
+}
+
 let reset_administrative = (all, level=null, except_keldes = null) => {
     if (all){
         $('#filter_kabkot').html('<option value="">-- Pilih Kab/Kota --</option>')
@@ -26,7 +43,7 @@ let reset_administrative = (all, level=null, except_keldes = null) => {
 
 let preview_excel = (table_id, field_file_id, len_coloumn) => {
     var input = $('#'+field_file_id).get(0).files[0]
-    readXlsxFile(input).then(function(data){
+    readXlsxFile(input).then((data) => {
         var i = 0
         $('#'+table_id+' tbody').html('') 
         data.map((row, index) =>{
@@ -60,17 +77,17 @@ let preview_excel = (table_id, field_file_id, len_coloumn) => {
 }
 
 let clearFormValidation = (form) => {
-    $(form + ' .form-control').each(function(i, obj) {
+    $(form + ' .form-control').each((i, obj) => {
         $(obj).removeClass('is-invalid')
         $(obj).trigger('change')
     });
 
-    $(form + ' .form-select').each(function(j, objs) {
+    $(form + ' .form-select').each((j, objs) => {
         $(objs).removeClass('is-invalid')
         $(objs).trigger('change')
     });
     
-    $('.invalid-feedback').each(function(i, obj) {
+    $('.invalid-feedback').each((i, obj) => {
         $(obj).html('')
     });
 }

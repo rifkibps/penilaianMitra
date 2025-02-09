@@ -1,44 +1,85 @@
 let generate_alokasi_petugas = (url, csrf) => {
-    return $("#basic-datatable").DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            "url": url,
-            "headers": {
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": csrf,
+    return $("#basic-datatable").DataTable(
+    {
+        ...{
+            processing: true,
+            serverSide: true,
+            ajax: {
+                "url": url,
+                "headers": {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRFToken": csrf,
+                },
+                "type": "POST",
+                "data": (d) => {
+                    return $.extend({}, d, {
+                        "survei_filter": $('#survei-select-filter').val(),
+                        "jabatan_filter": $('#jabatan-select-filter').val(),
+                    })
+                },
             },
-            "type": "POST",
-            "data": function (d){
-                return $.extend({}, d, {
-                    "survei_filter": $('#survei-select-filter').val(),
-                    "jabatan_filter": $('#jabatan-select-filter').val(),
-                })
-            },
+            lengthMenu: [5, 25, 50, 100,'All'],
+            columns :[
+                {"data": 'petugas__kode_petugas'},
+                {"data": 'petugas__nama_petugas'},
+                {"data": 'survey__nama'},
+                {"data" : 'role__jabatan'},
+                {"data" : 'aksi'},
+            ],
+            columnDefs: [ {
+                'targets': [4], /* column index */
+                'orderable': false, /* true or false */
+            }],
+        }, ...settingDatatables()
+    }
+);
+}
+
+let form_submit = (csrf) => {
+    e.preventDefault()
+    var serializedData = $('#formAlokPetugas').serialize();
+    $('.invalid-feedback').html('')
+    $('.is_invalid').removeClass('is_invalid')
+    
+    $.ajax({
+        type: 'POST',
+        url: $('#formAlokPetugas').attr('action'),
+        data: serializedData,
+        "headers": {
+            "X-Requested-With": "XMLHttpRequest",
+            "X-CSRFToken": csrf,
         },
-        lengthMenu: [5, 25, 50, 100,'All'],
-        columns :[
-            {"data": 'petugas__kode_petugas'},
-            {"data": 'petugas__nama_petugas'},
-            {"data": 'survey__nama'},
-            {"data" : 'role__jabatan'},
-            {"data" : 'aksi'},
-        ],
-        columnDefs: [ {
-            'targets': [4], /* column index */
-            'orderable': false, /* true or false */
-        }],
-        keys: !0,
-        language: {
-            paginate: {
-            previous: "<i class='mdi mdi-chevron-left'>",
-            next: "<i class='mdi mdi-chevron-right'>",
-            },
+        success: (response) =>  {
+            if (response.status == 'success'){
+                $('#messages-content').html(response["message"])
+                $('#msgs-upload').removeClass('alert-danger')
+                $('#msgs-upload').addClass('alert-success')
+                $('#msgs-upload').removeClass('d-none')
+                table.ajax.reload();
+                resetForm()
+                $('.nav-tabs a[href="#alokasi-preview"]').tab('show');
+            }else{
+                Swal.fire(
+                    'Terjadi Kesalahan!',
+                    response.message,
+                    'info'
+                )
+            }
         },
-        drawCallback: function () {
-            $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
-        },
-    });
+        error: (response) => {
+            var errors = response["responseJSON"]["error"]
+            for (const [key, value] of Object.entries(errors)) {
+                var msgs = '<ul>'
+                value.forEach((item, index) => {
+                    msgs += '<li>'+item+'</li>'
+                    });
+                
+                msgs += '</ul>'
+                $('#id_'+ key).addClass('is-invalid');
+                $('#msg-id_'+key).html(msgs)
+            }    
+        }
+    })
 }
 
 let editAlokasiPetugas = (url, csrf, target_url, e) => {
@@ -105,7 +146,7 @@ let confirmSubmitFile = (url, csrf, target_form_data) => {
                     "X-Requested-With": "XMLHttpRequest",
                     "X-CSRFToken": csrf,
                 },
-                success: function (response) {
+                success: (response) => {
                     
                     if (response.status == 'error'){
 
@@ -133,7 +174,7 @@ let confirmSubmitFile = (url, csrf, target_form_data) => {
                         table.ajax.reload();
                     }
                 },
-                error: function (xhr, status, error) {
+                error: (xhr, status, error) => {
                     return console.log(xhr.responseText['messages'])
                 }
             })
@@ -206,5 +247,12 @@ $('#btn-submit-file').on('click', (e) => {
     $('#nav-item-import').removeClass('d-none')
     $('.nav-tabs a[href="#import-tab"]').tab('show');
     $(this).blur()
+    $('#import-modal').modal('toggle')
+})
+
+$('#btn-submit-file').on('click', (e) => {
+    $('#nav-item-import').removeClass('d-none')
+    $('.nav-tabs a[href="#import-tab"]').tab('show');
+    $('#btn-submit-file').blur()
     $('#import-modal').modal('toggle')
 })

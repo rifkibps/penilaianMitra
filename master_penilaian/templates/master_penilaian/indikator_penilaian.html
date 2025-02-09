@@ -121,149 +121,18 @@
 {% endblock table-content %}
 
 {% block tables-script-extend %}
-<script src="{% static 'pages/js/kegiatan_penilaian.js' %}"></script>
+<script src="{% static 'pages/js/indikator_penilaian.js' %}"></script>
 <script>
-    var table = $("#basic-datatable").DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            "url": "{% url 'master_penilaian:indikator-penilaian-json' %}",
-            "headers": {
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": '{{csrf_token}}',
-            },
-            "type": "POST"
-        },
-        columns :[
-            {"data": 'nama_indikator'},
-            {"data": 'nama_indikator'},
-            {"data": 'deskripsi_penilaian'},
-            {"data" : 'aksi'},
-        ],
-        lengthMenu: [5, 25, 50, 100,'All'],
-        columnDefs: [ {
-            'targets': [3], /* column index */
-            'orderable': false, /* true or false */
-            'className': "text-center"
-        },
-        {
-            "targets": 0,
-            "data": null,
-            "defaultContent": "",
-            "render": function (data, type, row, meta) {
-                return meta.row + 1;
-            }
-        }],
-        keys: !0,
-        language: {
-            paginate: {
-            previous: "<i class='mdi mdi-chevron-left'>",
-            next: "<i class='mdi mdi-chevron-right'>",
-            },
-            lengthMenu : "Menampilkan _MENU_",
-            search: "Cari Indikator Penilaian ",
-        },
-        drawCallback: function () {
-            $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
-        },
-    });
+    let table = generate_indikator_penilaian("{% url 'master_penilaian:indikator-penilaian-json' %}", "{{csrf_token}}")
+    let resetForm = () => resetFormIndikatorPenilaian("{% url 'master_penilaian:index' %}") 
+    let editIndikator = (e) => edit_indikator("{% url 'master_penilaian:detail-indikator' %}", "{{csrf_token}}", "{% url 'master_penilaian:update-indikator' %}", e)
 
-    function resetForm(){
-        $('#formKegiatanPenilaianPetugas')[0].reset();
-        $('.was-validated').removeClass('was-validated')
-        $('#submitformIndikatorPenilaianPetugas').html('Kirim Data')
-        $('#formKegiatanPenilaianPetugas').attr('action', "{% url 'master_penilaian:index' %}")
-    }
+    let deleteIndikator = (e) => delete_general_request("Apakah anda yakin ingin menghapus indikator penilaian mitra?", "{% url 'master_penilaian:delete-indikator' %}", '{{csrf_token}}', e, table)
 
-    function editIndikator(e){
-        $('#formKegiatanPenilaianPetugas').attr('action', "{% url 'master_penilaian:update-indikator' %}")
-        $('#submitformIndikatorPenilaianPetugas').html('Update Data')
-    
-        $.ajax({
-            url: '{% url 'master_penilaian:detail-indikator' %}',
-            type: "POST",
-            dataType: "json",
-            data : {
-                'id' : e
-            },
-            headers: {
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": '{{csrf_token}}',
-            },
-            success: (data) => {
-
-                if (data.status == 'success'){
-
-                    for (const [key, value] of Object.entries(data.instance)) {
-                        $('#id_'+key).val(value)
-                    }
-                    $('.nav-tabs a[href="#input-tab"]').tab('show');
-                    table.ajax.reload();
-
-                }else{
-                    Swal.fire(
-                        'Terjadi Kesalahan!',
-                         data.message,
-                        'info'
-                    )
-                }
-                
-            },
-            error: (error) => {
-                console.log(error);
-            }
-        });
-    }
-
-    function deleteIndikator(e){
-
-        swalWithBootstrapButtons.fire({
-            title: 'Are you sure?',
-            text: "Apakah anda yakin ingin menghapus indikator penilaian mitra?",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'No, cancel!',
-            reverseButtons: false
-          }).then((result) => {
-            if (result.isConfirmed) {
-                
-                $.ajax({
-                    url: '{% url 'master_penilaian:delete-indikator' %}',
-                    type: "POST",
-                    dataType: "json",
-                    data : {
-                        'id' : e
-                    },
-                    headers: {
-                        "X-Requested-With": "XMLHttpRequest",
-                        "X-CSRFToken": '{{csrf_token}}',
-                    },
-                    success: (data) => {
-        
-                        if (data.status == 'success'){
-                            Swal.fire(
-                                'Deleted!',
-                                data.message,
-                                'success'
-                                )
-                            table.ajax.reload();
-                        }else{
-                            Swal.fire(
-                                'Terjadi Kesalahan!',
-                                 data.message,
-                                'info'
-                            )
-                        }
-                    },
-                    error: (error) => {
-                        console.log(error);
-                    }
-                });
-            }
-        }) 
-        
-    }
+    $('#formKegiatanPenilaianPetugas').on('submit', (e) => {
+        e.preventDefault()
+        check_submit('{{csrf_token}}')
+    })
 </script>
 
 {% endblock tables-script-extend %}

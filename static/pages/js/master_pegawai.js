@@ -1,60 +1,52 @@
 // Master Pegawai
 let generate_master_pegawai = (url, csrf) => {
-    return $("#basic-datatable").DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            "url": url,
-            "headers": {
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": csrf,
-            },
-            "type": "POST",
-            "data": function (d){
-                return $.extend({}, d, {
-                    "pangkat_filter": $('#pangkat-filter').val(),
-                    "jabatan_filter": $('#jabatan-filter').val()
-                })
-            },
-        },
-        columns :[
-            {"data": 'nip'},
-            {"data": 'nip'},
-            {"data": 'nip_bps'},
-            {"data": 'name'},
-            {"data" : 'pangkat__golongan'},
-            {"data" : 'jabatan__jabatan'},
-            {"data" : 'user'},
-            {"data" : 'aksi'},
-        ],
-        lengthMenu: [10, 25, 50, 100],
-        columnDefs: [ {
-            'targets': [7], /* column index */
-            'orderable': false, /* true or false */
-        },
+    return $("#basic-datatable").DataTable(
         {
-            "targets": 0,
-            "data": null,
-            "className": "text-center",
-            "defaultContent": "",
-            "render": function (data, type, row, meta) {
-                return meta.row + 1;
-            }
+            ...{
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    "url": url,
+                    "headers": {
+                        "X-Requested-With": "XMLHttpRequest",
+                        "X-CSRFToken": csrf,
+                    },
+                    "type": "POST",
+                    "data": (d) => {
+                        return $.extend({}, d, {
+                            "pangkat_filter": $('#pangkat-filter').val(),
+                            "jabatan_filter": $('#jabatan-filter').val()
+                        })
+                    },
+                },
+                columns :[
+                    {"data": 'nip'},
+                    {"data": 'nip'},
+                    {"data": 'nip_bps'},
+                    {"data": 'name'},
+                    {"data" : 'pangkat__golongan'},
+                    {"data" : 'jabatan__jabatan'},
+                    {"data" : 'user'},
+                    {"data" : 'aksi'},
+                ],
+                lengthMenu: [10, 25, 50, 100],
+                columnDefs: [ {
+                    'targets': [7], /* column index */
+                    'orderable': false, /* true or false */
+                },
+                {
+                    "targets": 0,
+                    "data": null,
+                    "className": "text-center",
+                    "defaultContent": "",
+                    "render": (data, type, row, meta) => {
+                        return meta.row + 1;
+                    }
+                }
+                ],
+            }, ...settingDatatables()
         }
-        ],
-        keys: !0,
-        language: {
-            paginate: {
-            previous: "<i class='mdi mdi-chevron-left'>",
-            next: "<i class='mdi mdi-chevron-right'>",
-            },
-            lengthMenu : "Menampilkan _MENU_",
-            search: "Cari Pegawai",
-        },
-        drawCallback: function () {
-            $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
-        },
-    });
+);
 }
 
 let edit_pegawai_request = (url, csrf, target_url, e) => {
@@ -104,7 +96,7 @@ let checkSubmitPegawai = (csrf) => {
             "X-Requested-With": "XMLHttpRequest",
             "X-CSRFToken": csrf,
         },
-        success: function (response) {
+        success: (response) =>  {
             $('#messages-content').html(response["message"])
             $('#msgs-feedback').removeClass('alert-danger')
             $('#msgs-feedback').addClass('alert-success')
@@ -113,11 +105,11 @@ let checkSubmitPegawai = (csrf) => {
             $('.nav-tabs a[href="#pegawai-preview"]').tab('show');
             $('#formMasterPegawai')[0].reset();
         },
-        error: function (response) {
+        error: (response) =>  {
             var errors = response["responseJSON"]["error"]
             for (const [key, value] of Object.entries(errors)) {
                 var msgs = '<ul>'
-                value.forEach(function (item, index) {
+                value.forEach((item, index) => {
                     msgs += '<li>'+item+'</li>'
                     });
                 
@@ -147,10 +139,9 @@ $('#reset-filter').on('click', () => {
     table.draw();
 })
 
-$("#formMasterPegawai").on("submit", function (e){
+$("#formMasterPegawai").on("submit", (e) => {
     e.preventDefault()
 })
-
 
 // Pangkat dan Golongan
 let generate_pangkat = (url, csrf) => {
@@ -181,7 +172,7 @@ let generate_pangkat = (url, csrf) => {
             "targets": 0,
             "data": null,
             "defaultContent": "",
-            "render": function (data, type, row, meta) {
+            "render": (data, type, row, meta) => {
                 return meta.row + 1;
             }
         }],
@@ -194,7 +185,7 @@ let generate_pangkat = (url, csrf) => {
             lengthMenu : "Menampilkan _MENU_",
             search: "Cari Pangkat/Gol.",
         },
-        drawCallback: function () {
+        drawCallback: () =>  {
             $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
         },
     });
@@ -239,7 +230,7 @@ let checkSubmitPangkat = (csrf) => {
             "X-Requested-With": "XMLHttpRequest",
             "X-CSRFToken": csrf,
         },
-        success: function (response) {
+        success: (response) =>  {
             $('#messages-content').html(response["message"])
             $('#msgs-feedback').removeClass('alert-danger')
             $('#msgs-feedback').addClass('alert-success')
@@ -248,11 +239,11 @@ let checkSubmitPangkat = (csrf) => {
             $('.nav-tabs a[href="#position-preview"]').tab('show');
             $('#formMasterPangkat')[0].reset();
         },
-        error: function (response) {
+        error: (response) =>  {
             var errors = response["responseJSON"]["error"]
             for (const [key, value] of Object.entries(errors)) {
                 var msgs = '<ul>'
-                value.forEach(function (item, index) {
+                value.forEach((item, index) => {
                     msgs += '<li>'+item+'</li>'
                     });
                 msgs += '</ul>'
@@ -275,7 +266,7 @@ let resetFormPangkat = (url) => {
     clearFormValidation('#formMasterPangkat')
 }
 
-$("#formMasterPangkat").on("submit", function (e){
+$("#formMasterPangkat").on("submit", (e) => {
     e.preventDefault()
 })
 
@@ -309,7 +300,7 @@ let generate_position = (url, csrf) => {
             "targets": 0,
             "data": null,
             "defaultContent": "",
-            "render": function (data, type, row, meta) {
+            "render": (data, type, row, meta) => {
                 return meta.row + 1;
             }
         }
@@ -323,7 +314,7 @@ let generate_position = (url, csrf) => {
             lengthMenu : "Menampilkan _MENU_",
             search: "Cari Jabatan",
         },
-        drawCallback: function () {
+        drawCallback: () =>  {
             $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
         },
     });
@@ -369,7 +360,7 @@ let checkSubmitPosition = (csrf) => {
             "X-Requested-With": "XMLHttpRequest",
             "X-CSRFToken": csrf,
         },
-        success: function (response) {
+        success: (response) =>  {
             $('#messages-content').html(response["message"])
             $('#msgs-feedback').removeClass('alert-danger')
             $('#msgs-feedback').addClass('alert-success')
@@ -378,12 +369,12 @@ let checkSubmitPosition = (csrf) => {
             $('.nav-tabs a[href="#position-preview"]').tab('show');
             $('#formMasterPosition')[0].reset();
         },
-        error: function (response) {
+        error: (response) =>  {
             var errors = response["responseJSON"]["error"]
             console.log(errors)
             for (const [key, value] of Object.entries(errors)) {
                 var msgs = '<ul>'
-                value.forEach(function (item, index) {
+                value.forEach((item, index) => {
                     msgs += '<li>'+item+'</li>'
                     });
                 
@@ -407,6 +398,6 @@ let resetFormPosition = (url) => {
     clearFormValidation('#formMasterPosition')
 }
 
-$("#formMasterPosition").on("submit", function (e){
+$("#formMasterPosition").on("submit", (e) => {
     e.preventDefault()
 })
