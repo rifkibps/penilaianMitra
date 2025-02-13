@@ -13,7 +13,7 @@ let settingDatatables = () => {
             next: "<i class='mdi mdi-chevron-right'>",
             },
             lengthMenu : "Menampilkan _MENU_",
-            search: "Cari Nilai Mitra ",
+            search: "Cari data ",
         },
         drawCallback: () => {
             $(".dataTables_paginate > .pagination").addClass("pagination-rounded");

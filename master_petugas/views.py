@@ -1088,7 +1088,7 @@ class MasterRoleUpdateView(LoginRequiredMixin, RestrictionsHttpRequestAccess, Vi
             if check_kegiatan_penilaian.exists():
                 return JsonResponse({'status' : 'failed', 'message': 'Data role petugas telah digunakan pada master data penilaian'}, status=200)
             
-            check_nilai_mitra = MasterNilaiPetugas.objects.filter(petugas__role = request.POST.get('id'))
+            check_nilai_mitra = MasterPenilaianPetugas.objects.filter(petugas__role = request.POST.get('id'))
             if check_nilai_mitra.exists():
                 return JsonResponse({'status' : 'failed', 'message': 'Data role petugas telah digunakan pada master data penilaian'}, status=200)
 
@@ -1096,7 +1096,6 @@ class MasterRoleUpdateView(LoginRequiredMixin, RestrictionsHttpRequestAccess, Vi
             if form.is_valid():
                 instance = form.save()
                 ser_instance = serializers.serialize('json', [ instance, ])
-                # send to client side.
                 return JsonResponse({"status" : "success", "instance": ser_instance, 'message': 'Data berhasil diubah'}, status=200)
             else:
                 return JsonResponse({"status" : "failed", "error": form.errors, "message": "Terjadi Kesalahan"}, status=400)

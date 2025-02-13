@@ -62,7 +62,7 @@ class SurveyJsonResponseClassView(LoginRequiredMixin, RestrictionsAccess, View):
 
         if search:
             data_survey = data_survey.filter(
-                Q(nama__icontains=search)|Q(deskripsi__icontains=search)|Q(tgl_mulai__icontains=search)|Q(tgl_selesai__icontains=search)|Q(salary=search)
+                Q(nama__icontains=search)|Q(deskripsi__icontains=search)|Q(tgl_mulai__icontains=search)|Q(tgl_selesai__icontains=search)
             )
         
         data_survey = data_survey.exclude(Q(nama=None)|Q(deskripsi=None)|Q(tgl_mulai=None)|Q(tgl_selesai=None))

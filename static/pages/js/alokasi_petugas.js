@@ -11,24 +11,34 @@ let generate_alokasi_petugas = (url, csrf) => {
                     "X-CSRFToken": csrf,
                 },
                 "type": "POST",
-                "data": (d) => {
+                "data": function (d){
                     return $.extend({}, d, {
-                        "survei_filter": $('#survei-select-filter').val(),
+                        "sub_kegiatan": $('#survei-select-filter').val(),
                         "jabatan_filter": $('#jabatan-select-filter').val(),
                     })
                 },
             },
             lengthMenu: [5, 25, 50, 100,'All'],
             columns :[
+                {"data": 'petugas__nama_petugas'},
                 {"data": 'petugas__kode_petugas'},
                 {"data": 'petugas__nama_petugas'},
-                {"data": 'survey__nama'},
+                {"data": 'sub_kegiatan__nama_kegiatan'},
                 {"data" : 'role__jabatan'},
+                {"data" : 'pegawai'},
                 {"data" : 'aksi'},
             ],
             columnDefs: [ {
-                'targets': [4], /* column index */
+                'targets': [6], /* column index */
                 'orderable': false, /* true or false */
+            },
+            {
+                "targets": 0,
+                "data": null,
+                "defaultContent": "",
+                "render": function (data, type, row, meta) {
+                    return meta.row + 1;
+                }
             }],
         }, ...settingDatatables()
     }

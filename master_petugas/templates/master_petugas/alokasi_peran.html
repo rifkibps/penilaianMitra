@@ -293,7 +293,7 @@
 {% endblock table-content %}
 
 {% block tables-script-extend %}
-<script src="{% static 'pages/js/alokasi_petugas.js' %}"></script>
+{% comment %} <script src="{% static 'pages/js/alokasi_petugas.js' %}"></script>
 <script>
     
     var table = $("#basic-datatable").DataTable({
@@ -419,7 +419,6 @@
                         "X-CSRFToken": '{{csrf_token}}',
                     },
                     success: (data) => {
-
                         if (data.status == 'success'){
                             Swal.fire(
                                 'Deleted!',
@@ -595,6 +594,38 @@
               )
             }
         }) 
+    })
+
+</script> {% endcomment %}
+
+<script src="{% static 'pages/js/alokasi_petugas.js' %}"></script>
+<script>
+
+    let table = generate_alokasi_petugas("{% url 'master_petugas:datatable-json-alok' %}", '{{csrf_token}}')
+
+    let editAlokPetugas = (e) => {
+        editAlokasiPetugas("{% url 'master_petugas:detail-alokasi' %}", '{{csrf_token}}', "{% url 'master_petugas:update-alokasi' %}", e)
+    }
+
+    let deleteAlokasi = (e) => {
+        delete_general_request("Apakah anda yakin ingin menghapus data alokasi mitra?", "{% url 'master_petugas:delete-alokasi' %}", '{{csrf_token}}', e, table)
+    }
+
+    let resetForm = () => {
+        resetFormAlokasiPetugas("{% url 'master_petugas:alokasi' %}")
+    }
+
+    $('#formAlokPetugas').on('submit', (e) => {
+        e.preventDefault()
+        form_submit('{{csrf_token}}')
+    })
+
+    $('#{{form_upload.import_file.id_for_label}}').on('change', () => {
+        preview_excel('preview-data-upload', '{{form_upload.import_file.id_for_label}}', 4)
+    })
+
+    $('#confirm-submit-file').on('click', () => {
+        confirmSubmitFile("{% url 'master_petugas:upload-alokasi' %}", "{{csrf_token}}", $('#{{form_upload.import_file.id_for_label}}').get(0).files[0])
     })
 
 </script>
