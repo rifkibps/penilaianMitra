@@ -13,12 +13,12 @@ let generate_alokasi_petugas = (url, csrf) => {
                 "type": "POST",
                 "data": function (d){
                     return $.extend({}, d, {
-                        "sub_kegiatan": $('#survei-select-filter').val(),
+                        "survei_filter": $('#survei-select-filter').val(),
                         "jabatan_filter": $('#jabatan-select-filter').val(),
                     })
                 },
             },
-            lengthMenu: [5, 25, 50, 100,'All'],
+            lengthMenu: [5, 25, 50, 100, 250],
             columns :[
                 {"data": 'petugas__nama_petugas'},
                 {"data": 'petugas__kode_petugas'},
@@ -46,7 +46,6 @@ let generate_alokasi_petugas = (url, csrf) => {
 }
 
 let form_submit = (csrf) => {
-    e.preventDefault()
     var serializedData = $('#formAlokPetugas').serialize();
     $('.invalid-feedback').html('')
     $('.is_invalid').removeClass('is_invalid')

@@ -243,7 +243,7 @@
     let table = generate_kegiatan_penilaian("{% url 'master_penilaian:datatable-json' %}", '{{csrf_token}}')
 
     let resetForm = () => resetFormKegiatanPenilain("{% url 'master_penilaian:index' %}")
-    let editKegiatanPenilaian = (e) => editKegiatanPenilaian("{% url 'master_penilaian:detail-kegiatan' %}", "{{csrf_token}}", "{% url 'master_penilaian:update-kegiatan' %}", e) 
+    let editKegiatanPenilaian = (e) => edit_kegiatan_penilaian_request("{% url 'master_penilaian:detail-kegiatan' %}", "{{csrf_token}}", "{% url 'master_penilaian:update-kegiatan' %}", e) 
 
     let hapusKegiatanPenilaian = (e) => delete_general_request("Apakah anda yakin ingin menghapus kegiatan penilaian?", "{% url 'master_penilaian:delete-kegiatan' %}", '{{csrf_token}}', e, table)
 

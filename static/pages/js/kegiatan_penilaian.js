@@ -48,7 +48,7 @@ let generate_kegiatan_penilaian = (url, csrf) => {
     );
 }
 
-let editKegiatanPenilaian = (url, csrf, target_url, e) => {
+let edit_kegiatan_penilaian_request = (url, csrf, target_url, e) => {
     $('#submitformKegiatanPenilaianPetugas').html('Update Data')
     $('#formKegiatanPenilaianPetugas').attr('action', target_url)
     $.ajax({

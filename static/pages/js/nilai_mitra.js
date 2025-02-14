@@ -351,7 +351,7 @@ let get_alocation_by_survey = (url, csrf) => {
         url: url,
         type: "POST",   
         dataType: "json",
-        data :  {'survey_id' : $('#field_survey').val(), 'penilaian_id' : $(this).val()},
+        data :  {'survey_id' : $('#field_survey').val(), 'penilaian_id' : $('#field_kegiatan').val()},
         headers: {
             "X-Requested-With": "XMLHttpRequest",
             "X-CSRFToken": csrf,

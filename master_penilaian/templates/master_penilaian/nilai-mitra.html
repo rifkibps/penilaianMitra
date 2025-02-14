@@ -535,7 +535,7 @@
     })
     
     $('#filter-kegiatan-template').on('change', get_penilai_by_kegiatan("{% url 'master_penilaian:get-penilai' %}", '{{csrf_token}}'))
-    $('#confirm-submit-file').on('click', confirm_submit_file("{% url 'master_penilaian:upload-nilai-mitra' %}", "{{csrf_token}}", $('#{{form_upload.import_file.id_for_label}}').get(0).files[0]))
+    {% comment %} $('#confirm-submit-file').on('click', confirm_submit_file("{% url 'master_penilaian:upload-nilai-mitra' %}", "{{csrf_token}}", $('#{{form_upload.import_file.id_for_label}}').get(0).files[0])) {% endcomment %}
     $('#nilai-mitra-filter-survey').on('change', filter_penilaian_by_survey("{% url 'master_penilaian:get-penilaian-by-survei' %}", '{{csrf_token}}'))
     $('#field_survey').on('change', () => {
         get_data_penilaian_by_survei({'survey_id' : $(this).val()}, '#field_kegiatan', "{% url 'master_penilaian:get-penilaian-by-survei' %}", '{{csrf_token}}')

@@ -5,10 +5,10 @@ let generate_indikator_penilaian = (url, csrf) => {
             processing: true,
             serverSide: true,
             ajax: {
-                "url": "{% url 'master_penilaian:indikator-penilaian-json' %}",
+                "url": url,
                 "headers": {
                     "X-Requested-With": "XMLHttpRequest",
-                    "X-CSRFToken": '{{csrf_token}}',
+                    "X-CSRFToken": csrf,
                 },
                 "type": "POST"
             },
@@ -18,7 +18,7 @@ let generate_indikator_penilaian = (url, csrf) => {
                 {"data": 'deskripsi_penilaian'},
                 {"data" : 'aksi'},
             ],
-            lengthMenu: [5, 25, 50, 100,'All'],
+            lengthMenu: [5, 25, 50, 100, 250],
             columnDefs: [ {
                 'targets': [3], /* column index */
                 'orderable': false, /* true or false */

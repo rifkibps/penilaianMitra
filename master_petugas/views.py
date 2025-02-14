@@ -748,7 +748,7 @@ class MasterAlokasiJsonResponseClassView(LoginRequiredMixin, RestrictionsHttpReq
 
         data = models.AlokasiPetugas.objects
         if datatables.get('survei_filter'):
-            data = data.filter(survey = datatables.get('survei_filter'))
+            data = data.filter(sub_kegiatan__survey = datatables.get('survei_filter'))
 
         if datatables.get('jabatan_filter'):
             data = data.filter(role = datatables.get('jabatan_filter'))
