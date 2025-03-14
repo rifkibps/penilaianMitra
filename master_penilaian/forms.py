@@ -171,7 +171,7 @@ class PenilaianMitraForm(forms.Form):
 
 
 class NilaiFormUpload(forms.Form):
-    import_file = forms.FileField(allow_empty_file=False,validators=[FileExtensionValidator(allowed_extensions=['xlsx'])], label="Import Alokasi Petugas", widget=forms.FileInput(
+    import_penilaian = forms.FileField(allow_empty_file=False, validators=[FileExtensionValidator(allowed_extensions=['xlsx'])], label="Import Alokasi Petugas", widget=forms.FileInput(
                               attrs={'class': "form-control"}))
     
     def clean(self):

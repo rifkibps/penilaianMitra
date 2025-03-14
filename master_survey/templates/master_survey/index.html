@@ -285,10 +285,10 @@
     $("#formMasterSurvei").on("submit", (e) => {
         e.preventDefault()
         submit_form_survey("{{csrf_token}}")
-    })
+    })  
 
     $('#get-templates-upload').on('click', (e) => {
-        var numrows = $('#number_rows').val()
+        let numrows = $('#number_rows').val()
         return window.location.replace("{% url 'master_survei:template-survey' %}?rows=" + numrows);
     })
 

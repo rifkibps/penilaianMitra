@@ -91,7 +91,7 @@ let clearFormValidation = (form) => {
         $(obj).html('')
     });
 }
-
+ 
 let delete_general_request = (ask, url, csrf, e, table) => {
     swalWithBootstrapButtons.fire({
         title: 'Are you sure?',

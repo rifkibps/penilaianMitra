@@ -1,6 +1,7 @@
 var region_code = ''
 
 let destroy_datatable = () => {
+     
     if ( $.fn.DataTable.isDataTable('#basic-datatable-2') ) {
         $('#basic-datatable-2').DataTable().destroy();
     }
@@ -189,13 +190,13 @@ let ExportToExcel = (type, fn, dl) => {
 let confirm_submit_file = (url, csrf, formDataTarget) => {
     swalWithBootstrapButtons.fire({
         title: 'Are you sure?',
-        text: "Apakah anda yakin ingin mengupload data mitra?",
+        text: "Apakah anda yakin ingin mengupload data penilaian mitra?",
         icon: 'question',
         showCancelButton: true,
         confirmButtonText: 'Yes, upload it!',
         cancelButtonText: 'No, cancel!',
         reverseButtons: true
-      }).then((result) => {
+    }).then((result) => {
         if (result.isConfirmed) {
             var data = new FormData();
             data.append("import_file",formDataTarget)
@@ -234,9 +235,7 @@ let confirm_submit_file = (url, csrf, formDataTarget) => {
                     return console.log(xhr.responseText['messages'])
                 }
             })
-        } else if (
-          result.dismiss === Swal.DismissReason.cancel
-        ) {
+        } else if (result.dismiss === Swal.DismissReason.cancel){
           swalWithBootstrapButtons.fire(
             'Cancelled',
             'Data successfully cancelled',

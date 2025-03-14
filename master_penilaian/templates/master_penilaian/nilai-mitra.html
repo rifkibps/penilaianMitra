@@ -105,7 +105,7 @@
                       <div class="tab-pane" id="nilai-mitra-preview-2">
                         <div class="row mb-2">
                             <div class="col-sm-8 d-flex justify-content-start align-items-center">
-                                <a href="#offcanvasFilter2"  data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasFilter2" class="btn btn-primary mb-2 d-inline"><i class="mdi mdi-filter-menu me-2"></i> Filter Data</a>&emsp;
+                                <a href="#offcanvasFilter2"  data-bs-toggle="offcanvas" role="button" class="btn btn-primary mb-2 d-inline"><i class="mdi mdi-filter-menu me-2"></i> Filter Data</a>&emsp;
                                 <select class="form-select mb-2 d-inline" id="nilai-mitra-filter-survey" style="width:200px">
                                     <option value="">-- Pilih Survei --</option>
                                     {% for dt in data_survei %}
@@ -125,7 +125,7 @@
                         </div>
 
                         <div class="table-responsive">
-                            <table id="basic-datatable-2" class="table table-centered table-striped w-100 dt-responsive nowrap">
+                            <table id="basic-datatable-2" class="table table-centered table-striped w-100 nowrap dt-responsive">
                                 <thead>
                                     <tr>
                                         <th>ID Mitra</th>
@@ -303,9 +303,9 @@
                     </div>
                     <form action="" enctype="multipart/form-data" novalidate>
                         {% csrf_token %}
-                        <label for="{{form_upload.import_file.id_for_label}}" class="form-label"><h5>{{ form_upload.import_file.label }}</h5></label>
+                        <label for="{{form_upload.import_penilaian.id_for_label}}" class="form-label"><h5>{{ form_upload.import_penilaian.label }}</h5></label>
                         <div class="mb-3">
-                            {{form_upload.import_file}}
+                            {{form_upload.import_penilaian}}
                         </div>
                     </form> 
 
@@ -492,15 +492,15 @@
 
 {% block tables-script-extend %}
 
-<script src="{% static 'pages/js/nilai_mitra.js' %}"></script>
 <script type="text/javascript" src="https://unpkg.com/xlsx@0.15.1/dist/xlsx.full.min.js"></script>
+<script src="{% static 'pages/js/nilai_mitra.js' %}"></script>
 <script>
     'use strict'
-
+    var  table_2
     let get_data_tables_nilai = (data) => {
         destroy_datatable()
         $.ajax({
-            url: generate_table_nilai_link,
+            url: "{% url 'master_penilaian:generate-table-nilai' %}",
             type: "POST",   
             dataType: "json",
             data : data,
@@ -512,9 +512,11 @@
                 if (data.status == 'success'){
                     $('#basic-datatable-2 thead').html(data.data['thead'] )
                     $('#basic-datatable-2 tbody').html(data.data['tbody'] )
-                    $("#basic-datatable-2").DataTable(
-                        settingDatatables()
+                    table_2 = $("#basic-datatable-2").DataTable(
+                        { ...{lengthMenu: [5, 10, 25, 50, 100]},
+                         ...settingDatatables()}
                     )
+                    return table_2
                 }
             },
             error: (error) => {
@@ -528,21 +530,17 @@
     let  updateNilaiMitra = (e) => edit_penilaian_request("{% url 'master_penilaian:get-nilai-mitra' %}", '{{csrf_token}}', e)
     let get_administrative = (e) => fetch_administrative("{% url 'master_petugas:adm-fetch' %}", '{{csrf_token}}', e)
 
-    $('#get-templates-upload').on('click', get_template_upload("{% url 'master_penilaian:template-nilai-mitra' %}"))
+    $('#get-templates-upload').on('click', () => get_template_upload("{% url 'master_penilaian:template-nilai-mitra' %}"))
     
-    $('#{{form_upload.import_file.id_for_label}}').on('change', function(){
-        preview_excel_nilai('preview-data-upload', '{{form_upload.import_file.id_for_label}}')
-    })
+    $('#{{form_upload.import_penilaian.id_for_label}}').on('change', () => preview_excel_nilai('preview-data-upload', '{{form_upload.import_penilaian.id_for_label}}'))
     
-    $('#filter-kegiatan-template').on('change', get_penilai_by_kegiatan("{% url 'master_penilaian:get-penilai' %}", '{{csrf_token}}'))
-    {% comment %} $('#confirm-submit-file').on('click', confirm_submit_file("{% url 'master_penilaian:upload-nilai-mitra' %}", "{{csrf_token}}", $('#{{form_upload.import_file.id_for_label}}').get(0).files[0])) {% endcomment %}
-    $('#nilai-mitra-filter-survey').on('change', filter_penilaian_by_survey("{% url 'master_penilaian:get-penilaian-by-survei' %}", '{{csrf_token}}'))
-    $('#field_survey').on('change', () => {
-        get_data_penilaian_by_survei({'survey_id' : $(this).val()}, '#field_kegiatan', "{% url 'master_penilaian:get-penilaian-by-survei' %}", '{{csrf_token}}')
-    })
-    $('#field_kegiatan').on('change', get_alocation_by_survey("{% url 'master_penilaian:get-alokasi-by-survei' %}", "{{csrf_token}}"))
-    $('#field_mitra, #field_penilai').on('change', select_mitra("{% url 'master_penilaian:get-nilai-mitra' %}", "{{csrf_token}}") )
+    $('#filter-kegiatan-template').on('change', () => get_penilai_by_kegiatan("{% url 'master_penilaian:get-penilai' %}", '{{csrf_token}}'))
+    $('#confirm-submit-file').on('click', () => confirm_submit_file("{% url 'master_penilaian:upload-nilai-mitra' %}", "{{csrf_token}}", $('#{{form_upload.import_penilaian.id_for_label}}').get(0).files[0]))
+
+    $('#nilai-mitra-filter-survey').on('change', () => filter_penilaian_by_survey("{% url 'master_penilaian:get-penilaian-by-survei' %}", '{{csrf_token}}'))
+    $('#field_survey').on('change', () => get_data_penilaian_by_survei({'survey_id' : $(this).val()}, '#field_kegiatan', "{% url 'master_penilaian:get-penilaian-by-survei' %}", '{{csrf_token}}'))
+    $('#field_kegiatan').on('change', () => get_alocation_by_survey("{% url 'master_penilaian:get-alokasi-by-survei' %}", "{{csrf_token}}"))
+    $('#field_mitra, #field_penilai').on('change', () => select_mitra("{% url 'master_penilaian:get-nilai-mitra' %}", "{{csrf_token}}") )
 
 </script>
-
 {% endblock tables-script-extend %}

@@ -625,7 +625,7 @@ class NilaiMitraClassView(LoginRequiredMixin, RestrictionsAccess, View):
             'data_pegawai' : model_pegawai.MasterPegawaiModel.objects.all().order_by('name'),
             'form' : forms.PenilaianMitraForm(),
             'form_upload' : forms.NilaiFormUpload()
-            }
+        }
 
         return render(request, 'master_penilaian/nilai-mitra.html', context)
 
