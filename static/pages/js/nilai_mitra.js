@@ -122,26 +122,27 @@ let edit_penilaian_request = (url, csrf, e) => {
 }
 
 let get_data_penilaian_by_survei = (data, field_target, url, csrf) => {
-    $.ajax({
-        url: url,
-        type: "POST",   
-        dataType: "json",
-        data : data,
-        headers: {
-            "X-Requested-With": "XMLHttpRequest",
-            "X-CSRFToken": csrf,
-        },
-        success: (data) => {
-            let option = '<option value="">-- Pilih Penilaian --</option>'
-            for (let i = 0; i < data.instance.length; i++) {
-                option += '<option value="'+ data.instance[i]['id'] +'">'+ data.instance[i]['kegiatan_survey__nama_kegiatan'] +'</option>'
-            }
-            $(field_target).html(option)
-        },
-        error: (error) => {
-            console.log(error);
-        }
-    });
+    alert('MASUK')
+    // $.ajax({
+    //     url: url,
+    //     type: "POST",   
+    //     dataType: "json",
+    //     data : data,
+    //     headers: {
+    //         "X-Requested-With": "XMLHttpRequest",
+    //         "X-CSRFToken": csrf,
+    //     },
+    //     success: (data) => {
+    //         let option = '<option value="">-- Pilih Penilaian --</option>'
+    //         for (let i = 0; i < data.instance.length; i++) {
+    //             option += '<option value="'+ data.instance[i]['id'] +'">'+ data.instance[i]['kegiatan_survey__nama_kegiatan'] +'</option>'
+    //         }
+    //         $(field_target).html(option)
+    //     },
+    //     error: (error) => {
+    //         console.log(error);
+    //     }
+    // });
 }
 
 let preview_excel_nilai = (table_id, field_file_id) => {

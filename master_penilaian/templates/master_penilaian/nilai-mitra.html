@@ -538,7 +538,14 @@
     $('#confirm-submit-file').on('click', () => confirm_submit_file("{% url 'master_penilaian:upload-nilai-mitra' %}", "{{csrf_token}}", $('#{{form_upload.import_penilaian.id_for_label}}').get(0).files[0]))
 
     $('#nilai-mitra-filter-survey').on('change', () => filter_penilaian_by_survey("{% url 'master_penilaian:get-penilaian-by-survei' %}", '{{csrf_token}}'))
-    $('#field_survey').on('change', () => get_data_penilaian_by_survei({'survey_id' : $(this).val()}, '#field_kegiatan', "{% url 'master_penilaian:get-penilaian-by-survei' %}", '{{csrf_token}}'))
+    let get_data_penilaian_by_survei1 = (data, field_target, url, csrf) => {
+        return alert('Jancok')
+    }
+    $('#field_survey').on('change', (e) => {
+        alert($(this).val())
+        {% comment %} get_data_penilaian_by_survei1({'survey_id' : $(this).val()}, '#field_kegiatan', "{% url 'master_penilaian:get-penilaian-by-survei' %}", '{{csrf_token}}') {% endcomment %}
+    })
+    {% comment %} $('#field_survey').on('change', () => get_data_penilaian_by_survei({'survey_id' : $(this).val()}, '#field_kegiatan', "{% url 'master_penilaian:get-penilaian-by-survei' %}", '{{csrf_token}}')) {% endcomment %}
     $('#field_kegiatan').on('change', () => get_alocation_by_survey("{% url 'master_penilaian:get-alokasi-by-survei' %}", "{{csrf_token}}"))
     $('#field_mitra, #field_penilai').on('change', () => select_mitra("{% url 'master_penilaian:get-nilai-mitra' %}", "{{csrf_token}}") )
 
